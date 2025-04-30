@@ -416,8 +416,6 @@ def determine_acuracy(par_2_scores, predicted_par_2_scores):
 
     average = result_df['rank_accuracy'].mean()
     print("Average of new_col:", average)
-    
-
 
 
 if __name__ == "__main__":
@@ -427,7 +425,7 @@ if __name__ == "__main__":
     push_notification("start test")
 
     with open("../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl", "rb") as file:
-        df = pickle.load(file).copy()
+        df: pd.DataFrame = pickle.load(file).copy()
 
     print(df)
 
@@ -437,7 +435,21 @@ if __name__ == "__main__":
 
     par_2_scores = df.mean(axis=0, skipna=True)
 
+    average_before_limits = df.mean(axis=1, skipna=True)
+
     runtime_limits = df.mean(axis=1, skipna=True) * aimed_runtime_perc
+
+    df_copy = df.copy()
+
+    for index, row in df_copy.iterrows():
+        row[row < runtime_limits[index]] = np.nan
+
+    average_after_limits = df_copy.mean(axis=1, skipna=True)
+
+    print("average before limits")
+    print(average_before_limits)
+    print("average after limits")
+    print(average_after_limits)
 
     n_rows = df.shape[0]
 
@@ -446,7 +458,7 @@ if __name__ == "__main__":
 
     for i in range(n_rows):
         # pull out the i-th row as a Series, map your function, assign it back
-        df.iloc[i] = df.iloc[i].map(lambda x: x if x < runtime_limits[i] else runtime_limits[i] * 2)
+        df.iloc[i] = df.iloc[i].map(lambda x: x if x < runtime_limits[i] else average_after_limits[i])
 
     predicted_par_2_scores = df.mean(axis=0, skipna=True)
 
