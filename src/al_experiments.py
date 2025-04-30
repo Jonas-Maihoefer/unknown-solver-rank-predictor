@@ -14,6 +14,7 @@ from scipy.stats import spearmanr
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.ensemble import StackingClassifier, RandomForestClassifier
+import matplotlib.pyplot as plt
 
 from al_experiments.config import DEBUG
 from al_experiments.clustering import merge_closest_intervals, assign_labels_from_label_boundaries
@@ -393,8 +394,86 @@ def run_e2e_experiment(
     return (perf_tuple, y_sampled)
 
 
+def determine_acuracy(par_2_scores, predicted_par_2_scores):
+
+    solver_fraction = 1/par_2_scores.size
+
+    result_df = pd.concat([par_2_scores, predicted_par_2_scores], axis=1)
+    result_df['rank_accuracy'] = np.nan
+
+    for index_1, value_1 in predicted_par_2_scores.items():
+        rank_accuracy = 0
+        for index_2, value_2 in predicted_par_2_scores.items():
+            #print(f"comparing {index_1} to {index_2}:")
+            #print(f"predicted: {value_1} vs {value_2}")
+            #print(f"actual   : {par_2_scores[index_1]} vs {par_2_scores[index_2]}")
+            if (value_2 - value_1) * (par_2_scores[index_2] - par_2_scores[index_1]) > 0:
+                #print("prediction holds")
+                rank_accuracy += solver_fraction
+        result_df.at[index_1, 'rank_accuracy'] = rank_accuracy
+
+    print(result_df)
+
+    average = result_df['rank_accuracy'].mean()
+    print("Average of new_col:", average)
+    
+
+
+
 if __name__ == "__main__":
-    # Notify experiment start
+
+    aimed_runtime_perc = 0.1
+
+    push_notification("start test")
+
+    with open("../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl", "rb") as file:
+        df = pickle.load(file).copy()
+
+    print(df)
+
+
+    # 2a. Drop infinite values
+    df = df.replace([np.inf, -np.inf], 10000)
+
+    par_2_scores = df.mean(axis=0, skipna=True)
+
+    runtime_limits = df.mean(axis=1, skipna=True) * aimed_runtime_perc
+
+    n_rows = df.shape[0]
+
+    print(f"runtime limits: {runtime_limits}")
+    print(f"runtime limit place 2: {runtime_limits[1]}")
+
+    for i in range(n_rows):
+        # pull out the i-th row as a Series, map your function, assign it back
+        df.iloc[i] = df.iloc[i].map(lambda x: x if x < runtime_limits[i] else runtime_limits[i] * 2)
+
+    predicted_par_2_scores = df.mean(axis=0, skipna=True)
+
+    print("par-2 scores")
+    print(par_2_scores)
+    print(par_2_scores.sort_values())
+    print("predicted par-2 scores")
+    print(predicted_par_2_scores.sort_values())
+
+    determine_acuracy(par_2_scores, predicted_par_2_scores)
+
+
+
+
+    # 3. Plot the histogram
+    plt.figure(figsize=(10, 6))
+    plt.hist(runtime_limits, bins='auto')
+    plt.xlabel("mean runtime (seconds)")
+    plt.ylabel("Count")
+    plt.title("Histogram of mean runtimes per SAT instance")
+    plt.grid(True, linestyle="--", alpha=0.5)
+    plt.tight_layout()
+    # Show or save
+    plt.show()
+    #plt.savefig("instance_histogram.png", dpi=300)
+
+    """ # Notify experiment start
     push_notification("Starting experiments.")
 
     for i_exp, experiment in enumerate(all_experiments):
@@ -451,4 +530,4 @@ if __name__ == "__main__":
         if len(all_experiments) <= 50 or i_exp % 100 == 0:
             push_notification(
                 f"{(i_exp+1)}/{len(all_experiments)} = {(i_exp/len(all_experiments)):.2f} ({experiment.key})."
-            )
+            ) """
