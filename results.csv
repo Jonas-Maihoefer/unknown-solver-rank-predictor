@@ -1,3 +1,3 @@
-commit,accuracy,description
-f528ba2a,0.7372,break execution after 10% of average runtime of this instance is reached; count broken executions with average runtime * 2
-
+commit,accuracy,runtime_fraction,description
+f528ba2a,0.7372,unknown,break execution after 10% of average runtime of this instance is reached; count broken executions with average runtime * 2
+40d10e85,0.7500,0.1056,break execution after 10% of average runtime of this instance is reached; count broken executions with average after omitting every run that was under 10% of time under the average
