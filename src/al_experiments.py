@@ -26,6 +26,12 @@ from al_experiments.final_experiments import all_experiments
 from al_experiments.experiment import Experiment
 from al_experiments.helper import push_notification
 
+# constants
+number_of_solvers = 28
+solver_fraction = 1/number_of_solvers
+denominator = number_of_solvers * number_of_solvers
+instances = 5355
+
 
 logging.basicConfig(
     format="%(asctime)s %(levelname)s: %(message)s",
@@ -412,13 +418,23 @@ def determine_runtime_fraction(df: pd.DataFrame, runtime_limits: pd.Series):
     print(f"runtime fraction was {runtime_fraction}")
 
 
+def determine_accuracy_2(actu: np.ndarray, pred: np.ndarray) -> float:
+    # compute all pairwise differences
+    # shape is (n, n)
+    dp = pred[:, None] - pred[None, :]
+    da = actu[:, None] - actu[None, :]
+
+    # a concordant (correct) pair is where dp and da have the same sign
+    # (= dp * da > 0)
+    concordant = np.count_nonzero(dp * da > 0)
+
+    # total possible ordered comparisons per solver is (n - 1),
+    # and we average over n solvers:
+    #   average = (1/(n*(n-1))) * concordant
+    return concordant / (number_of_solvers*(number_of_solvers-1))
 
 
-
-
-def determine_acuracy(par_2_scores, predicted_par_2_scores):
-
-    solver_fraction = 1/par_2_scores.size
+def determine_accuracy_1(par_2_scores: pd.Series, predicted_par_2_scores: pd.Series):
 
     result_df = pd.concat([par_2_scores, predicted_par_2_scores], axis=1)
     result_df['rank_accuracy'] = np.nan
@@ -426,27 +442,91 @@ def determine_acuracy(par_2_scores, predicted_par_2_scores):
     for index_1, value_1 in predicted_par_2_scores.items():
         rank_accuracy = 0
         for index_2, value_2 in predicted_par_2_scores.items():
-            if (value_2 - value_1) * (par_2_scores[index_2] - par_2_scores[index_1]) > 0:
+            if (value_2 - value_1) * (par_2_scores[index_2] - par_2_scores[index_1]) > 0 or index_1 == index_2:
                 rank_accuracy += solver_fraction
         result_df.at[index_1, 'rank_accuracy'] = rank_accuracy
 
-    print(result_df)
+    average = result_df['rank_accuracy'].mean(skipna=True)
 
-    average = result_df['rank_accuracy'].mean()
-    print("Rank accuracy was:", average)
+    return average
+
+
+def determine_accuracy_2(actu: np.ndarray, pred: np.ndarray):
+
+    # Compute pairwise differences
+    pred_diff = pred[:, None] - pred
+    true_diff = actu[:, None] - actu
+
+    # Check for agreement in direction
+    agreement = (pred_diff * true_diff) > 0
+
+    # Sum up agreements per row and normalize
+    rank_accuracies = agreement.sum(axis=1) / (number_of_solvers - 1)
+
+    return rank_accuracies.mean()
 
 
 if __name__ == "__main__":
 
-    p = 40
-    k = 1.5  # higher k punishes harder instances less
-
     push_notification("start test")
+
+    calc_steps = 10000
+    # total_runtime = 25860323 s
 
     with open("../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl", "rb") as file:
         df: pd.DataFrame = pickle.load(file).copy()
 
     print(df)
+
+    df_actual = df.replace([np.inf, -np.inf], 5000)
+
+    df_rated = df.replace([np.inf, -np.inf], 10000)
+
+    par_2_scores = df_rated.mean(axis=0, skipna=True).to_numpy()
+
+    total_runtime = df_actual.stack().sum() / 10
+
+    runtime_per_step = total_runtime / calc_steps
+
+    max_runtime_per_step = 2 * runtime_per_step
+
+    print(f"total allowed runtime is {total_runtime}")
+
+    print(f"adding {runtime_per_step}s of runtime per step")
+
+    # Fill all values with np.nan
+    df_build = df_actual.copy()
+    df_build.iloc[:, :] = np.nan
+
+    start = time.time_ns()
+    for i in range(calc_steps):
+        runtime_to_add = random.random() * max_runtime_per_step
+        best_instance = 0
+        best_accuracy = 0
+        for j in range(instances):
+            df_temp = df_build.copy()
+            row = df_actual.iloc[j]
+            mask = (row > runtime_to_add) | (row == 5000)
+            df_temp.iloc[j] = np.where(mask, 10000, row)
+            new_par_2_scores = df_temp.mean(axis=0, skipna=True).to_numpy()
+            accuracy = determine_accuracy_2(par_2_scores, new_par_2_scores)
+            if accuracy > best_accuracy:
+                best_accuracy = accuracy
+                best_instance = j
+                print(f"found new best: {best_accuracy}")
+        row = df_actual.iloc[best_instance]
+        mask = (row > runtime_to_add) | (row == 5000)
+        df_build.iloc[best_instance] = np.where(mask, 10000, row)
+        print(f"added {runtime_to_add}s to instance {best_instance}.")
+        print("this leads to the following instance scores:")
+        print(df_build.iloc[best_instance])
+        print("the first instance looks like this:")
+        print(df_build.iloc[0])
+        print(f"this leads to a score of {determine_accuracy_2(par_2_scores, df_build.mean(axis=0, skipna=True).to_numpy())}")
+    print(f"took {(time.time_ns() - start) / 1_000_000_000}s")
+
+
+    """
 
     # 2a. set infinite value to punishment of 2*tau
     df_non_inf = df.replace([np.inf, -np.inf], 10000)
@@ -517,7 +597,7 @@ if __name__ == "__main__":
     plt.tight_layout()
     # Show or save
     plt.show()
-    #plt.savefig("instance_histogram.png", dpi=300)
+    #plt.savefig("instance_histogram.png", dpi=300) """
 
     """ # Notify experiment start
     push_notification("Starting experiments.")
