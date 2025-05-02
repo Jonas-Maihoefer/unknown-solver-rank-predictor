@@ -426,11 +426,7 @@ def determine_acuracy(par_2_scores, predicted_par_2_scores):
     for index_1, value_1 in predicted_par_2_scores.items():
         rank_accuracy = 0
         for index_2, value_2 in predicted_par_2_scores.items():
-            #print(f"comparing {index_1} to {index_2}:")
-            #print(f"predicted: {value_1} vs {value_2}")
-            #print(f"actual   : {par_2_scores[index_1]} vs {par_2_scores[index_2]}")
             if (value_2 - value_1) * (par_2_scores[index_2] - par_2_scores[index_1]) > 0:
-                #print("prediction holds")
                 rank_accuracy += solver_fraction
         result_df.at[index_1, 'rank_accuracy'] = rank_accuracy
 
@@ -442,7 +438,8 @@ def determine_acuracy(par_2_scores, predicted_par_2_scores):
 
 if __name__ == "__main__":
 
-    aimed_runtime_perc = 0.06
+    p = 40
+    k = 1.5  # higher k punishes harder instances less
 
     push_notification("start test")
 
@@ -451,7 +448,6 @@ if __name__ == "__main__":
 
     print(df)
 
-
     # 2a. set infinite value to punishment of 2*tau
     df_non_inf = df.replace([np.inf, -np.inf], 10000)
 
@@ -459,50 +455,64 @@ if __name__ == "__main__":
 
     average_before_limits = df_non_inf.mean(axis=1, skipna=True)
 
-    runtime_limits = df_non_inf.mean(axis=1, skipna=True) * aimed_runtime_perc
+    runtime_limits = df_non_inf.sum(axis=1, skipna=True) * p
 
-    df_copy = df_non_inf.copy()
+    df_remaining_runtimes = df_non_inf.copy()
 
-    for index, row in df_copy.iterrows():
-        row[row < runtime_limits[index]] = np.nan
+    runtime_per_instance = {}
+    max_runtime = {}
 
-    average_after_limits = df_copy.mean(axis=1, skipna=True)
+    # Determine max allowed runtime
+    for index, row in df_remaining_runtimes.iterrows():
+        runtime_limits[index] = runtime_limits[index] * k/average_before_limits[index]
+        runtime_per_instance[index] = 0
+        max_runtime[index] = 0
+        row_copy = row.sort_values()
+        i = 0
+        while runtime_per_instance[index] < runtime_limits[index] and i < row_copy.size:
+            if i >= 1:
+                max_runtime[index] = row_copy.iloc[i-1]
+            runtime_per_instance[index] += row_copy.iloc[i]
+            i += 1
+
+        row[row < max_runtime[index]] = np.nan
+
+    max_runtime = pd.Series(max_runtime)
+
+    average_after_limits = df_remaining_runtimes.mean(axis=1, skipna=True)
 
     print("average before limits")
     print(average_before_limits)
     print("average after limits")
     print(average_after_limits)
 
-    n_rows = df_non_inf.shape[0]
-
-    print(f"runtime limits: {runtime_limits}")
-    print(f"runtime limit place 2: {runtime_limits[1]}")
+    df_remaining_runtimes = df_non_inf.copy()
+    n_rows = df_remaining_runtimes.shape[0]
 
     for i in range(n_rows):
         # pull out the i-th row as a Series, map your function, assign it back
-        df_non_inf.iloc[i] = df_non_inf.iloc[i].map(lambda x: x if x < runtime_limits[i] else average_after_limits[i])
+        df_remaining_runtimes.iloc[i] = df_remaining_runtimes.iloc[i].map(
+            lambda x: x if x < max_runtime[i] else average_after_limits[i]
+        )
 
-    predicted_par_2_scores = df_non_inf.mean(axis=0, skipna=True)
+    predicted_par_2_scores = df_remaining_runtimes.mean(axis=0, skipna=True)
 
     print("par-2 scores")
-    print(par_2_scores)
     print(par_2_scores.sort_values())
     print("predicted par-2 scores")
     print(predicted_par_2_scores.sort_values())
 
     determine_acuracy(par_2_scores, predicted_par_2_scores)
 
-    determine_runtime_fraction(df.copy(), runtime_limits.copy())
-
-
+    determine_runtime_fraction(df.copy(), max_runtime.copy())
 
 
     # 3. Plot the histogram
     plt.figure(figsize=(10, 6))
-    plt.hist(runtime_limits, bins='auto')
-    plt.xlabel("mean runtime (seconds)")
+    plt.hist(max_runtime, bins='auto')
+    plt.xlabel("total runtime (seconds)")
     plt.ylabel("Count")
-    plt.title("Histogram of mean runtimes per SAT instance")
+    plt.title("Histogram of restricted runtime per SAT instance")
     plt.grid(True, linestyle="--", alpha=0.5)
     plt.tight_layout()
     # Show or save
