@@ -394,28 +394,6 @@ def run_e2e_experiment(
     return (perf_tuple, y_sampled)
 
 
-def determine_runtime_fraction(df: pd.DataFrame, runtime_limits: pd.Series):
-    # set infinite value to timeout
-    df_non_inf = df.replace([np.inf, -np.inf], 5000)
-
-    total_runtime = 0
-    used_runtime = 0
-
-    for index, row in df_non_inf.iterrows():
-        total_runtime += row.sum()
-
-        row[row > runtime_limits[index]] = runtime_limits[index]
-
-        used_runtime += row.sum()
-
-    runtime_fraction = used_runtime/total_runtime
-    print(f"runtime fraction was {runtime_fraction}")
-
-
-
-
-
-
 def determine_acuracy(par_2_scores, predicted_par_2_scores):
 
     solver_fraction = 1/par_2_scores.size
@@ -437,7 +415,25 @@ def determine_acuracy(par_2_scores, predicted_par_2_scores):
     print(result_df)
 
     average = result_df['rank_accuracy'].mean()
-    print("Rank accuracy was:", average)
+    print("Rank accuracy was: ", average)
+
+
+def determine_runtime_fraction(df: pd.DataFrame, runtime_limits: pd.Series):
+    # set infinite value to timeout
+    df_non_inf = df.replace([np.inf, -np.inf], 5000)
+
+    total_runtime = 0
+    used_runtime = 0
+
+    for index, row in df_non_inf.iterrows():
+        total_runtime += row.sum()
+
+        row[row > runtime_limits[index]] = runtime_limits[index]
+
+        used_runtime += row.sum()
+
+    runtime_fraction = used_runtime/total_runtime
+    print(f"runtime fraction was: {runtime_fraction}")
 
 
 if __name__ == "__main__":
@@ -447,31 +443,17 @@ if __name__ == "__main__":
     push_notification("start test")
 
     with open("../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl", "rb") as file:
-        df: pd.DataFrame = pickle.load(file).copy()
+        df = pickle.load(file).copy()
 
     print(df)
 
 
-    # 2a. set infinite value to punishment of 2*tau
+    # 2a. Drop infinite values
     df_non_inf = df.replace([np.inf, -np.inf], 10000)
 
     par_2_scores = df_non_inf.mean(axis=0, skipna=True)
 
-    average_before_limits = df_non_inf.mean(axis=1, skipna=True)
-
     runtime_limits = df_non_inf.mean(axis=1, skipna=True) * aimed_runtime_perc
-
-    df_copy = df_non_inf.copy()
-
-    for index, row in df_copy.iterrows():
-        row[row < runtime_limits[index]] = np.nan
-
-    average_after_limits = df_copy.mean(axis=1, skipna=True)
-
-    print("average before limits")
-    print(average_before_limits)
-    print("average after limits")
-    print(average_after_limits)
 
     n_rows = df_non_inf.shape[0]
 
@@ -480,7 +462,7 @@ if __name__ == "__main__":
 
     for i in range(n_rows):
         # pull out the i-th row as a Series, map your function, assign it back
-        df_non_inf.iloc[i] = df_non_inf.iloc[i].map(lambda x: x if x < runtime_limits[i] else average_after_limits[i])
+        df_non_inf.iloc[i] = df_non_inf.iloc[i].map(lambda x: x if x < runtime_limits[i] else runtime_limits[i] * 2)
 
     predicted_par_2_scores = df_non_inf.mean(axis=0, skipna=True)
 
@@ -491,7 +473,6 @@ if __name__ == "__main__":
     print(predicted_par_2_scores.sort_values())
 
     determine_acuracy(par_2_scores, predicted_par_2_scores)
-
     determine_runtime_fraction(df.copy(), runtime_limits.copy())
 
 
