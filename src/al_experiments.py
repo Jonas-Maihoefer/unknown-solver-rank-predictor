@@ -451,7 +451,7 @@ def determine_accuracy_1(par_2_scores: pd.Series, predicted_par_2_scores: pd.Ser
     return average
 
 
-def determine_accuracy_2(actu: np.ndarray, pred: np.ndarray):
+def determine_accuracy_3(actu: np.ndarray, pred: np.ndarray):
 
     # Compute pairwise differences
     pred_diff = pred[:, None] - pred
@@ -464,6 +464,32 @@ def determine_accuracy_2(actu: np.ndarray, pred: np.ndarray):
     rank_accuracies = agreement.sum(axis=1) / (number_of_solvers - 1)
 
     return rank_accuracies.mean()
+
+
+def vector_to_acc(
+        thresholds: np.ndarray[np.floating[np.float32]],
+        runtimes: np.ndarray[np.floating[np.float32]],
+        true_par_2
+):
+    """
+    thresholds: 1D array‑like of shape (5355,)
+    runtimes:    2D array‑like of shape (5355, 28)
+
+    For each i, any runtimes[i, j] > thresholds[i] is replaced by 10000,
+    then averaged across i
+    """
+    thresholds = np.ascontiguousarray(thresholds, dtype=np.float32)
+    runtimes = np.ascontiguousarray(runtimes,  dtype=np.float32)
+
+    # broadcast compare & clamp
+    # thr[:, None] gives shape (N,1) so thr[i] is compared to run[i,j]
+    clipped = np.where(runtimes > thresholds[:, None], 10000.0, runtimes)
+
+    pred_par_2 = clipped.mean(axis=0)
+
+    # acc = determine_accuracy_2(true_par_2, pred_par_2)
+
+    return pred_par_2 # acc
 
 
 if __name__ == "__main__":
@@ -482,13 +508,28 @@ if __name__ == "__main__":
 
     df_rated = df.replace([np.inf, -np.inf], 10000)
 
-    par_2_scores = df_rated.mean(axis=0, skipna=True).to_numpy()
+    par_2_scores = np.ascontiguousarray(
+        df_rated.mean(axis=0), dtype=np.float32
+    )
 
     total_runtime = df_actual.stack().sum() / 10
 
     runtime_per_step = total_runtime / calc_steps
 
     max_runtime_per_step = 2 * runtime_per_step
+
+    tresholds = np.full((5355,), 100)
+
+    runtimes = np.ascontiguousarray(
+        df_actual.copy(), dtype=np.float32
+    )
+
+    print(f"the accuracy is {vector_to_acc(tresholds,runtimes,par_2_scores)}")
+
+    start = time.time_ns()
+    for i in range(10000):
+        vector_to_acc(tresholds,runtimes,par_2_scores)
+    print(f"this took {(time.time_ns() - start) / 1_000_000_000}s")
 
     print(f"total allowed runtime is {total_runtime}")
 
