@@ -415,7 +415,7 @@ def determine_runtime_fraction(df: pd.DataFrame, runtime_limits: pd.Series):
         used_runtime += row.sum()
 
     runtime_fraction = used_runtime/total_runtime
-    print(f"runtime fraction was {runtime_fraction}")
+    print(f"the runtime fraction is {runtime_fraction}")
 
 
 def determine_accuracy_2(actu: np.ndarray, pred: np.ndarray) -> float:
@@ -466,6 +466,26 @@ def determine_accuracy_3(actu: np.ndarray, pred: np.ndarray):
     return rank_accuracies.mean()
 
 
+def vector_to_runtime_frac(
+        thresholds: np.ndarray[np.floating[np.float32]],
+        runtimes: np.ndarray[np.floating[np.float32]],
+        total_runtime: float
+):
+    """
+    thresholds: 1D array‑like of shape (5355,)
+    runtimes:    2D array‑like of shape (5355, 28)
+
+    For each i, any runtimes[i, j] > thresholds[i] is replaced by thresholds[i],
+    then everything is summed and compared to the given total_runtime
+    """
+    thresholds = np.ascontiguousarray(thresholds, dtype=np.float32)
+    runtimes = np.ascontiguousarray(runtimes,  dtype=np.float32)
+
+    used_runtime = np.minimum(runtimes, thresholds[:, None]).sum()
+
+    return used_runtime / total_runtime
+
+
 def vector_to_acc(
         thresholds: np.ndarray[np.floating[np.float32]],
         runtimes: np.ndarray[np.floating[np.float32]],
@@ -483,13 +503,13 @@ def vector_to_acc(
 
     # broadcast compare & clamp
     # thr[:, None] gives shape (N,1) so thr[i] is compared to run[i,j]
-    clipped = np.where(runtimes > thresholds[:, None], 10000.0, runtimes)
+    scores = np.where(runtimes > thresholds[:, None], 10000.0, runtimes)
 
-    pred_par_2 = clipped.mean(axis=0)
+    pred_par_2 = scores.mean(axis=0)
 
-    # acc = determine_accuracy_2(true_par_2, pred_par_2)
+    acc = determine_accuracy_2(true_par_2, pred_par_2)
 
-    return pred_par_2 # acc
+    return acc
 
 
 if __name__ == "__main__":
@@ -518,17 +538,18 @@ if __name__ == "__main__":
 
     max_runtime_per_step = 2 * runtime_per_step
 
-    tresholds = np.full((5355,), 100)
+    tresholds = np.full((5355,), 300)
 
     runtimes = np.ascontiguousarray(
         df_actual.copy(), dtype=np.float32
     )
 
     print(f"the accuracy is {vector_to_acc(tresholds,runtimes,par_2_scores)}")
+    print(f"the runtime fraction is {vector_to_runtime_frac(tresholds,runtimes,total_runtime*10)}")
 
     start = time.time_ns()
     for i in range(10000):
-        vector_to_acc(tresholds,runtimes,par_2_scores)
+        vector_to_acc(tresholds, runtimes, par_2_scores)
     print(f"this took {(time.time_ns() - start) / 1_000_000_000}s")
 
     print(f"total allowed runtime is {total_runtime}")
