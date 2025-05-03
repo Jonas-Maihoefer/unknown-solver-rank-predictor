@@ -29,8 +29,9 @@ from al_experiments.helper import push_notification
 # constants
 number_of_solvers = 28
 solver_fraction = 1/number_of_solvers
-denominator = number_of_solvers * number_of_solvers
-instances = 5355
+square_of_solvers = number_of_solvers * number_of_solvers
+reduced_square_of_solvers = number_of_solvers*(number_of_solvers-1)
+number_of_instances = 5355
 
 
 logging.basicConfig(
@@ -431,7 +432,7 @@ def determine_accuracy_2(actu: np.ndarray, pred: np.ndarray) -> float:
     # total possible ordered comparisons per solver is (n - 1),
     # and we average over n solvers:
     #   average = (1/(n*(n-1))) * concordant
-    return concordant / (number_of_solvers*(number_of_solvers-1))
+    return concordant / reduced_square_of_solvers
 
 
 def determine_accuracy_1(par_2_scores: pd.Series, predicted_par_2_scores: pd.Series):
@@ -516,7 +517,7 @@ if __name__ == "__main__":
 
     push_notification("start test")
 
-    calc_steps = 10000
+    calc_steps = 1000
     # total_runtime = 25860323 s
 
     with open("../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl", "rb") as file:
@@ -528,65 +529,59 @@ if __name__ == "__main__":
 
     df_rated = df.replace([np.inf, -np.inf], 10000)
 
-    par_2_scores = np.ascontiguousarray(
-        df_rated.mean(axis=0), dtype=np.float32
-    )
+    total_runtime = df_actual.stack().sum()
 
-    total_runtime = df_actual.stack().sum() / 10
+    estimated_addable_runtime = 300 * number_of_instances  # as determined by experiment on commit 8abdbd3a
 
-    runtime_per_step = total_runtime / calc_steps
+    runtime_per_step = estimated_addable_runtime / calc_steps
 
     max_runtime_per_step = 2 * runtime_per_step
 
-    tresholds = np.full((5355,), 300)
+    # initialize tresholds with 0
+    tresholds = np.ascontiguousarray(
+        np.full((5355,), 0), dtype=np.float32
+    )
 
     runtimes = np.ascontiguousarray(
         df_actual.copy(), dtype=np.float32
     )
 
-    print(f"the accuracy is {vector_to_acc(tresholds,runtimes,par_2_scores)}")
-    print(f"the runtime fraction is {vector_to_runtime_frac(tresholds,runtimes,total_runtime*10)}")
+    par_2_scores = np.ascontiguousarray(
+        df_rated.mean(axis=0), dtype=np.float32
+    )
 
-    start = time.time_ns()
-    for i in range(10000):
-        vector_to_acc(tresholds, runtimes, par_2_scores)
-    print(f"this took {(time.time_ns() - start) / 1_000_000_000}s")
-
-    print(f"total allowed runtime is {total_runtime}")
+    print(f"total allowed runtime to add is {estimated_addable_runtime}")
 
     print(f"adding {runtime_per_step}s of runtime per step")
-
-    # Fill all values with np.nan
-    df_build = df_actual.copy()
-    df_build.iloc[:, :] = np.nan
 
     start = time.time_ns()
     for i in range(calc_steps):
         runtime_to_add = random.random() * max_runtime_per_step
         best_instance = 0
         best_accuracy = 0
-        for j in range(instances):
-            df_temp = df_build.copy()
-            row = df_actual.iloc[j]
-            mask = (row > runtime_to_add) | (row == 5000)
-            df_temp.iloc[j] = np.where(mask, 10000, row)
-            new_par_2_scores = df_temp.mean(axis=0, skipna=True).to_numpy()
-            accuracy = determine_accuracy_2(par_2_scores, new_par_2_scores)
-            if accuracy > best_accuracy:
+        for j in range(number_of_instances):
+            # add runtime to instance j
+            tresholds[j] += runtime_to_add
+            # test accuracy
+            accuracy = vector_to_acc(tresholds, runtimes, par_2_scores)
+            if accuracy > best_accuracy and tresholds[j] < 5000:
                 best_accuracy = accuracy
                 best_instance = j
-                print(f"found new best: {best_accuracy}")
-        row = df_actual.iloc[best_instance]
-        mask = (row > runtime_to_add) | (row == 5000)
-        df_build.iloc[best_instance] = np.where(mask, 10000, row)
+            # remove runtime for next loop
+            tresholds[j] -= runtime_to_add
+        # add runtime to best performing instance
+        tresholds[best_instance] += runtime_to_add
         print(f"added {runtime_to_add}s to instance {best_instance}.")
-        print("this leads to the following instance scores:")
-        print(df_build.iloc[best_instance])
-        print("the first instance looks like this:")
-        print(df_build.iloc[0])
-        print(f"this leads to a score of {determine_accuracy_2(par_2_scores, df_build.mean(axis=0, skipna=True).to_numpy())}")
+        print(f"this leads to a score of {best_accuracy}")
+        runtime_fraction = vector_to_runtime_frac(tresholds, runtimes, total_runtime)
+        print(f"runtime fraction is {runtime_fraction}")
+        if runtime_fraction > 0.1:
+            break
     print(f"took {(time.time_ns() - start) / 1_000_000_000}s")
 
+    print("here is the calculated threshold vector:")
+
+    print(tresholds)
 
     """
 

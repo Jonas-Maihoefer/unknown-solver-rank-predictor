@@ -4,4 +4,5 @@ commit,accuracy,runtime_fraction,description
 4374e2ba,0.8265,0.0995,p=4  ; k=15 ; try to spend p*total-time amount of time on instance a; reduce p if instance is hard
 4374e2ba,0.8265,0.0995,p=0.4; k=150; try to spend p*total-time amount of time on instance a; reduce p if instance is hard
 cf249a96,took to long to run,0.1,distribute runtime fraction to instance making the accuracy climb the steepest
-,0.8994,0.0996,run with a timeout of 300s and penalty of 10000 or 600
+8abdbd3a,0.8994,0.0996,run with a timeout of 300s and penalty of 10000 or 600
+,1.0,0.013058633283747673,calc_steps = 1000; distribute runtime fraction to instance making the accuracy climb the steepest
