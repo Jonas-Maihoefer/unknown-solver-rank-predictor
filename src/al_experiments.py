@@ -567,6 +567,10 @@ if __name__ == "__main__":
             if accuracy > best_accuracy and tresholds[j] < 5000:
                 best_accuracy = accuracy
                 best_instance = j
+            elif accuracy == 1 and tresholds[j] < 5000:
+                # no need to search for better instance
+                tresholds[j] -= runtime_to_add
+                break
             # remove runtime for next loop
             tresholds[j] -= runtime_to_add
         # add runtime to best performing instance
@@ -581,7 +585,8 @@ if __name__ == "__main__":
 
     print("here is the calculated threshold vector:")
 
-    print(tresholds)
+    for threshold in tresholds:
+        print(f"{threshold}, ")
 
     """
 
