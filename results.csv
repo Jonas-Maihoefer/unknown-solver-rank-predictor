@@ -6,4 +6,4 @@ commit,accuracy,runtime_fraction,description
 cf249a96,took to long to run,0.1,distribute runtime fraction to instance making the accuracy climb the steepest
 8abdbd3a,0.8994,0.0996,run with a timeout of 300s and penalty of 10000 or 600
 af65aeda,1.0,0.0131,calc_steps = 1000; distribute runtime fraction to instance making the accuracy climb the steepest
-,1.0,0.0596,calc_steps = 1000; distribute runtime fraction to instance making the accuracy climb the steepest
+f95ace3d,1.0,0.0596,calc_steps = 1000; distribute runtime fraction to instance making the accuracy climb the steepest

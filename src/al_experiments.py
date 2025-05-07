@@ -513,11 +513,64 @@ def vector_to_acc(
     return acc
 
 
+def determine_tresholds(
+        calc_steps: int,
+        total_runtime: float,
+        par_2_scores: np.ndarray[np.floating[np.float32]],
+        runtimes: np.ndarray[np.floating[np.float32]]
+) -> np.ndarray[np.floating[np.float32]]:
+
+    estimated_addable_runtime = 300 * number_of_instances  # as determined by experiment on commit 8abdbd3a
+    runtime_per_step = estimated_addable_runtime / calc_steps
+    max_runtime_per_step = 2 * runtime_per_step
+
+    print(f"total allowed runtime to add is {estimated_addable_runtime}")
+    print(f"adding {runtime_per_step}s of runtime per step")
+
+    # initialize tresholds with 0
+    thresholds = np.ascontiguousarray(
+        np.full((5355,), 0), dtype=np.float32
+    )
+    start = time.time_ns()
+
+    for i in range(calc_steps):
+        runtime_to_add = random.random() * max_runtime_per_step
+        best_instance = 0
+        best_accuracy = 0
+        for j in range(number_of_instances):
+            # add runtime to instance j
+            thresholds[j] += runtime_to_add
+            # test accuracy
+            accuracy = vector_to_acc(thresholds, runtimes, par_2_scores)
+            if accuracy > best_accuracy and thresholds[j] < 5000:
+                best_accuracy = accuracy
+                best_instance = j
+            elif accuracy == 1 and thresholds[j] < 5000:
+                # no need to search for better instance
+                thresholds[j] -= runtime_to_add
+                break
+            # remove runtime for next loop
+            thresholds[j] -= runtime_to_add
+        # add runtime to best performing instance
+        thresholds[best_instance] += runtime_to_add
+        print(f"added {runtime_to_add}s to instance {best_instance}.")
+        print(f"this leads to a score of {best_accuracy}")
+        runtime_fraction = vector_to_runtime_frac(
+            thresholds, runtimes, total_runtime
+        )
+        print(f"runtime fraction is {runtime_fraction}")
+        if runtime_fraction > 0.1 or best_accuracy == 1.0:
+            break
+    print(f"took {(time.time_ns() - start) / 1_000_000_000}s")
+
+    return thresholds
+
+
 if __name__ == "__main__":
 
     push_notification("start test")
 
-    calc_steps = 1000
+    calc_steps = 10000
     # total_runtime = 25860323 s
 
     with open("../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl", "rb") as file:
@@ -531,17 +584,6 @@ if __name__ == "__main__":
 
     total_runtime = df_actual.stack().sum()
 
-    estimated_addable_runtime = 300 * number_of_instances  # as determined by experiment on commit 8abdbd3a
-
-    runtime_per_step = estimated_addable_runtime / calc_steps
-
-    max_runtime_per_step = 2 * runtime_per_step
-
-    # initialize tresholds with 0
-    tresholds = np.ascontiguousarray(
-        np.full((5355,), 0), dtype=np.float32
-    )
-
     runtimes = np.ascontiguousarray(
         df_actual.copy(), dtype=np.float32
     )
@@ -550,43 +592,15 @@ if __name__ == "__main__":
         df_rated.mean(axis=0), dtype=np.float32
     )
 
-    print(f"total allowed runtime to add is {estimated_addable_runtime}")
-
-    print(f"adding {runtime_per_step}s of runtime per step")
-
-    start = time.time_ns()
-    for i in range(calc_steps):
-        runtime_to_add = random.random() * max_runtime_per_step
-        best_instance = 0
-        best_accuracy = 0
-        for j in range(number_of_instances):
-            # add runtime to instance j
-            tresholds[j] += runtime_to_add
-            # test accuracy
-            accuracy = vector_to_acc(tresholds, runtimes, par_2_scores)
-            if accuracy > best_accuracy and tresholds[j] < 5000:
-                best_accuracy = accuracy
-                best_instance = j
-            elif accuracy == 1 and tresholds[j] < 5000:
-                # no need to search for better instance
-                tresholds[j] -= runtime_to_add
-                break
-            # remove runtime for next loop
-            tresholds[j] -= runtime_to_add
-        # add runtime to best performing instance
-        tresholds[best_instance] += runtime_to_add
-        print(f"added {runtime_to_add}s to instance {best_instance}.")
-        print(f"this leads to a score of {best_accuracy}")
-        runtime_fraction = vector_to_runtime_frac(tresholds, runtimes, total_runtime)
-        print(f"runtime fraction is {runtime_fraction}")
-        if runtime_fraction > 0.1:
-            break
-    print(f"took {(time.time_ns() - start) / 1_000_000_000}s")
+    thresholds = determine_tresholds(
+        calc_steps, total_runtime, par_2_scores, runtimes
+    )
 
     print("here is the calculated threshold vector:")
 
-    for threshold in tresholds:
+    for threshold in thresholds:
         print(f"{threshold}, ")
+
 
     """
 
