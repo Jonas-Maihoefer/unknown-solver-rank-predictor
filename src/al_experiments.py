@@ -25,6 +25,7 @@ from al_experiments.evaluation import (
 from al_experiments.final_experiments import all_experiments
 from al_experiments.experiment import Experiment
 from al_experiments.helper import push_notification
+from al_experiments.accuracy import accuracy
 
 # constants
 number_of_solvers = 28
@@ -419,54 +420,6 @@ def determine_runtime_fraction(df: pd.DataFrame, runtime_limits: pd.Series):
     print(f"the runtime fraction is {runtime_fraction}")
 
 
-def determine_accuracy_2(actu: np.ndarray, pred: np.ndarray) -> float:
-    # compute all pairwise differences
-    # shape is (n, n)
-    dp = pred[:, None] - pred[None, :]
-    da = actu[:, None] - actu[None, :]
-
-    # a concordant (correct) pair is where dp and da have the same sign
-    # (= dp * da > 0)
-    concordant = np.count_nonzero(dp * da > 0)
-
-    # total possible ordered comparisons per solver is (n - 1),
-    # and we average over n solvers:
-    #   average = (1/(n*(n-1))) * concordant
-    return concordant / reduced_square_of_solvers
-
-
-def determine_accuracy_1(par_2_scores: pd.Series, predicted_par_2_scores: pd.Series):
-
-    result_df = pd.concat([par_2_scores, predicted_par_2_scores], axis=1)
-    result_df['rank_accuracy'] = np.nan
-
-    for index_1, value_1 in predicted_par_2_scores.items():
-        rank_accuracy = 0
-        for index_2, value_2 in predicted_par_2_scores.items():
-            if (value_2 - value_1) * (par_2_scores[index_2] - par_2_scores[index_1]) > 0 or index_1 == index_2:
-                rank_accuracy += solver_fraction
-        result_df.at[index_1, 'rank_accuracy'] = rank_accuracy
-
-    average = result_df['rank_accuracy'].mean(skipna=True)
-
-    return average
-
-
-def determine_accuracy_3(actu: np.ndarray, pred: np.ndarray):
-
-    # Compute pairwise differences
-    pred_diff = pred[:, None] - pred
-    true_diff = actu[:, None] - actu
-
-    # Check for agreement in direction
-    agreement = (pred_diff * true_diff) > 0
-
-    # Sum up agreements per row and normalize
-    rank_accuracies = agreement.sum(axis=1) / (number_of_solvers - 1)
-
-    return rank_accuracies.mean()
-
-
 def vector_to_runtime_frac(
         thresholds: np.ndarray[np.floating[np.float32]],
         runtimes: np.ndarray[np.floating[np.float32]],
@@ -487,37 +440,12 @@ def vector_to_runtime_frac(
     return used_runtime / total_runtime
 
 
-def vector_to_acc(
-        thresholds: np.ndarray[np.floating[np.float32]],
-        runtimes: np.ndarray[np.floating[np.float32]],
-        true_par_2
-):
-    """
-    thresholds: 1D array‑like of shape (5355,)
-    runtimes:    2D array‑like of shape (5355, 28)
-
-    For each i, any runtimes[i, j] > thresholds[i] is replaced by 10000,
-    then averaged across i
-    """
-    thresholds = np.ascontiguousarray(thresholds, dtype=np.float32)
-    runtimes = np.ascontiguousarray(runtimes,  dtype=np.float32)
-
-    # broadcast compare & clamp
-    # thr[:, None] gives shape (N,1) so thr[i] is compared to run[i,j]
-    scores = np.where(runtimes > thresholds[:, None], 10000.0, runtimes)
-
-    pred_par_2 = scores.mean(axis=0)
-
-    acc = determine_accuracy_2(true_par_2, pred_par_2)
-
-    return acc
-
-
 def determine_tresholds(
         calc_steps: int,
         total_runtime: float,
         par_2_scores: np.ndarray[np.floating[np.float32]],
-        runtimes: np.ndarray[np.floating[np.float32]]
+        runtimes: np.ndarray[np.floating[np.float32]],
+        acc_calculator: accuracy
 ) -> np.ndarray[np.floating[np.float32]]:
 
     estimated_addable_runtime = 300 * number_of_instances  # as determined by experiment on commit 8abdbd3a
@@ -536,16 +464,16 @@ def determine_tresholds(
     for i in range(calc_steps):
         runtime_to_add = random.random() * max_runtime_per_step
         best_instance = 0
-        best_accuracy = 0
+        best_acc = 0
         for j in range(number_of_instances):
             # add runtime to instance j
             thresholds[j] += runtime_to_add
             # test accuracy
-            accuracy = vector_to_acc(thresholds, runtimes, par_2_scores)
-            if accuracy > best_accuracy and thresholds[j] < 5000:
-                best_accuracy = accuracy
+            acc = acc_calculator.vector_to_cross_acc(thresholds, runtimes, par_2_scores)
+            if acc > best_acc and thresholds[j] < 5000:
+                best_acc = acc
                 best_instance = j
-            elif accuracy == 1 and thresholds[j] < 5000:
+            elif acc == 1 and thresholds[j] < 5000:
                 # no need to search for better instance
                 thresholds[j] -= runtime_to_add
                 break
@@ -554,12 +482,12 @@ def determine_tresholds(
         # add runtime to best performing instance
         thresholds[best_instance] += runtime_to_add
         print(f"added {runtime_to_add}s to instance {best_instance}.")
-        print(f"this leads to a score of {best_accuracy}")
+        print(f"this leads to a score of {best_acc}")
         runtime_fraction = vector_to_runtime_frac(
             thresholds, runtimes, total_runtime
         )
         print(f"runtime fraction is {runtime_fraction}")
-        if runtime_fraction > 0.1 or best_accuracy == 1.0:
+        if runtime_fraction > 0.1 or best_acc == 1.0:
             break
     print(f"took {(time.time_ns() - start) / 1_000_000_000}s")
 
@@ -570,6 +498,8 @@ if __name__ == "__main__":
 
     push_notification("start test")
 
+    acc_calculator = accuracy()
+
     calc_steps = 10000
     # total_runtime = 25860323 s
 
@@ -578,22 +508,33 @@ if __name__ == "__main__":
 
     print(df)
 
-    df_actual = df.replace([np.inf, -np.inf], 5000)
+    df_runtimes = df.replace([np.inf, -np.inf], 5000)
 
     df_rated = df.replace([np.inf, -np.inf], 10000)
 
-    total_runtime = df_actual.stack().sum()
+    total_runtime = df_runtimes.stack().sum()
 
-    runtimes = np.ascontiguousarray(
-        df_actual.copy(), dtype=np.float32
+    par_2_scores_series = df_rated.mean(axis=0)
+
+    # TODO: iterate the following code over all solves
+    skipped_solver = random.randint(0, 27)
+    print(f"removing solver {par_2_scores_series.index[skipped_solver]}")
+
+    # remove solver from par-2-scores and runtimes and build fast C arrays
+    reduced_par_2_scores_series = par_2_scores_series.drop(
+        par_2_scores_series.index[skipped_solver]
     )
-
     par_2_scores = np.ascontiguousarray(
-        df_rated.mean(axis=0), dtype=np.float32
+        reduced_par_2_scores_series, dtype=np.float32
+    )
+    reduced_df_runtimes = df_runtimes.drop(df_runtimes.columns[skipped_solver], axis=1)
+    runtimes = np.ascontiguousarray(
+        reduced_df_runtimes.copy(), dtype=np.float32
     )
 
+    # determine thresholds for perfect differentiation of remaining solvers
     thresholds = determine_tresholds(
-        calc_steps, total_runtime, par_2_scores, runtimes
+        calc_steps, total_runtime, par_2_scores, runtimes, acc_calculator
     )
 
     print("here is the calculated threshold vector:")
@@ -601,6 +542,22 @@ if __name__ == "__main__":
     for threshold in thresholds:
         print(f"{threshold}, ")
 
+    print(f"adding solver {par_2_scores_series.index[skipped_solver]} back in")
+
+    print(f"it has index {skipped_solver}")
+
+    par_2_scores = np.ascontiguousarray(
+        par_2_scores_series, dtype=np.float32
+    )
+    runtimes = np.ascontiguousarray(
+        df_runtimes.copy(), dtype=np.float32
+    )
+
+    acc = acc_calculator.vector_to_true_acc(
+        thresholds, runtimes, par_2_scores, skipped_solver
+    )
+
+    print(f"this gives an accuracy of {acc}")
 
     """
 
