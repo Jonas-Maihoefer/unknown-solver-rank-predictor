@@ -451,6 +451,7 @@ def determine_tresholds(
     estimated_addable_runtime = 300 * number_of_instances  # as determined by experiment on commit 8abdbd3a
     runtime_per_step = estimated_addable_runtime / calc_steps
     max_runtime_per_step = 2 * runtime_per_step
+    mean_par_2_score = par_2_scores.mean()
 
     print(f"total allowed runtime to add is {estimated_addable_runtime}")
     print(f"adding {runtime_per_step}s of runtime per step")
@@ -461,34 +462,22 @@ def determine_tresholds(
     )
     start = time.time_ns()
 
-    for i in range(calc_steps):
+    for i in range(calc_steps*100):  # will break earlier
         runtime_to_add = random.random() * max_runtime_per_step
-        best_instance = 0
-        best_acc = 0
-        for j in range(number_of_instances):
-            # add runtime to instance j
-            thresholds[j] += runtime_to_add
-            # test accuracy
-            acc = acc_calculator.vector_to_cross_acc(thresholds, runtimes, par_2_scores)
-            if acc > best_acc and thresholds[j] < 5000:
-                best_acc = acc
-                best_instance = j
-            elif acc == 1 and thresholds[j] < 5000:
-                # no need to search for better instance
-                thresholds[j] -= runtime_to_add
-                break
-            # remove runtime for next loop
-            thresholds[j] -= runtime_to_add
-        # add runtime to best performing instance
-        thresholds[best_instance] += runtime_to_add
-        print(f"added {runtime_to_add}s to instance {best_instance}.")
-        print(f"this leads to a score of {best_acc}")
-        runtime_fraction = vector_to_runtime_frac(
-            thresholds, runtimes, total_runtime
+        thresholds = acc_calculator.add_runtime(
+            thresholds, runtimes, par_2_scores,
+            mean_par_2_score, runtime_to_add
         )
-        print(f"runtime fraction is {runtime_fraction}")
-        if runtime_fraction > 0.1 or best_acc == 1.0:
-            break
+        if i % 100 == 0:
+            runtime_fraction = vector_to_runtime_frac(
+                thresholds, runtimes, total_runtime
+            )
+            print(f"runtime fraction is {runtime_fraction}")
+            print(f"cross accuracy is {acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)}")
+            acc_calculator.print_key_signature(thresholds, runtimes, par_2_scores)
+            print(f"difference of both scores is {acc_calculator.vec_to_diff(thresholds, runtimes, par_2_scores, par_2_scores.mean())}")
+            if runtime_fraction > 0.1:
+                break
     print(f"took {(time.time_ns() - start) / 1_000_000_000}s")
 
     return thresholds
@@ -542,6 +531,14 @@ if __name__ == "__main__":
     for threshold in thresholds:
         print(f"{threshold}, ")
 
+    print("bevore adding solver back in, here are the stats:")
+
+    print(f"cross accuracy is {acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)}")
+
+    acc_calculator.print_key_signature(thresholds, runtimes, par_2_scores)
+
+    print(f"difference of both scores is {acc_calculator.vec_to_diff(thresholds, runtimes, par_2_scores, par_2_scores.mean())}")
+
     print(f"adding solver {par_2_scores_series.index[skipped_solver]} back in")
 
     print(f"it has index {skipped_solver}")
@@ -553,11 +550,15 @@ if __name__ == "__main__":
         df_runtimes.copy(), dtype=np.float32
     )
 
-    acc = acc_calculator.vector_to_true_acc(
+    acc = acc_calculator.vec_to_true_acc(
         thresholds, runtimes, par_2_scores, skipped_solver
     )
 
-    print(f"this gives an accuracy of {acc}")
+    print(f"this gives an accuracy (true) of {acc}")
+
+    print(f"the cross accuracy is {acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)}")
+
+    acc_calculator.print_key_signature(thresholds, runtimes, par_2_scores)
 
     """
 

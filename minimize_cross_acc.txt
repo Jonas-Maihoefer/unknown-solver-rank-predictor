@@ -1,2 +1,0 @@
-'kissat-sc2022-light': 0.8571428571428571
-'Kissat_adaptive_restart': 
