@@ -445,7 +445,8 @@ def determine_tresholds(
         total_runtime: float,
         par_2_scores: np.ndarray[np.floating[np.float32]],
         runtimes: np.ndarray[np.floating[np.float32]],
-        acc_calculator: accuracy
+        acc_calculator: accuracy,
+        progress: str
 ) -> np.ndarray[np.floating[np.float32]]:
 
     estimated_addable_runtime = 300 * number_of_instances  # as determined by experiment on commit 8abdbd3a
@@ -472,10 +473,9 @@ def determine_tresholds(
             runtime_fraction = vector_to_runtime_frac(
                 thresholds, runtimes, total_runtime
             )
-            print(f"runtime fraction is {runtime_fraction}")
-            print(f"cross accuracy is {acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)}")
-            acc_calculator.print_key_signature(thresholds, runtimes, par_2_scores)
-            print(f"difference of both scores is {acc_calculator.vec_to_diff(thresholds, runtimes, par_2_scores, par_2_scores.mean())}")
+            print(f"{progress} runtime fraction is {runtime_fraction}")
+            print(f"{progress} cross accuracy is {acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)}")
+            print(f"{progress} difference of both scores is {acc_calculator.vec_to_diff(thresholds, runtimes, par_2_scores, par_2_scores.mean())}")
             if runtime_fraction > 0.1:
                 break
     print(f"took {(time.time_ns() - start) / 1_000_000_000}s")
@@ -490,6 +490,7 @@ if __name__ == "__main__":
     acc_calculator = accuracy()
 
     calc_steps = 10000
+    break_after_solvers = 100
     # total_runtime = 25860323 s
 
     with open("../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl", "rb") as file:
@@ -505,60 +506,96 @@ if __name__ == "__main__":
 
     par_2_scores_series = df_rated.mean(axis=0)
 
-    # TODO: iterate the following code over all solves
-    skipped_solver = random.randint(0, 27)
-    print(f"removing solver {par_2_scores_series.index[skipped_solver]}")
+    results = par_2_scores_series.reset_index()
+    results.columns = ['SolverName', 'Par2Score']
 
-    # remove solver from par-2-scores and runtimes and build fast C arrays
-    reduced_par_2_scores_series = par_2_scores_series.drop(
-        par_2_scores_series.index[skipped_solver]
-    )
-    par_2_scores = np.ascontiguousarray(
-        reduced_par_2_scores_series, dtype=np.float32
-    )
-    reduced_df_runtimes = df_runtimes.drop(df_runtimes.columns[skipped_solver], axis=1)
-    runtimes = np.ascontiguousarray(
-        reduced_df_runtimes.copy(), dtype=np.float32
-    )
+    # Add three custom columns with default values (e.g., None or NaN)
+    results['Par2Diff'] = None
+    results['CrossAcc'] = None
+    results['TrueAcc'] = None
 
-    # determine thresholds for perfect differentiation of remaining solvers
-    thresholds = determine_tresholds(
-        calc_steps, total_runtime, par_2_scores, runtimes, acc_calculator
-    )
+    random_solver_order = list(range(28))
 
-    print("here is the calculated threshold vector:")
+    random.shuffle(random_solver_order)
 
-    for threshold in thresholds:
-        print(f"{threshold}, ")
+    for index, solver_index in enumerate(random_solver_order):
+        if index >= break_after_solvers:
+            break
 
-    print("bevore adding solver back in, here are the stats:")
+        print(f"removing solver {par_2_scores_series.index[solver_index]}")
 
-    print(f"cross accuracy is {acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)}")
+        # remove solver from par-2-scores and runtimes and build fast C arrays
+        reduced_par_2_scores_series = par_2_scores_series.drop(
+            par_2_scores_series.index[solver_index]
+        )
+        par_2_scores = np.ascontiguousarray(
+            reduced_par_2_scores_series, dtype=np.float32
+        )
+        reduced_df_runtimes = df_runtimes.drop(df_runtimes.columns[solver_index], axis=1)
+        runtimes = np.ascontiguousarray(
+            reduced_df_runtimes.copy(), dtype=np.float32
+        )
 
-    acc_calculator.print_key_signature(thresholds, runtimes, par_2_scores)
+        # determine thresholds for perfect differentiation of remaining solvers
+        thresholds = determine_tresholds(
+            calc_steps, total_runtime, par_2_scores, runtimes, acc_calculator, f"{index+1}/{random_solver_order.__len__()}"
+        )
 
-    print(f"difference of both scores is {acc_calculator.vec_to_diff(thresholds, runtimes, par_2_scores, par_2_scores.mean())}")
+        print("here is the calculated threshold vector:")
 
-    print(f"adding solver {par_2_scores_series.index[skipped_solver]} back in")
+        for threshold in thresholds:
+            print(f"{threshold}, ")
 
-    print(f"it has index {skipped_solver}")
+        print("before adding solver back in, here are the stats:")
 
-    par_2_scores = np.ascontiguousarray(
-        par_2_scores_series, dtype=np.float32
-    )
-    runtimes = np.ascontiguousarray(
-        df_runtimes.copy(), dtype=np.float32
-    )
+        cross_acc = acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)
 
-    acc = acc_calculator.vec_to_true_acc(
-        thresholds, runtimes, par_2_scores, skipped_solver
-    )
+        print(f"cross accuracy is {cross_acc}")
 
-    print(f"this gives an accuracy (true) of {acc}")
+        acc_calculator.print_key_signature(thresholds, runtimes, par_2_scores)
 
-    print(f"the cross accuracy is {acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)}")
+        par_2_diff = acc_calculator.vec_to_diff(thresholds, runtimes, par_2_scores, par_2_scores.mean())
 
-    acc_calculator.print_key_signature(thresholds, runtimes, par_2_scores)
+        print(f"difference of both scores is {par_2_diff}")
+
+        print(f"adding solver {par_2_scores_series.index[solver_index]} back in")
+
+        print(f"it has index {solver_index}")
+
+        par_2_scores = np.ascontiguousarray(
+            par_2_scores_series, dtype=np.float32
+        )
+        runtimes = np.ascontiguousarray(
+            df_runtimes.copy(), dtype=np.float32
+        )
+
+        true_acc = acc_calculator.vec_to_true_acc(
+            thresholds, runtimes, par_2_scores, solver_index
+        )
+
+        print(f"this gives an accuracy (true) of {true_acc}")
+
+        print(f"the cross accuracy is {acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)}")
+
+        acc_calculator.print_key_signature(thresholds, runtimes, par_2_scores)
+
+        print("inserting into results:")
+
+        results.iloc[
+            solver_index, results.columns.get_loc('Par2Diff')
+        ] = par_2_diff
+        results.iloc[
+            solver_index, results.columns.get_loc('CrossAcc')
+        ] = cross_acc
+        results.iloc[
+            solver_index, results.columns.get_loc('TrueAcc')
+        ] = true_acc
+
+        print(results)
+
+        print("this gives a mean of")
+
+        print(results.mean())
 
     """
 
