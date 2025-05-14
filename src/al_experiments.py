@@ -464,7 +464,7 @@ def vec_to_single_runtime_frac(
     return used_runtime / total_runtime
 
 
-def determine_tresholds(
+def determine_thresholds(
         runtime_per_step: float,
         total_runtime: float,
         par_2_scores: np.ndarray[np.floating[np.float32]],
@@ -567,7 +567,7 @@ if __name__ == "__main__":
         )
 
         # determine thresholds for perfect differentiation of remaining solvers
-        thresholds = determine_tresholds(
+        thresholds = determine_thresholds(
             runtime_per_step, total_runtime, par_2_scores, runtimes, acc_calculator, f"{index+1}/{random_solver_order.__len__()}"
         )
 
@@ -633,6 +633,8 @@ if __name__ == "__main__":
         print(results.mean())
 
         print(f"took {calc_steps} calculation steps")
+
+        print(f"until now there were {acc_calculator.sub_optimal_optimizations} suboptimal optimizations")
 
     """
 

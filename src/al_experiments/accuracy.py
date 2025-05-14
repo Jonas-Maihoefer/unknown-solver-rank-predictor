@@ -10,6 +10,7 @@ class accuracy:
     _letters = np.frombuffer((string.ascii_lowercase + "AB").encode('ascii'), dtype=np.uint8)
     number_of_instances = 5355
     n = 0
+    sub_optimal_optimizations = 0
 
     def add_runtime(
             self,
@@ -32,6 +33,7 @@ class accuracy:
                     if runtime_to_add >= 5000:
                         self.n += 1
                         print("next next iteration will maximaze acc suboptimally!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                        self.sub_optimal_optimizations += 1
                         return thresholds, prev_max_acc - (prev_max_acc * 0.01), prev_min_diff
                     print(f"again with {runtime_to_add}")
                 else:
@@ -46,6 +48,7 @@ class accuracy:
                     if runtime_to_add >= 5000:
                         self.n += 1
                         print("next next iteration will minimize diff suboptimally!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                        self.sub_optimal_optimizations += 1
                         return thresholds, prev_max_acc, prev_min_diff + (prev_min_diff * 0.01)
                     print(f"again with {runtime_to_add}")
                 else:
