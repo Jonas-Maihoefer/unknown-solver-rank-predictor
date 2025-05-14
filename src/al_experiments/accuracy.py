@@ -24,8 +24,10 @@ class accuracy:
         while (True):
             if self.n % 2 == 0:
                 best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
+                if (best_instances.size == 0):
+                    return thresholds, prev_max_acc, -1 
                 best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add, best_instances)
-                if max_acc <= prev_max_acc:
+                if self.sub_optimal_acc_maxing(max_acc, prev_max_acc):
                     runtime_to_add *= 2
                     if runtime_to_add >= 5000:
                         self.n += 1
@@ -38,7 +40,7 @@ class accuracy:
                 if (best_instances.size == 0):
                     return thresholds, prev_max_acc, -1 
                 best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add, best_instances)
-                if min_diff >= prev_min_diff:
+                if self.sub_optimal_diff_mining(min_diff, prev_min_diff):
                     runtime_to_add *= 2
                     if runtime_to_add >= 5000:
                         self.n += 1
@@ -50,6 +52,12 @@ class accuracy:
         thresholds[best_instances[0]] += runtime_to_add
         self.n += 1
         return thresholds, max_acc, min_diff
+
+    def sub_optimal_acc_maxing(self, new_acc: float, prev_acc: float):
+        return new_acc <= prev_acc
+
+    def sub_optimal_diff_mining(self, new_diff: float, prev_min: float):
+        return new_diff >= prev_min
 
     def find_best_index_min_diff(
             self,
