@@ -31,7 +31,8 @@ class accuracy:
                     runtime_to_add *= 2
                     if runtime_to_add >= 5000:
                         self.n += 1
-                        return thresholds, prev_max_acc, prev_min_diff
+                        print("next next iteration will maximaze acc suboptimally!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                        return thresholds, prev_max_acc - (prev_max_acc * 0.01), prev_min_diff
                     print(f"again with {runtime_to_add}")
                 else:
                     break
@@ -44,7 +45,8 @@ class accuracy:
                     runtime_to_add *= 2
                     if runtime_to_add >= 5000:
                         self.n += 1
-                        return thresholds, prev_max_acc, prev_min_diff
+                        print("next next iteration will minimize diff suboptimally!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                        return thresholds, prev_max_acc, prev_min_diff + (prev_min_diff * 0.01)
                     print(f"again with {runtime_to_add}")
                 else:
                     break
