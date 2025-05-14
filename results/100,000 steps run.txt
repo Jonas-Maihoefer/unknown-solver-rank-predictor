@@ -1,0 +1,36 @@
+                 SolverName    Par2Score    Par2Diff  CrossAcc   TrueAcc
+0           CaDiCaL_DVDL_V1  3089.303852   739.55127  0.903134  0.892857
+1           CaDiCaL_DVDL_V2  3095.117989  579.395508  0.925926  0.892857
+2            CadicalReorder  3028.922123  623.367432  0.931624  0.857143
+3               Cadical_ESA  3010.642427  659.877197  0.928775  0.785714
+4                    IsaSAT  4750.807592  790.952393  0.917379  0.964286
+5         Kissat_MAB-HyWalk  2857.219430  682.531006   0.91453  0.857143
+6            Kissat_MAB_ESA  2806.399950  763.869629  0.905983  0.892857
+7           Kissat_MAB_MOSS  2842.665502   646.56958  0.908832  0.857143
+8            Kissat_MAB_UCB  2833.080702   575.69165  0.920228  0.892857
+9   Kissat_adaptive_restart  2964.729164   629.63208  0.923077      0.75
+10             LSTech_Maple  3288.798456  564.973633   0.91453  0.892857
+11      LStech-Maple-HyWalk  3287.321714  643.076416  0.917379  0.821429
+12  MapleLCMDistChrBt-DL-v3  3504.243855  223.383057  0.923077  0.964286
+13            SLIME-SC-2022  3410.345479  628.936768  0.917379  0.928571
+14       SLIME-SC-2022-beta  3399.280972  721.256592  0.928775  0.928571
+15        SeqFROST-NoExtend  2974.990134  638.318604  0.891738      0.75
+16       cadical_rel_Scavel  3042.540247  724.300049  0.928775  0.642857
+17        ekissat-mab-db-v1  2841.734300  654.248291  0.894587  0.857143
+18        ekissat-mab-gb-db  2830.143350  708.580811  0.920228      0.75
+19           glucose-reboot  3272.673710  596.299316   0.94302  0.928571
+20            hCaD_V1-psids  3430.403190   683.63623  0.923077  0.928571
+21               hKis-unsat  2950.179046  637.656494  0.931624  0.785714
+22            kissat-els-v1  3012.152117  668.158447  0.934473  0.857143
+23            kissat-els-v2  2896.370918  849.032227  0.925926  0.928571
+24      kissat-sc2022-bulky  2810.958876   729.26416  0.923077  0.678571
+25      kissat-sc2022-light  2866.960391   731.44458  0.934473  0.892857
+26               kissat_inc  2833.396989  492.700439   0.94302      0.75
+27           kissat_relaxed  3082.292642  620.986084  0.937322  0.892857
+this gives a mean of
+C:\Users\jonas\Documents\al-for-sat-solver-benchmarking\src\al_experiments.py:11345: FutureWarning: The default value of numeric_only in DataFrame.mean is deprecated. In a future version, it will default to False. In addition, specifying 'numeric_only=None' is deprecated. Select only valid columns or specify the value of numeric_only to silence this warning.
+  print(results.mean())
+Par2Score    3107.631254
+Par2Diff      650.274693
+CrossAcc        0.921856
+TrueAcc         0.850765

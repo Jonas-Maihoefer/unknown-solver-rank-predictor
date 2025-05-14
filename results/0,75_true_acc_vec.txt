@@ -1,0 +1,36 @@
+solver is index 5: 'Kissat_MAB-HyWalk'
+
+with 10.000 steps and 0.5 cross maxing
+
+1       452.254639  1.0       0.75
+2       482.725586  0.994302  0.75
+3       410.626953  0.997151  0.857143
+
+-> learing: score is inherently random 
+-> maybe move values around after thresh vec building is finished
+
+with 100.000 steps and 0.5 cross maxing
+
+646.161133  0.945869  0.928571
+727.343506  0.931624  0.928571
+
+
+with 10.000 steps and 0.01 cross maxing
+
+13.69458  0.931624  0.714286
+13.643799  0.951567  0.714286
+
+
+with 10.000 steps and 0.05 cross maxing
+
+16.210693  0.951567  0.714286
+
+with 10.000 steps and 0.05 cross maxing
+
+106.869873  0.960114    0.75
+
+
+
+with 10.000 steps and 10 cross maxing
+
+4400.547363  0.997151  0.714286

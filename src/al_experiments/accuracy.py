@@ -17,18 +17,39 @@ class accuracy:
             runtimes: np.ndarray[np.floating[np.float32]],
             par_2_scores,
             mean_par_2_score: float,
-            runtime_to_add: float
+            runtime_to_add: float,
+            prev_max_acc: float,
+            prev_min_diff: float
     ):
-        if self.n % 2 == 0:
-            best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
-            best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add, best_instances)
-        else:
-            best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
-            best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add, best_instances)
+        while (True):
+            if self.n % 2 == 0:
+                best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
+                best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add, best_instances)
+                if max_acc <= prev_max_acc:
+                    runtime_to_add *= 2
+                    if runtime_to_add >= 5000:
+                        self.n += 1
+                        return thresholds, prev_max_acc, prev_min_diff
+                    print(f"again with {runtime_to_add}")
+                else:
+                    break
+            else:
+                best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
+                if (best_instances.size == 0):
+                    return thresholds, prev_max_acc, -1 
+                best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add, best_instances)
+                if min_diff >= prev_min_diff:
+                    runtime_to_add *= 2
+                    if runtime_to_add >= 5000:
+                        self.n += 1
+                        return thresholds, prev_max_acc, prev_min_diff
+                    print(f"again with {runtime_to_add}")
+                else:
+                    break
         # add runtime to best performing instance
         thresholds[best_instances[0]] += runtime_to_add
         self.n += 1
-        return thresholds
+        return thresholds, max_acc, min_diff
 
     def find_best_index_min_diff(
             self,
@@ -65,36 +86,43 @@ class accuracy:
 
 
         # 1) original score‐matrix on the subset
-        S_sub = np.where(
+        old_scores = np.where(
             runtimes > thresholds[:, None],
             2 * thresholds[:, None],
             runtimes
         )             # (5355, allowed_idxs.size)
-        pred0 = S_sub.mean(axis=0)               # (allowed_idxs.size,)
+
+        #print("old scores")
+        #print(old_scores)
+
+        old_par_2 = old_scores.mean(axis=0)               # (allowed_idxs.size,)
+
+        #print("old scores")
+        #print(old_scores)
 
         # 2) scores with thresholds + x on the subset
-        thr_x_sub = thresholds + runtime_to_add
-        Sx_sub = np.where(
-            runtimes > thr_x_sub[:, None],
-            2 * thr_x_sub[:, None],
+        new_thresh = thresholds + runtime_to_add
+        new_scores_adding_thresh_to_every_instance = np.where(
+            runtimes > new_thresh[:, None],
+            2 * new_thresh[:, None],
             runtimes
         )            # (5355, allowed_idxs.size)
 
         # 3) candidate predictions for each allowed i
-        preds_sub = pred0[None, :] + (Sx_sub - S_sub) / self.number_of_instances  # (5355, allowed_idxs.size)
+        new_par_2_scores_when_adding_thresh_to_instance_i = old_par_2[None, :] + (new_scores_adding_thresh_to_every_instance - old_scores) / self.number_of_instances  # (5355, allowed_idxs.size)
 
         # 4) compute similarity for each candidate
-        preds_mean_sub = preds_sub.mean(axis=1)    # (5355,)
+        preds_mean_sub = new_par_2_scores_when_adding_thresh_to_instance_i.mean(axis=1)    # (5355,)
         scalings_sub = mean_actu / preds_mean_sub
-        errs_sub = np.abs(preds_sub * scalings_sub[:, None] - actu[None, :])
+        errs_sub = np.abs(new_par_2_scores_when_adding_thresh_to_instance_i * scalings_sub[:, None] - actu[None, :])
         sims_sub = errs_sub.sum(axis=1)      # (5355,)
+        best_val = sims_sub.min()
 
         # 5) mask out any that violate thresholds+ x > 5000
-        invalid_mask = (thr_x_sub > 5000)
+        invalid_mask = (new_thresh > 5000)
         sims_sub[invalid_mask] = np.inf
 
         # 6) pick all within tol of the minimum
-        best_val = sims_sub.min()
         best_mask = np.isclose(sims_sub, best_val, atol=tol)
         if allowed_idxs is None:
             best_idxs = np.where(best_mask)[0]
@@ -107,7 +135,7 @@ class accuracy:
             self,
             thresholds: np.ndarray[np.floating[np.float32]],
             runtimes: np.ndarray[np.floating[np.float32]],
-            actu,
+            actu_par_2,
             mean_actu: float,
             runtime_to_add: float,
             allowed_idxs:  np.ndarray = None,
@@ -129,34 +157,51 @@ class accuracy:
         # -- restrict to allowed subset ---------------------------------------
         # extract only the K rows we care about
         if allowed_idxs is not None:
+            #print("allowed_idxs:")
+            #print(allowed_idxs)
             thresholds = thresholds[allowed_idxs]          # (5355,)
             runtimes = runtimes[allowed_idxs, :]         # (5355, allowed_idxs.size)
 
         # 1) base score‐matrix & prediction
         thresholds = np.ascontiguousarray(thresholds, dtype=np.float32)
         runtimes = np.ascontiguousarray(runtimes, dtype=np.float32)
-        S = np.where(
+        old_scores = np.where(
             runtimes > thresholds[:, None],
             punishment,
             runtimes
         )          # (5355, allowed_idxs.size)
-        pred0 = S.mean(axis=0)                   # (allowed_idxs.size,)
+        #print("old scores:")
+        #print(old_scores)
+
+        old_par_2 = old_scores.mean(axis=0)                   # (allowed_idxs.size,)
+
+        #print("old par_2_scores:")
+        #print(old_par_2)
 
         # 2) score‐matrix with thresholds + x
-        thr_x = thresholds + runtime_to_add
-        Sx = np.where(
-            runtimes > thr_x[:, None],
+        new_thresh = thresholds + runtime_to_add
+        new_scores_adding_thresh_to_every_instance = np.where(
+            runtimes > new_thresh[:, None],
             punishment,
             runtimes
         )          # (5355, allowed_idxs.size)
 
+        #print(f"new scores when adding {runtime_to_add} to thresh:")
+        #print(new_scores_adding_thresh_to_every_instance)
+
         # 3) candidate predictions for each i
-        preds = pred0[None, :] + (Sx - S) / M    # (5355, allowed_idxs.size)
+        # (new_scores - old_scores) / M is change par_2_score
+        new_par_2_scores_when_adding_thresh_to_instance_i = old_par_2[None, :] + (new_scores_adding_thresh_to_every_instance - old_scores) / M    # (5355, allowed_idxs.size)
+
+        #print("new par_2")
+
+        #print(new_par_2_scores_when_adding_thresh_to_instance_i)
 
         # 4) compute cross‐accuracy for each i
-        #    dp: pred differences; da: true differences
-        dp = preds[:, :, None] - preds[:, None, :]       # (5355, allowed_idxs.size, allowed_idxs.size)
-        da = actu[:, None] - actu[None, :]   # (N, N)
+        # dp: for each candidate i, and each ordered pair of samples (j,k)(j,k), dp[i,j,k] is the difference in predicted scores between sample jj and sample kk.;
+        # da: true differences
+        dp = new_par_2_scores_when_adding_thresh_to_instance_i[:, :, None] - new_par_2_scores_when_adding_thresh_to_instance_i[:, None, :]       # (5355, allowed_idxs.size, allowed_idxs.size)
+        da = actu_par_2[:, None] - actu_par_2[None, :]   # (N, N)
 
         # concordant if dp * da > 0
         concordant = (dp * da[None, :, :]) > 0          # (5355, allowed_idxs.size, allowed_idxs.size)
@@ -164,13 +209,13 @@ class accuracy:
 
         # average over n*(n-1) ordered pairs
         accs = concordant_count / (N * (N - 1))         # (5355,)
+        best_acc = accs.max()
 
         # 5) mask out any i where thr_x[i] >= 5000
-        valid = thr_x < 5000
+        valid = new_thresh < 5000
         accs[~valid] = -np.inf
 
         # 6) pick all indices within tol of the max
-        best_acc = accs.max()
         best_mask = np.isclose(accs, best_acc, atol=tol)
         if allowed_idxs is None:
             best_idx = np.where(best_mask)[0]
@@ -266,7 +311,7 @@ class accuracy:
     ):
         pred_par_2 = self.vec_to_pred(thresholds, runtimes, 10000)
 
-        return self.calc_true_acc_2(true_par_2, pred_par_2, index)
+        return self.calc_true_acc_1(true_par_2, pred_par_2, index)
 
     def determine_acc(self, actu: np.ndarray, pred: np.ndarray):
         key = self.pred_vec_to_key(pred)
@@ -369,9 +414,12 @@ class accuracy:
         for i in range(solvers):
             if (pred[i] - pred_index) * (actu[i] - actu_index) > 0:
                 acc += 1
-        return acc / solvers
+        return acc / (solvers - 1)
 
     def calc_true_acc_2(self, actu: np.ndarray, pred: np.ndarray, index: int) -> float:
+        """
+        DEPRECATED! implemented with A and not A'
+        """
         # Compute signed differences for given reference
         dp = pred - pred[index]
         da = actu - actu[index]
