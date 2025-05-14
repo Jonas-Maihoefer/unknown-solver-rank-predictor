@@ -1,0 +1,9 @@
+commit,accuracy,runtime_fraction,description
+5838cd55,0.6352,0.1056,break execution after 10% of average runtime of this instance is reached; count broken executions with average runtime * 2
+55ef4bf4,0.7500,0.1056,break execution after 10% of average runtime of this instance is reached; count broken executions with average after omitting every run that was under 10% of time under the average
+4374e2ba,0.8265,0.0995,p=4  ; k=15 ; try to spend p*total-time amount of time on instance a; reduce p if instance is hard
+4374e2ba,0.8265,0.0995,p=0.4; k=150; try to spend p*total-time amount of time on instance a; reduce p if instance is hard
+cf249a96,took to long to run,0.1,distribute runtime fraction to instance making the accuracy climb the steepest
+8abdbd3a,0.8994,0.0996,run with a timeout of 300s and penalty of 10000 or 600
+af65aeda,1.0,0.0131,calc_steps = 1000; distribute runtime fraction to instance making the accuracy climb the steepest
+f95ace3d,1.0,0.0596,calc_steps = 1000; distribute runtime fraction to instance making the accuracy climb the steepest

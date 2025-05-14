@@ -515,7 +515,7 @@ if __name__ == "__main__":
     acc_calculator = accuracy()
 
     calc_steps = 1000000
-    runtime_per_step = 40
+    runtime_per_step = 20
     break_after_solvers = 100
     # total_runtime = 25860323 s
 
