@@ -483,7 +483,7 @@ def determine_thresholds(
         np.full((5355,), 0), dtype=np.float32
     )
     start = time.time_ns()
-    max_acc = 0.0
+    max_acc = 0.00001
     min_diff = 999999999.0
 
     for i in range(calc_steps*100):  # will break earlier (if runtime fracion is reached)
@@ -515,7 +515,7 @@ if __name__ == "__main__":
     acc_calculator = accuracy()
 
     calc_steps = 1000000
-    runtime_per_step = 20
+    runtime_per_step = 50
     break_after_solvers = 100
     # total_runtime = 25860323 s
 

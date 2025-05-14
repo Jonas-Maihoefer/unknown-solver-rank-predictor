@@ -22,39 +22,10 @@ class accuracy:
             prev_max_acc: float,
             prev_min_diff: float
     ):
-        while (True):
-            if self.n % 2 == 0:
-                best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
-                if (best_instances.size == 0):
-                    return thresholds, prev_max_acc, -1 
-                best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add, best_instances)
-                if self.sub_optimal_acc_maxing(max_acc, prev_max_acc):
-                    runtime_to_add *= 2
-                    if runtime_to_add >= 5000:
-                        self.n += 1
-                        print("next next iteration will maximaze acc suboptimally!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                        self.sub_optimal_optimizations += 1
-                        return thresholds, prev_max_acc - (prev_max_acc * 0.01), prev_min_diff
-                    print(f"again with {runtime_to_add}")
-                else:
-                    break
-            else:
-                best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
-                if (best_instances.size == 0):
-                    return thresholds, prev_max_acc, -1 
-                best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add, best_instances)
-                if self.sub_optimal_diff_mining(min_diff, prev_min_diff):
-                    runtime_to_add *= 2
-                    if runtime_to_add >= 5000:
-                        self.n += 1
-                        print("next next iteration will minimize diff suboptimally!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                        self.sub_optimal_optimizations += 1
-                        return thresholds, prev_max_acc, prev_min_diff + (prev_min_diff * 0.01)
-                    print(f"again with {runtime_to_add}")
-                else:
-                    break
+
+        best_i, max_acc, min_diff = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add, prev_max_acc, prev_min_diff) 
         # add runtime to best performing instance
-        thresholds[best_instances[0]] += runtime_to_add
+        thresholds[best_i] += runtime_to_add
         self.n += 1
         return thresholds, max_acc, min_diff
 
@@ -64,86 +35,6 @@ class accuracy:
     def sub_optimal_diff_mining(self, new_diff: float, prev_min: float):
         return new_diff >= prev_min
 
-    def find_best_index_min_diff(
-            self,
-            thresholds: np.ndarray[np.floating[np.float32]],
-            runtimes: np.ndarray[np.floating[np.float32]],
-            actu,
-            mean_actu: float,
-            runtime_to_add: float,
-            allowed_idxs:  np.ndarray = None,
-            tol: float = 1e-8
-    ):
-        """
-        Among only the positions in `allowed_idxs`, finds every index i
-        for which `vec_to_diff(thresholds_with_x_at_i)` is minimal.
-
-        Args:
-        thresholds:  (M,)    array of original thresholds
-        runtimes:    (M, N)  array of runtimes
-        true_par_2:  (N,)    ground‑truth vector
-        mean_actu:   scalar  precomputed true_par_2.mean()
-        x:            scalar  the increment to test at each threshold
-        allowed_idxs:(K,)    integer indices into [0..M)
-        tol:         scalar  tolerance for floating‑point ties
-
-        Returns:
-        best_idxs:   1D array of original indices (subset of allowed_idxs)
-        best_val:    the minimal similarity value
-        """
-        # -- restrict to allowed subset ---------------------------------------
-        # extract only the K rows we care about
-        if allowed_idxs is not None:
-            thresholds = thresholds[allowed_idxs]          # (5355,)
-            runtimes = runtimes[allowed_idxs, :]         # (5355, allowed_idxs.size)
-
-
-        # 1) original score‐matrix on the subset
-        old_scores = np.where(
-            runtimes > thresholds[:, None],
-            2 * thresholds[:, None],
-            runtimes
-        )             # (5355, allowed_idxs.size)
-
-        #print("old scores")
-        #print(old_scores)
-
-        old_par_2 = old_scores.mean(axis=0)               # (allowed_idxs.size,)
-
-        #print("old scores")
-        #print(old_scores)
-
-        # 2) scores with thresholds + x on the subset
-        new_thresh = thresholds + runtime_to_add
-        new_scores_adding_thresh_to_every_instance = np.where(
-            runtimes > new_thresh[:, None],
-            2 * new_thresh[:, None],
-            runtimes
-        )            # (5355, allowed_idxs.size)
-
-        # 3) candidate predictions for each allowed i
-        new_par_2_scores_when_adding_thresh_to_instance_i = old_par_2[None, :] + (new_scores_adding_thresh_to_every_instance - old_scores) / self.number_of_instances  # (5355, allowed_idxs.size)
-
-        # 4) compute similarity for each candidate
-        preds_mean_sub = new_par_2_scores_when_adding_thresh_to_instance_i.mean(axis=1)    # (5355,)
-        scalings_sub = mean_actu / preds_mean_sub
-        errs_sub = np.abs(new_par_2_scores_when_adding_thresh_to_instance_i * scalings_sub[:, None] - actu[None, :])
-        sims_sub = errs_sub.sum(axis=1)      # (5355,)
-        best_val = sims_sub.min()
-
-        # 5) mask out any that violate thresholds+ x > 5000
-        invalid_mask = (new_thresh > 5000)
-        sims_sub[invalid_mask] = np.inf
-
-        # 6) pick all within tol of the minimum
-        best_mask = np.isclose(sims_sub, best_val, atol=tol)
-        if allowed_idxs is None:
-            best_idxs = np.where(best_mask)[0]
-        else:
-            best_idxs = allowed_idxs[best_mask]
-
-        return best_idxs, best_val
-
     def find_all_best_indices_max_cross_acc(
             self,
             thresholds: np.ndarray[np.floating[np.float32]],
@@ -151,9 +42,9 @@ class accuracy:
             actu_par_2,
             mean_actu: float,
             runtime_to_add: float,
-            allowed_idxs:  np.ndarray = None,
+            prev_acc: float,
+            prev_diff: float,
             punishment: float = 10000.0,
-            tol: float = 1e-8
     ):
         """
         Among all i=0..M-1, returns every index i for which
@@ -166,14 +57,6 @@ class accuracy:
         NOTE: this builds an (M×N×N) boolean tensor, so memory is O(M*N^2).
         """
         M, N = runtimes.shape
-
-        # -- restrict to allowed subset ---------------------------------------
-        # extract only the K rows we care about
-        if allowed_idxs is not None:
-            #print("allowed_idxs:")
-            #print(allowed_idxs)
-            thresholds = thresholds[allowed_idxs]          # (5355,)
-            runtimes = runtimes[allowed_idxs, :]         # (5355, allowed_idxs.size)
 
         # 1) base score‐matrix & prediction
         thresholds = np.ascontiguousarray(thresholds, dtype=np.float32)
@@ -222,20 +105,21 @@ class accuracy:
 
         # average over n*(n-1) ordered pairs
         accs = concordant_count / (N * (N - 1))         # (5355,)
-        best_acc = accs.max()
+
+        # 6) compute similarity for each candidate
+        preds_mean_sub = new_par_2_scores_when_adding_thresh_to_instance_i.mean(axis=1)    # (5355,)
+        scalings_sub = mean_actu / preds_mean_sub
+        errs_sub = np.abs(new_par_2_scores_when_adding_thresh_to_instance_i * scalings_sub[:, None] - actu_par_2[None, :])
+        diffs = errs_sub.sum(axis=1)      # (5355,)
 
         # 5) mask out any i where thr_x[i] >= 5000
         valid = new_thresh < 5000
         accs[~valid] = -np.inf
+        diffs[~valid] = np.inf
 
-        # 6) pick all indices within tol of the max
-        best_mask = np.isclose(accs, best_acc, atol=tol)
-        if allowed_idxs is None:
-            best_idx = np.where(best_mask)[0]
-        else:
-            best_idx = allowed_idxs[best_mask]
+        best_i, best_val = max(enumerate((accs/prev_acc - 1) + 6 * (1 - (diffs/prev_diff))), key=lambda pair: pair[1])
 
-        return best_idx, best_acc
+        return best_i, accs[0], diffs[0]
 
     def vec_to_pred(
             self,
