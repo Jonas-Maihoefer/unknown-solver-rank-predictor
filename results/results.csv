@@ -1,3 +1,5 @@
-commit,accuracy,runtime_fraction,description
-8d66e62c,0.8916,0.1,iterate diff and acc optimization
-303e1457,0.9220,0.0184,only allow optimizing instances
+commit,accuracy,runtime_fraction,description,configuration
+8d66e62c,0.8916,0.1,iterate diff and acc optimization,not determined
+303e1457,0.9220,0.0184,only allow optimizing instances,runtime_per_step=40
+303e1457,0.8823,0.0166,only allow optimizing instances,runtime_per_step=20
+303e1457,0.9220,0.0188,only allow optimizing instances,runtime_per_step=50
