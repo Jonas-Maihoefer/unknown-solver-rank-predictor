@@ -480,7 +480,7 @@ def determine_thresholds(
 
     # initialize tresholds with 0
     thresholds = np.ascontiguousarray(
-        np.full((5355,), 0), dtype=np.float32
+        np.full((number_of_instances,), 0), dtype=np.float32
     )
     start = time.time_ns()
     max_acc = 0.0
@@ -508,6 +508,26 @@ def determine_thresholds(
     return thresholds
 
 
+def load_df_2022():
+    with open("../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl", "rb") as file:
+        df: pd.DataFrame = pickle.load(file).copy()
+    return df
+
+
+def load_df_2023():
+    # replace 'your_file.csv' with the path to your CSV/TSV file
+    df = pd.read_csv(
+        '../al-for-sat-solver-benchmarking-data/pickled-data/results_main_detailed.csv',
+        sep=',',
+        index_col='hash'
+    )  # use sep='\t' if it’s tab-separated
+
+    # drop the 'vresult' column
+    df = df.drop(columns=['vresult'])
+
+    return df
+
+
 if __name__ == "__main__":
 
     push_notification("start test")
@@ -515,12 +535,11 @@ if __name__ == "__main__":
     acc_calculator = accuracy()
 
     calc_steps = 1000000
-    runtime_per_step = 20
+    runtime_per_step = 4999#1
     break_after_solvers = 100
     # total_runtime = 25860323 s
 
-    with open("../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl", "rb") as file:
-        df: pd.DataFrame = pickle.load(file).copy()
+    df = load_df_2022()
 
     print(df)
 
@@ -540,7 +559,7 @@ if __name__ == "__main__":
     results['TrueAcc'] = None
     results['RuntimeFrac'] = None
 
-    random_solver_order = list(range(28))
+    random_solver_order = list(range(number_of_solvers))
 
     random.shuffle(random_solver_order)
 
