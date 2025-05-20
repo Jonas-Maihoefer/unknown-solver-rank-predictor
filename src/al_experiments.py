@@ -498,10 +498,11 @@ def determine_thresholds(
             runtime_fraction = vec_to_runtime_frac(
                 thresholds, runtimes, total_runtime
             )
+            diff = acc_calculator.vec_to_diff(thresholds, runtimes, par_2_scores, par_2_scores.mean())
             print(f"{progress} runtime fraction is {runtime_fraction}")
             print(f"{progress} cross accuracy is {acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)}")
-            print(f"{progress} difference of both scores is {acc_calculator.vec_to_diff(thresholds, runtimes, par_2_scores, par_2_scores.mean())}")
-            if runtime_fraction > 0.1:
+            print(f"{progress} difference of both scores is {diff}")
+            if runtime_fraction > 0.1 or diff < 5:
                 break
     print(f"took {(time.time_ns() - start) / 1_000_000_000}s")
 
