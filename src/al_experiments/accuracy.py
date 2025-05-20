@@ -22,41 +22,23 @@ class accuracy:
             prev_max_acc: float,
             prev_min_diff: float
     ):
-        while (True):
-            if self.n % 2 == 0:
-                best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
-                if (best_instances.size == 0):
-                    return thresholds, prev_max_acc, -1 
-                best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add, best_instances)
-                if self.sub_optimal_acc_maxing(max_acc, prev_max_acc):
-                    runtime_to_add *= 2
-                    if runtime_to_add >= 5000:
-                        self.n += 1
-                        print("next next iteration will maximaze acc suboptimally!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                        self.sub_optimal_optimizations += 1
-                        return thresholds, prev_max_acc - (prev_max_acc * 0.01), prev_min_diff
-                    print(f"again with {runtime_to_add}")
-                else:
-                    break
-            else:
-                best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
-                if (best_instances.size == 0):
-                    return thresholds, prev_max_acc, -1 
-                best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add, best_instances)
-                if self.sub_optimal_diff_mining(min_diff, prev_min_diff):
-                    runtime_to_add *= 2
-                    if runtime_to_add >= 5000:
-                        self.n += 1
-                        print("next next iteration will minimize diff suboptimally!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-                        self.sub_optimal_optimizations += 1
-                        return thresholds, prev_max_acc, prev_min_diff + (prev_min_diff * 0.01)
-                    print(f"again with {runtime_to_add}")
-                else:
-                    break
+        best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
+        """ if (best_instances.size > 1):
+            best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add, best_instances) """
+        """if self.sub_optimal_diff_mining(min_diff, prev_min_diff):
+            runtime_to_add *= 2
+            if runtime_to_add >= 5000:
+                self.n += 1
+                #print("next next iteration will minimize diff suboptimally!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                self.sub_optimal_optimizations += 1
+                return thresholds, prev_max_acc, prev_min_diff + (prev_min_diff * 0.01)
+            #print(f"again with {runtime_to_add}")
+        else:
+            break """
         # add runtime to best performing instance
-        thresholds[best_instances[0]] += runtime_to_add
+        thresholds[np.random.choice(best_instances)] += runtime_to_add
         self.n += 1
-        return thresholds, max_acc, min_diff
+        return thresholds, 0, min_diff
 
     def sub_optimal_acc_maxing(self, new_acc: float, prev_acc: float):
         return new_acc <= prev_acc
@@ -110,8 +92,8 @@ class accuracy:
 
         old_par_2 = old_scores.mean(axis=0)               # (allowed_idxs.size,)
 
-        #print("old scores")
-        #print(old_scores)
+        #print("old par-2")
+        #print(old_par_2)
 
         # 2) scores with thresholds + x on the subset
         new_thresh = thresholds + runtime_to_add
@@ -120,23 +102,40 @@ class accuracy:
             2 * new_thresh[:, None],
             runtimes
         )            # (5355, allowed_idxs.size)
+        invalid_mask = (new_thresh > 5000)
+        new_scores_adding_thresh_to_every_instance[invalid_mask] = 999999
+
+        #print("new scores when adding thresh to every instance")
+        #print(new_scores_adding_thresh_to_every_instance)
 
         # 3) candidate predictions for each allowed i
         new_par_2_scores_when_adding_thresh_to_instance_i = old_par_2[None, :] + (new_scores_adding_thresh_to_every_instance - old_scores) / self.number_of_instances  # (5355, allowed_idxs.size)
 
+
+        #print("new_par_2_scores_when_adding_thresh_to_instance_i")
+        #print(new_par_2_scores_when_adding_thresh_to_instance_i)
+
         # 4) compute similarity for each candidate
-        preds_mean_sub = new_par_2_scores_when_adding_thresh_to_instance_i.mean(axis=1)    # (5355,)
+        preds_mean_sub = new_par_2_scores_when_adding_thresh_to_instance_i.mean(axis=1, )    # (5355,)
+        #print("mean predicition:")
+        #print(preds_mean_sub)
+        #print("mean of actual:")
+        #print(mean_actu)
         scalings_sub = mean_actu / preds_mean_sub
-        errs_sub = np.abs(new_par_2_scores_when_adding_thresh_to_instance_i * scalings_sub[:, None] - actu[None, :])
-        sims_sub = errs_sub.sum(axis=1)      # (5355,)
-        best_val = sims_sub.min()
+        #print("so the scaling is")
+        #print(scalings_sub)
+        relative_divergence_from_actual_score = np.abs(new_par_2_scores_when_adding_thresh_to_instance_i * scalings_sub[:, None] - actu[None, :])
+        #print("relative_divergence_from_actual_score")
+        #print(relative_divergence_from_actual_score)
+        sumed_relative_divergence_from_actual_score = relative_divergence_from_actual_score.sum(axis=1)      # (5355,)
+        #print("sumed_relative_divergence_from_actual_score")
+        #print(sumed_relative_divergence_from_actual_score)
+        best_val = sumed_relative_divergence_from_actual_score.min()
+        #print("best value")
+        #print(best_val)
 
-        # 5) mask out any that violate thresholds+ x > 5000
-        invalid_mask = (new_thresh > 5000)
-        sims_sub[invalid_mask] = np.inf
-
-        # 6) pick all within tol of the minimum
-        best_mask = np.isclose(sims_sub, best_val, atol=tol)
+        # 5) pick all within tol of the minimum
+        best_mask = np.isclose(sumed_relative_divergence_from_actual_score, best_val, atol=tol)
         if allowed_idxs is None:
             best_idxs = np.where(best_mask)[0]
         else:
@@ -198,6 +197,8 @@ class accuracy:
             punishment,
             runtimes
         )          # (5355, allowed_idxs.size)
+        invalid_mask = (new_thresh > 5000)
+        new_scores_adding_thresh_to_every_instance[invalid_mask] = 999999
 
         #print(f"new scores when adding {runtime_to_add} to thresh:")
         #print(new_scores_adding_thresh_to_every_instance)
@@ -224,11 +225,7 @@ class accuracy:
         accs = concordant_count / (N * (N - 1))         # (5355,)
         best_acc = accs.max()
 
-        # 5) mask out any i where thr_x[i] >= 5000
-        valid = new_thresh < 5000
-        accs[~valid] = -np.inf
-
-        # 6) pick all indices within tol of the max
+        # 5) pick all indices within tol of the max
         best_mask = np.isclose(accs, best_acc, atol=tol)
         if allowed_idxs is None:
             best_idx = np.where(best_mask)[0]
