@@ -9,6 +9,8 @@ class accuracy:
     stored_accs = {}
     _letters = np.frombuffer((string.ascii_lowercase + "AB").encode('ascii'), dtype=np.uint8)
     number_of_instances = 5355
+    number_of_reduced_solvers = 27
+    pairs = (number_of_reduced_solvers * (number_of_reduced_solvers - 1))
     n = 0
 
     def add_runtime(
@@ -31,7 +33,7 @@ class accuracy:
                     runtime_to_add *= 2
                     if runtime_to_add >= 5000:
                         self.n += 1
-                        return thresholds, prev_max_acc, prev_min_diff
+                        return thresholds, prev_max_acc * 0.99, prev_min_diff
                     print(f"again with {runtime_to_add}")
                 else:
                     break
@@ -44,7 +46,7 @@ class accuracy:
                     runtime_to_add *= 2
                     if runtime_to_add >= 5000:
                         self.n += 1
-                        return thresholds, prev_max_acc, prev_min_diff
+                        return thresholds, prev_max_acc, prev_min_diff * 1.01
                     print(f"again with {runtime_to_add}")
                 else:
                     break
@@ -110,6 +112,7 @@ class accuracy:
 
         # 2) scores with thresholds + x on the subset
         new_thresh = thresholds + runtime_to_add
+        valid_mask = (new_thresh < 5000)
         new_scores_adding_thresh_to_every_instance = np.where(
             runtimes > new_thresh[:, None],
             2 * new_thresh[:, None],
@@ -124,18 +127,14 @@ class accuracy:
         scalings_sub = mean_actu / preds_mean_sub
         errs_sub = np.abs(new_par_2_scores_when_adding_thresh_to_instance_i * scalings_sub[:, None] - actu[None, :])
         sims_sub = errs_sub.sum(axis=1)      # (5355,)
-        best_val = sims_sub.min()
-
-        # 5) mask out any that violate thresholds+ x > 5000
-        invalid_mask = (new_thresh > 5000)
-        sims_sub[invalid_mask] = np.inf
+        best_val = sims_sub[valid_mask].min()
 
         # 6) pick all within tol of the minimum
         best_mask = np.isclose(sims_sub, best_val, atol=tol)
         if allowed_idxs is None:
-            best_idxs = np.where(best_mask)[0]
+            best_idxs = np.where(best_mask & valid_mask)[0]
         else:
-            best_idxs = allowed_idxs[best_mask]
+            best_idxs = allowed_idxs[best_mask & valid_mask]
 
         return best_idxs, best_val
 
@@ -160,7 +159,6 @@ class accuracy:
 
         NOTE: this builds an (M×N×N) boolean tensor, so memory is O(M*N^2).
         """
-        M, N = runtimes.shape
 
         # -- restrict to allowed subset ---------------------------------------
         # extract only the K rows we care about
@@ -188,6 +186,7 @@ class accuracy:
 
         # 2) score‐matrix with thresholds + x
         new_thresh = thresholds + runtime_to_add
+        valid_mask = new_thresh < 5000
         new_scores_adding_thresh_to_every_instance = np.where(
             runtimes > new_thresh[:, None],
             punishment,
@@ -199,7 +198,7 @@ class accuracy:
 
         # 3) candidate predictions for each i
         # (new_scores - old_scores) / M is change par_2_score
-        new_par_2_scores_when_adding_thresh_to_instance_i = old_par_2[None, :] + (new_scores_adding_thresh_to_every_instance - old_scores) / M    # (5355, allowed_idxs.size)
+        new_par_2_scores_when_adding_thresh_to_instance_i = old_par_2[None, :] + (new_scores_adding_thresh_to_every_instance - old_scores) / self.number_of_instances   # (5355, allowed_idxs.size)
 
         #print("new par_2")
 
@@ -216,19 +215,15 @@ class accuracy:
         concordant_count = concordant.sum(axis=(1, 2))   # (5355,)
 
         # average over n*(n-1) ordered pairs
-        accs = concordant_count / (N * (N - 1))         # (5355,)
-        best_acc = accs.max()
-
-        # 5) mask out any i where thr_x[i] >= 5000
-        valid = new_thresh < 5000
-        accs[~valid] = -np.inf
+        accs = concordant_count / self.pairs        # (5355,)
+        best_acc = accs[valid_mask].max()
 
         # 6) pick all indices within tol of the max
         best_mask = np.isclose(accs, best_acc, atol=tol)
         if allowed_idxs is None:
-            best_idx = np.where(best_mask)[0]
+            best_idx = np.where(best_mask & valid_mask)[0]
         else:
-            best_idx = allowed_idxs[best_mask]
+            best_idx = allowed_idxs[best_mask & valid_mask]
 
         return best_idx, best_acc
 
