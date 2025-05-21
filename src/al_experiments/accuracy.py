@@ -9,6 +9,8 @@ class accuracy:
     stored_accs = {}
     _letters = np.frombuffer((string.ascii_lowercase + "ABCDEFGHIJKLMNOPQRSTUVWXYZ").encode('ascii'), dtype=np.uint8)
     number_of_instances = 400
+    number_of_reduced_solvers = 41
+    pairs = number_of_reduced_solvers * (number_of_reduced_solvers - 1)
     n = 0
     sub_optimal_optimizations = 0
 
@@ -23,7 +25,7 @@ class accuracy:
             prev_min_diff: float
     ):
         while (True):
-            if self.n % 2 == 0:
+            if self.n % 200 == -1:
                 best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
                 if (best_instances.size == 0):
                     return thresholds, prev_max_acc, -1 
@@ -49,7 +51,7 @@ class accuracy:
                         self.n += 1
                         print("next next iteration will minimize diff suboptimally!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                         self.sub_optimal_optimizations += 1
-                        return thresholds, prev_max_acc, prev_min_diff + (prev_min_diff * 0.01)
+                        return thresholds, prev_max_acc, 2 * prev_min_diff
                     print(f"again with {runtime_to_add}")
                 else:
                     break
@@ -62,7 +64,7 @@ class accuracy:
         return new_acc <= prev_acc
 
     def sub_optimal_diff_mining(self, new_diff: float, prev_min: float):
-        return new_diff >= prev_min
+        return new_diff > prev_min*1.002
 
     def find_best_index_min_diff(
             self,
@@ -115,6 +117,7 @@ class accuracy:
 
         # 2) scores with thresholds + x on the subset
         new_thresh = thresholds + runtime_to_add
+        valid_mask = (new_thresh < 5000)
         new_scores_adding_thresh_to_every_instance = np.where(
             runtimes > new_thresh[:, None],
             2 * new_thresh[:, None],
@@ -129,18 +132,14 @@ class accuracy:
         scalings_sub = mean_actu / preds_mean_sub
         errs_sub = np.abs(new_par_2_scores_when_adding_thresh_to_instance_i * scalings_sub[:, None] - actu[None, :])
         sims_sub = errs_sub.sum(axis=1)      # (5355,)
-        best_val = sims_sub.min()
-
-        # 5) mask out any that violate thresholds+ x > 5000
-        invalid_mask = (new_thresh > 5000)
-        sims_sub[invalid_mask] = np.inf
+        best_val = sims_sub[valid_mask].min()
 
         # 6) pick all within tol of the minimum
         best_mask = np.isclose(sims_sub, best_val, atol=tol)
         if allowed_idxs is None:
-            best_idxs = np.where(best_mask)[0]
+            best_idxs = np.where(best_mask & valid_mask)[0]
         else:
-            best_idxs = allowed_idxs[best_mask]
+            best_idxs = allowed_idxs[best_mask & valid_mask]
 
         return best_idxs, best_val
 
@@ -165,8 +164,6 @@ class accuracy:
 
         NOTE: this builds an (M×N×N) boolean tensor, so memory is O(M*N^2).
         """
-        M, N = runtimes.shape
-
         # -- restrict to allowed subset ---------------------------------------
         # extract only the K rows we care about
         if allowed_idxs is not None:
@@ -193,6 +190,7 @@ class accuracy:
 
         # 2) score‐matrix with thresholds + x
         new_thresh = thresholds + runtime_to_add
+        valid_mask = new_thresh < 5000
         new_scores_adding_thresh_to_every_instance = np.where(
             runtimes > new_thresh[:, None],
             punishment,
@@ -204,7 +202,7 @@ class accuracy:
 
         # 3) candidate predictions for each i
         # (new_scores - old_scores) / M is change par_2_score
-        new_par_2_scores_when_adding_thresh_to_instance_i = old_par_2[None, :] + (new_scores_adding_thresh_to_every_instance - old_scores) / M    # (5355, allowed_idxs.size)
+        new_par_2_scores_when_adding_thresh_to_instance_i = old_par_2[None, :] + (new_scores_adding_thresh_to_every_instance - old_scores) / self.number_of_reduced_solvers    # (5355, allowed_idxs.size)
 
         #print("new par_2")
 
@@ -221,19 +219,15 @@ class accuracy:
         concordant_count = concordant.sum(axis=(1, 2))   # (5355,)
 
         # average over n*(n-1) ordered pairs
-        accs = concordant_count / (N * (N - 1))         # (5355,)
-        best_acc = accs.max()
-
-        # 5) mask out any i where thr_x[i] >= 5000
-        valid = new_thresh < 5000
-        accs[~valid] = -np.inf
+        accs = concordant_count / self.pairs         # (5355,)
+        best_acc = accs[valid_mask].max()
 
         # 6) pick all indices within tol of the max
         best_mask = np.isclose(accs, best_acc, atol=tol)
         if allowed_idxs is None:
-            best_idx = np.where(best_mask)[0]
+            best_idx = np.where(best_mask & valid_mask)[0]
         else:
-            best_idx = allowed_idxs[best_mask]
+            best_idx = allowed_idxs[best_mask & valid_mask]
 
         return best_idx, best_acc
 
