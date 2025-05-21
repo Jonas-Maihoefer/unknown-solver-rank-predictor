@@ -8,7 +8,9 @@ class accuracy:
 
     stored_accs = {}
     _letters = np.frombuffer((string.ascii_lowercase + "ABCDEFGHIJKLMNOPQRSTUVWXYZ").encode('ascii'), dtype=np.uint8)
-    number_of_instances = 5355
+    number_of_instances = 400
+    number_of_reduced_solvers = 41
+    pairs = (number_of_reduced_solvers * (number_of_reduced_solvers - 1)) 
     n = 0
     sub_optimal_optimizations = 0
 
@@ -73,13 +75,6 @@ class accuracy:
         best_idxs:   1D array of original indices (subset of allowed_idxs)
         best_val:    the minimal similarity value
         """
-        # -- restrict to allowed subset ---------------------------------------
-        # extract only the K rows we care about
-        if allowed_idxs is not None:
-            thresholds = thresholds[allowed_idxs]          # (5355,)
-            runtimes = runtimes[allowed_idxs, :]         # (5355, allowed_idxs.size)
-
-
         # 1) original score‐matrix on the subset
         old_scores = np.where(
             runtimes > thresholds[:, None],
@@ -97,13 +92,12 @@ class accuracy:
 
         # 2) scores with thresholds + x on the subset
         new_thresh = thresholds + runtime_to_add
+        valid_mask = (new_thresh < 5000)
         new_scores_adding_thresh_to_every_instance = np.where(
             runtimes > new_thresh[:, None],
             2 * new_thresh[:, None],
             runtimes
-        )            # (5355, allowed_idxs.size)
-        invalid_mask = (new_thresh > 5000)
-        new_scores_adding_thresh_to_every_instance[invalid_mask] = 999999
+        )          # (5355, allowed_idxs.size)
 
         #print("new scores when adding thresh to every instance")
         #print(new_scores_adding_thresh_to_every_instance)
@@ -130,17 +124,34 @@ class accuracy:
         sumed_relative_divergence_from_actual_score = relative_divergence_from_actual_score.sum(axis=1)      # (5355,)
         #print("sumed_relative_divergence_from_actual_score")
         #print(sumed_relative_divergence_from_actual_score)
-        best_val = sumed_relative_divergence_from_actual_score.min()
-        #print("best value")
-        #print(best_val)
+        best_val = sumed_relative_divergence_from_actual_score[valid_mask].min()
 
         # 5) pick all within tol of the minimum
-        best_mask = np.isclose(sumed_relative_divergence_from_actual_score, best_val, atol=tol)
-        if allowed_idxs is None:
-            best_idxs = np.where(best_mask)[0]
-        else:
-            best_idxs = allowed_idxs[best_mask]
+        best_mask_diff = np.isclose(sumed_relative_divergence_from_actual_score, best_val, atol=tol)
+        best_idxs = np.where(best_mask_diff & valid_mask)[0]
 
+
+        if best_idxs.size > 1:
+            # 6) compute cross‐accuracy for each i
+            # dp: for each candidate i, and each ordered pair of samples (j,k)(j,k), dp[i,j,k] is the difference in predicted scores between sample jj and sample kk.;
+            # da: true differences
+            dp = new_par_2_scores_when_adding_thresh_to_instance_i[:, :, None] - new_par_2_scores_when_adding_thresh_to_instance_i[:, None, :]       # (5355, allowed_idxs.size, allowed_idxs.size)
+            da = actu[:, None] - actu[None, :]   # (N, N)
+
+            # concordant if dp * da > 0
+            concordant = (dp * da[None, :, :]) > 0          # (5355, allowed_idxs.size, allowed_idxs.size)
+            concordant_count = concordant.sum(axis=(1, 2))   # (5355,)
+
+            # average over n*(n-1) ordered pairs
+            accs = concordant_count / self.pairs        # (5355,)
+            best_acc = accs[best_idxs].max()
+            # 5) pick all indices within tol of the max
+            best_mask_acc = np.isclose(accs, best_acc, atol=tol)
+            delete = best_idxs.size
+            best_idxs = np.where(best_mask_acc & best_mask_diff & valid_mask)[0]
+            delete2 = best_idxs.size
+            if (delete2 < delete):
+                print(f"reduced by :{delete/delete2} (from {delete} to {delete2})")
         return best_idxs, best_val
 
     def find_all_best_indices_max_cross_acc(
@@ -198,7 +209,7 @@ class accuracy:
             runtimes
         )          # (5355, allowed_idxs.size)
         invalid_mask = (new_thresh > 5000)
-        new_scores_adding_thresh_to_every_instance[invalid_mask] = 999999
+        new_scores_adding_thresh_to_every_instance[invalid_mask] = np.nan
 
         #print(f"new scores when adding {runtime_to_add} to thresh:")
         #print(new_scores_adding_thresh_to_every_instance)

@@ -28,11 +28,11 @@ from al_experiments.helper import push_notification
 from al_experiments.accuracy import accuracy
 
 # constants
-number_of_solvers = 28
+number_of_solvers = 42
 solver_fraction = 1/number_of_solvers
 square_of_solvers = number_of_solvers * number_of_solvers
 reduced_square_of_solvers = number_of_solvers*(number_of_solvers-1)
-number_of_instances = 5355
+number_of_instances = 400
 
 
 logging.basicConfig(
@@ -502,6 +502,7 @@ def determine_thresholds(
             print(f"{progress} runtime fraction is {runtime_fraction}")
             print(f"{progress} cross accuracy is {acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)}")
             print(f"{progress} difference of both scores is {diff}")
+            print(thresholds.max())
             if runtime_fraction > 0.1 or diff < 5:
                 break
     print(f"took {(time.time_ns() - start) / 1_000_000_000}s")
@@ -540,7 +541,7 @@ if __name__ == "__main__":
     break_after_solvers = 100
     # total_runtime = 25860323 s
 
-    df = load_df_2022()
+    df = load_df_2023()
 
     print(df)
 

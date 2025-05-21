@@ -4,4 +4,12 @@ commit,accuracy,runtime_fraction,description,configuration
 303e1457,0.9167,0.0189,only allow optimizing instances,runtime_per_step=40
 303e1457,0.8823,0.0166,only allow optimizing instances,runtime_per_step=20
 303e1457,0.9220,0.0188,only allow optimizing instances,runtime_per_step=50
+de8e0607,0.8439,0.0130,only min diff and break after Par2Diff < 5, runtime_per_step = 50;dataset=anni2022
+
+
+
 303e1457,0.8447,0.0353,only allow optimizing instances,runtime_per_step=40;dataset:anni2023
+de8e0607,0.8531,0.1088,only min diff and break after Par2Diff < 5,runtime_per_step = 50
+
+
+
