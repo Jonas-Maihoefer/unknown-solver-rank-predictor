@@ -28,11 +28,11 @@ from al_experiments.helper import push_notification
 from al_experiments.accuracy import accuracy
 
 # constants
-number_of_solvers = 28
+number_of_solvers = 42
 solver_fraction = 1/number_of_solvers
 square_of_solvers = number_of_solvers * number_of_solvers
 reduced_square_of_solvers = number_of_solvers*(number_of_solvers-1)
-number_of_instances = 5355
+number_of_instances = 400
 
 
 logging.basicConfig(
@@ -480,7 +480,7 @@ def determine_thresholds(
 
     # initialize tresholds with 0
     thresholds = np.ascontiguousarray(
-        np.full((5355,), 0), dtype=np.float32
+        np.full((number_of_instances,), 0), dtype=np.float32
     )
     start = time.time_ns()
     max_acc = 0.0
@@ -508,6 +508,26 @@ def determine_thresholds(
     return thresholds
 
 
+def load_df_2022():
+    with open("../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl", "rb") as file:
+        df: pd.DataFrame = pickle.load(file).copy()
+    return df
+
+
+def load_df_2023():
+    # replace 'your_file.csv' with the path to your CSV/TSV file
+    df = pd.read_csv(
+        '../al-for-sat-solver-benchmarking-data/pickled-data/results_main_detailed.csv',
+        sep=',',
+        index_col='hash'
+    )  # use sep='\t' if it’s tab-separated
+
+    # drop the 'vresult' column
+    df = df.drop(columns=['vresult'])
+
+    return df
+
+
 if __name__ == "__main__":
 
     push_notification("start test")
@@ -519,10 +539,7 @@ if __name__ == "__main__":
     break_after_solvers = 100
     # total_runtime = 25860323 s
 
-    with open("../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl", "rb") as file:
-        df: pd.DataFrame = pickle.load(file).copy()
-
-    print(df)
+    df = load_df_2023()
 
     df_runtimes = df.replace([np.inf, -np.inf], 5000)
 
@@ -540,7 +557,7 @@ if __name__ == "__main__":
     results['TrueAcc'] = None
     results['RuntimeFrac'] = None
 
-    random_solver_order = list(range(28))
+    random_solver_order = list(range(number_of_solvers))
 
     random.shuffle(random_solver_order)
 

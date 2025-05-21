@@ -7,8 +7,8 @@ import pandas as pd
 class accuracy:
 
     stored_accs = {}
-    _letters = np.frombuffer((string.ascii_lowercase + "AB").encode('ascii'), dtype=np.uint8)
-    number_of_instances = 5355
+    _letters = np.frombuffer((string.ascii_lowercase + "ABCDEFGHIJKLMNOPQRSTUVWXYZ").encode('ascii'), dtype=np.uint8)
+    number_of_instances = 400
     n = 0
     sub_optimal_optimizations = 0
 
