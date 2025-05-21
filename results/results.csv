@@ -10,6 +10,9 @@ de8e0607,0.8439,0.0130,only min diff and break after Par2Diff < 5, runtime_per_s
 
 303e1457,0.8447,0.0353,only allow optimizing instances,runtime_per_step=40;dataset:anni2023
 de8e0607,0.8531,0.1088,only min diff and break after Par2Diff < 5,runtime_per_step = 50
+bf5866b7,0.8438,0.1112,min diff; then max acc of remaining and break after Par2Diff < 5,runtime_per_step = 50
+
+
 
 
 
