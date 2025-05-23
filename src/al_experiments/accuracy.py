@@ -24,37 +24,19 @@ class accuracy:
             prev_max_acc: float,
             prev_min_diff: float
     ):
-        while (True):
-            if self.n % 2 == 0:
-                best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
-                if (best_instances.size == 0):
-                    return thresholds, prev_max_acc, -1 
-                best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add, best_instances)
-                if self.sub_optimal_acc_maxing(max_acc, prev_max_acc):
-                    runtime_to_add *= 2
-                    if runtime_to_add >= 5000:
-                        self.n += 1
-                        return thresholds, prev_max_acc * 0.99, prev_min_diff
-                    print(f"again with {runtime_to_add}")
-                else:
-                    break
-            else:
-                best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
-                if (best_instances.size == 0):
-                    return thresholds, prev_max_acc, -1 
-                best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add, best_instances)
-                if self.sub_optimal_diff_mining(min_diff, prev_min_diff):
-                    runtime_to_add *= 2
-                    if runtime_to_add >= 5000:
-                        self.n += 1
-                        return thresholds, prev_max_acc, prev_min_diff * 1.01
-                    print(f"again with {runtime_to_add}")
-                else:
-                    break
+        best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
+        if (best_instances.size == 0):
+            return thresholds, prev_max_acc, -1 
+        if self.sub_optimal_diff_mining(min_diff, prev_min_diff):
+            runtime_to_add *= 2
+            if runtime_to_add >= 5000:
+                self.n += 1
+                return thresholds, prev_max_acc, prev_min_diff * 1.01
+            print(f"again with {runtime_to_add}")
 
         thresholds[best_instances[0]] += runtime_to_add
         self.n += 1
-        return thresholds, max_acc, min_diff
+        return thresholds, prev_max_acc, prev_min_diff
 
     def sub_optimal_acc_maxing(self, new_acc: float, prev_acc: float):
         return new_acc <= prev_acc
@@ -306,9 +288,10 @@ class accuracy:
             thresholds: np.ndarray[np.floating[np.float32]],
             runtimes: np.ndarray[np.floating[np.float32]],
             true_par_2,
-            true_par_2_mean: float
+            true_par_2_mean: float,
+            removed_index: int 
     ):
-        pred_par_2 = self.vec_to_pred_punish_thresh(thresholds, runtimes)
+        pred_par_2 = np.delete(self.vec_to_pred(thresholds, runtimes), removed_index)
 
         return self.similarity(true_par_2, pred_par_2, true_par_2_mean)
 
@@ -328,11 +311,13 @@ class accuracy:
             self,
             thresholds: np.ndarray[np.floating[np.float32]],
             runtimes: np.ndarray[np.floating[np.float32]],
-            true_par_2,
+            true_par_2: np.ndarray,
             index: int
     ):
-        pred_par_2 = self.vec_to_pred(thresholds, runtimes, 10000)
+        pred_par_2_for_this_solver = self.vec_to_pred(thresholds, runtimes, 10000)[index]
 
+        pred_par_2 = true_par_2.copy()
+        pred_par_2[index] = pred_par_2_for_this_solver
         return self.calc_true_acc_1(true_par_2, pred_par_2, index)
 
     def determine_acc(self, actu: np.ndarray, pred: np.ndarray):
