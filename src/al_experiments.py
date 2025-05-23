@@ -712,6 +712,9 @@ if __name__ == "__main__":
 
         print("before adding solver back in, here are the stats:")
 
+        # TODO: this is calculated with the wrong runtimes (it needs the rated ones)
+        cross_acc = acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)
+
         acc_calculator.print_key_signature(thresholds, runtimes, par_2_scores)
 
         par_2_diff = acc_calculator.vec_to_diff(thresholds, runtimes, par_2_scores, par_2_scores.mean())
