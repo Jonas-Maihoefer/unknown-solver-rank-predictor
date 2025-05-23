@@ -21,7 +21,7 @@ class accuracy:
             par_2_scores,
             mean_par_2_score: float,
             runtime_to_add: float,
-            prev_idxs,
+            prev_max_acc: float,
             prev_min_diff: float
     ):
         """ while (True):
@@ -52,33 +52,13 @@ class accuracy:
                 else:
                     break """
         
-        if prev_idxs is None:
-            ratios = []
+        random_index = np.random.randint(0, thresholds.size)
+        while thresholds[random_index] == 5000:
+            random_index = np.random.randint(0, thresholds.size)
 
-            for i, instance_runtimes in enumerate(runtimes):
-                if thresholds[i] == 5000:
-                    ratios.append(-1)
-                    continue
-                # pstdev gives population standard deviation; square it to get variance
-                var = pstdev(instance_runtimes) ** 2
-
-                m = mean(instance_runtimes)
-                r = var / m if m != 0 else float('inf')  # avoid division by zero
-                ratios.append(r)
-
-            # Find the index with the maximum variance/mean ratio
-            idxs = list(enumerate(ratios))
-            idxs = sorted(idxs, key=lambda pair: pair[1])
-            idxs = [idx for idx, _ in idxs]
-            highest_ratio = idxs.pop()
-            thresholds[highest_ratio] = 5000
-            """self.n += 1"""
-            return thresholds, idxs, 0
-        else:
-            highest_ratio = prev_idxs.pop()
-            thresholds[highest_ratio] = 5000
-            """self.n += 1"""
-            return thresholds, prev_idxs, 0
+        thresholds[random_index] = 5000
+        """self.n += 1"""
+        return thresholds, 0, 0
 
     def sub_optimal_acc_maxing(self, new_acc: float, prev_acc: float):
         return new_acc <= prev_acc
