@@ -53,10 +53,10 @@ class accuracy:
                     break """
         
         random_index = np.random.randint(0, thresholds.size)
-        while thresholds[random_index] == 5000:
+        while thresholds[random_index] + runtime_to_add >= 5000:
             random_index = np.random.randint(0, thresholds.size)
 
-        thresholds[random_index] = 5000
+        thresholds[random_index] += runtime_to_add
         """self.n += 1"""
         return thresholds, 0, 0
 
@@ -239,20 +239,39 @@ class accuracy:
             punishment: int = 10000
     ):
         """
-        thresholds: 1D array‑like of shape (5355,)
-        runtimes:    2D array‑like of shape (5355, N)
+        thresholds: 1D array of shape (M,)
+        runtimes:    2D array of shape (M, N)
 
-        For each i, any runtimes[i, j] > thresholds[i] is replaced
-        by punishment, then averaged across i
+        For each i:
+        let mask_i = runtimes[i, :] > thresholds[i]
+        compute mean_i = mean(runtimes[i, mask_i])
+        replace each runtimes[i, j] where mask_i[j] is True with mean_i
+        then return the column‐wise mean of the resulting array.
         """
-        thresholds = np.ascontiguousarray(thresholds, dtype=np.float32)
-        runtimes = np.ascontiguousarray(runtimes,  dtype=np.float32)
+        # ensure flat, contiguous float32 arrays
+        thr = np.ascontiguousarray(thresholds, dtype=np.float32).ravel()
+        runs = np.ascontiguousarray(runtimes,   dtype=np.float32)
 
-        # broadcast compare & clamp
-        # thr[:, None] gives shape (N,1) so thr[i] is compared to run[i,j]
-        scores = np.where(runtimes > thresholds[:, None], punishment, runtimes)
+        # build boolean mask of “over‐threshold” entries
+        mask = runs > thr[:, None]      # shape (M, N)
 
-        return scores.mean(axis=0)
+        # sum and count of over‐threshold per row
+        # runs * mask casts mask to 0/1, so sums only the True elements
+        sums = np.sum(runs * mask, axis=1)    # shape (M,)
+        counts = np.sum(mask,      axis=1)      # shape (M,)
+
+        # row‐means of the values > threshold; 
+        # we suppress divide‐by‐zero warnings since if counts[i]==0,
+        # that row has no masked entries and mean[i] will not actually be used.
+        with np.errstate(divide='ignore', invalid='ignore'):
+            mean_over = sums / counts             # shape (M,)
+
+        # replace over‐threshold entries by the corresponding row mean
+        # broadcasting mean_over[:, None] to shape (M, N)
+        replaced = np.where(mask, mean_over[:, None], runs)
+
+        # finally, return the column‐wise mean
+        return replaced.mean(axis=0)
 
     def vec_to_pred_punish_thresh(
             self,

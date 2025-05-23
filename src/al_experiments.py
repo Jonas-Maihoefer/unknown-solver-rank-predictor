@@ -537,7 +537,7 @@ def store_and_show_mean_result():
     ax1.grid(True)
     ax1.set_xlabel("runtime fraction")
     fig.tight_layout()
-    fig.savefig("./plots/run1 to 0.2 random baseline whole instances/average_results.png", dpi=300)
+    fig.savefig("./plots/run1 to 0.2 random baseline (dynamic timeout)/average_results.png", dpi=300)
 
 
 def determine_tresholds(
@@ -550,7 +550,8 @@ def determine_tresholds(
         solver_string: str,
         solver_index: int,
         par_2_scores_series,
-        df_runtimes
+        df_runtimes,
+        df_rated
 ) -> np.ndarray[np.floating[np.float32]]:
 
     max_runtime_per_step = 2 * runtime_per_step
@@ -581,7 +582,7 @@ def determine_tresholds(
                 thresholds, runtimes, total_runtime
             )
             print(f"{progress} runtime fraction is {runtime_frac}")
-            solver_results.append(get_stats(df_runtimes, par_2_scores_series, par_2_scores, runtimes, thresholds, solver_index, acc_calculator, progress))
+            solver_results.append(get_stats(df_rated, df_runtimes, par_2_scores_series, par_2_scores, runtimes, thresholds, solver_index, acc_calculator, progress))
             if runtime_frac > 0.2:
                 break
     print(f"took {(time.time_ns() - start) / 1_000_000_000}s")
@@ -610,24 +611,27 @@ def determine_tresholds(
     ax1.grid(True)
     ax1.set_xlabel("runtime fraction")
     fig.tight_layout()
-    fig.savefig(f"./plots/run1 to 0.2 random baseline whole instances/{solver_string}_results.png", dpi=300)
+    fig.savefig(f"./plots/run1 to 0.2 random baseline (dynamic timeout)/{solver_string}_results.png", dpi=300)
 
     return thresholds
 
 
-def get_stats(df_runtimes, par_2_scores_series, par_2_scores, runtimes, thresholds, solver_index, acc_calculator: accuracy, progress: str):
+def get_stats(df_rated, df_runtimes, par_2_scores_series, par_2_scores, runtimes, thresholds, solver_index, acc_calculator: accuracy, progress: str):
     cross_acc = acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)
     diff = acc_calculator.vec_to_diff(thresholds, runtimes, par_2_scores, par_2_scores.mean())
     par_2_scores = np.ascontiguousarray(
         par_2_scores_series, dtype=np.float32
     )
-    runtimes = np.ascontiguousarray(
+    runtimes_unrated = np.ascontiguousarray(
         df_runtimes.copy(), dtype=np.float32
     )
-    true_acc = acc_calculator.vec_to_true_acc(
-        thresholds, runtimes, par_2_scores, solver_index
+    runtimes_rated = np.ascontiguousarray(
+        df_rated.copy(), dtype=np.float32
     )
-    runtime_frac = vec_to_single_runtime_frac(thresholds, runtimes, solver_index)
+    true_acc = acc_calculator.vec_to_true_acc(
+        thresholds, runtimes_rated, par_2_scores, solver_index
+    )
+    runtime_frac = vec_to_single_runtime_frac(thresholds, runtimes_unrated, solver_index)
     print(f"{progress} cross accuracy is {cross_acc}")
     print(f"{progress} true acc would be {true_acc}")
     print(f"{progress} difference of both scores is {diff}")
@@ -697,7 +701,7 @@ if __name__ == "__main__":
 
         # determine thresholds for perfect differentiation of remaining solvers
         thresholds = determine_tresholds(
-            runtime_per_step, total_runtime, par_2_scores, runtimes, acc_calculator, f"{index+1}/{random_solver_order.__len__()}", solver_string, solver_index, par_2_scores_series, df_runtimes
+            runtime_per_step, total_runtime, par_2_scores, runtimes, acc_calculator, f"{index+1}/{random_solver_order.__len__()}", solver_string, solver_index, par_2_scores_series, df_runtimes, df_rated
         )
 
         print("here is the calculated threshold vector:")
