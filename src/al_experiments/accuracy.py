@@ -24,7 +24,7 @@ class accuracy:
             prev_max_acc: float,
             prev_min_diff: float
     ):
-        """ while (True):
+        while (True):
             if self.n % 2 == 0:
                 best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
                 if (best_instances.size == 0):
@@ -50,15 +50,11 @@ class accuracy:
                         return thresholds, prev_max_acc, prev_min_diff * 1.01
                     print(f"again with {runtime_to_add}")
                 else:
-                    break """
-        
-        random_index = np.random.randint(0, thresholds.size)
-        while thresholds[random_index] + runtime_to_add >= 5000:
-            random_index = np.random.randint(0, thresholds.size)
+                    break
 
-        thresholds[random_index] += runtime_to_add
-        """self.n += 1"""
-        return thresholds, 0, 0
+        thresholds[best_instances[0]] += runtime_to_add
+        self.n += 1
+        return thresholds, max_acc, min_diff
 
     def sub_optimal_acc_maxing(self, new_acc: float, prev_acc: float):
         return new_acc <= prev_acc
