@@ -2,6 +2,7 @@ import string
 import time
 import numpy as np
 import pandas as pd
+from statistics import mean, pstdev
 
 
 class accuracy:
@@ -20,10 +21,10 @@ class accuracy:
             par_2_scores,
             mean_par_2_score: float,
             runtime_to_add: float,
-            prev_max_acc: float,
+            prev_idxs,
             prev_min_diff: float
     ):
-        while (True):
+        """ while (True):
             if self.n % 2 == 0:
                 best_instances, max_acc = self.find_all_best_indices_max_cross_acc(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
                 if (best_instances.size == 0):
@@ -49,11 +50,35 @@ class accuracy:
                         return thresholds, prev_max_acc, prev_min_diff * 1.01
                     print(f"again with {runtime_to_add}")
                 else:
-                    break
-        # add runtime to best performing instance
-        thresholds[best_instances[0]] += runtime_to_add
-        self.n += 1
-        return thresholds, max_acc, min_diff
+                    break """
+        
+        if prev_idxs is None:
+            ratios = []
+
+            for i, instance_runtimes in enumerate(runtimes):
+                if thresholds[i] == 5000:
+                    ratios.append(-1)
+                    continue
+                # pstdev gives population standard deviation; square it to get variance
+                var = pstdev(instance_runtimes) ** 2
+
+                m = mean(instance_runtimes)
+                r = var / m if m != 0 else float('inf')  # avoid division by zero
+                ratios.append(r)
+
+            # Find the index with the maximum variance/mean ratio
+            idxs = list(enumerate(ratios))
+            idxs = sorted(idxs, key=lambda pair: pair[1])
+            idxs = [idx for idx, _ in idxs]
+            highest_ratio = idxs.pop()
+            thresholds[highest_ratio] = 5000
+            """self.n += 1"""
+            return thresholds, idxs, 0
+        else:
+            highest_ratio = prev_idxs.pop()
+            thresholds[highest_ratio] = 5000
+            """self.n += 1"""
+            return thresholds, prev_idxs, 0
 
     def sub_optimal_acc_maxing(self, new_acc: float, prev_acc: float):
         return new_acc <= prev_acc

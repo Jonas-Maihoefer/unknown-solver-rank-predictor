@@ -537,7 +537,7 @@ def store_and_show_mean_result():
     ax1.grid(True)
     ax1.set_xlabel("runtime fraction")
     fig.tight_layout()
-    fig.savefig("./plots/average_results.png", dpi=300)
+    fig.savefig("./plots/run1 to 0.9 variance based selection/average_results.png", dpi=300)
 
 
 def determine_tresholds(
@@ -563,7 +563,7 @@ def determine_tresholds(
         np.full((5355,), 0), dtype=np.float32
     )
     start = time.time_ns()
-    max_acc = 0.0
+    max_acc = None
     min_diff = 999999999.0
 
     solver_results = []
@@ -576,13 +576,13 @@ def determine_tresholds(
         )
         if min_diff == -1:
             break
-        if i % 200 == 0:
+        if i % 100 == 0:
             runtime_frac = vec_to_runtime_frac(
                 thresholds, runtimes, total_runtime
             )
             print(f"{progress} runtime fraction is {runtime_frac}")
             solver_results.append(get_stats(df_runtimes, par_2_scores_series, par_2_scores, runtimes, thresholds, solver_index, acc_calculator, progress))
-            if runtime_frac > 0.018:
+            if runtime_frac > 0.9:
                 break
     print(f"took {(time.time_ns() - start) / 1_000_000_000}s")
 
@@ -610,7 +610,7 @@ def determine_tresholds(
     ax1.grid(True)
     ax1.set_xlabel("runtime fraction")
     fig.tight_layout()
-    fig.savefig(f"./plots/{solver_string}_results.png", dpi=300)
+    fig.savefig(f"./plots/run1 to 0.9 variance based selection/{solver_string}_results.png", dpi=300)
 
     return thresholds
 
