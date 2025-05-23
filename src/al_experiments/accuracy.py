@@ -101,11 +101,7 @@ class accuracy:
 
 
         # 1) original score‐matrix on the subset
-        old_scores = np.where(
-            runtimes > thresholds[:, None],
-            2 * thresholds[:, None],
-            runtimes
-        )             # (5355, allowed_idxs.size)
+        old_scores = self.replace_by_overflow_mean(runtimes, thresholds)             # (5355, allowed_idxs.size)
 
         #print("old scores")
         #print(old_scores)
@@ -118,11 +114,7 @@ class accuracy:
         # 2) scores with thresholds + x on the subset
         new_thresh = thresholds + runtime_to_add
         valid_mask = (new_thresh < 5000)
-        new_scores_adding_thresh_to_every_instance = np.where(
-            runtimes > new_thresh[:, None],
-            2 * new_thresh[:, None],
-            runtimes
-        )            # (5355, allowed_idxs.size)
+        new_scores_adding_thresh_to_every_instance = self.replace_by_overflow_mean(runtimes, new_thresh)        # (5355, allowed_idxs.size)
 
         # 3) candidate predictions for each allowed i
         new_par_2_scores_when_adding_thresh_to_instance_i = old_par_2[None, :] + (new_scores_adding_thresh_to_every_instance - old_scores) / self.number_of_instances  # (5355, allowed_idxs.size)
@@ -176,15 +168,11 @@ class accuracy:
         # 1) base score‐matrix & prediction
         thresholds = np.ascontiguousarray(thresholds, dtype=np.float32)
         runtimes = np.ascontiguousarray(runtimes, dtype=np.float32)
-        old_scores = np.where(
-            runtimes > thresholds[:, None],
-            punishment,
-            runtimes
-        )          # (5355, allowed_idxs.size)
+
+        old_scores = self.replace_by_overflow_mean(runtimes, thresholds)    # (M, N)
+        old_par_2 = old_scores.mean(axis=0)                # (N,)
         #print("old scores:")
         #print(old_scores)
-
-        old_par_2 = old_scores.mean(axis=0)                   # (allowed_idxs.size,)
 
         #print("old par_2_scores:")
         #print(old_par_2)
@@ -192,11 +180,7 @@ class accuracy:
         # 2) score‐matrix with thresholds + x
         new_thresh = thresholds + runtime_to_add
         valid_mask = new_thresh < 5000
-        new_scores_adding_thresh_to_every_instance = np.where(
-            runtimes > new_thresh[:, None],
-            punishment,
-            runtimes
-        )          # (5355, allowed_idxs.size)
+        new_scores_adding_thresh_to_every_instance = self.replace_by_overflow_mean(runtimes, new_thresh)          # (5355, allowed_idxs.size)
 
         #print(f"new scores when adding {runtime_to_add} to thresh:")
         #print(new_scores_adding_thresh_to_every_instance)
@@ -231,6 +215,21 @@ class accuracy:
             best_idx = allowed_idxs[best_mask & valid_mask]
 
         return best_idx, best_acc
+
+    def replace_by_overflow_mean(self, values: np.ndarray, limits: np.ndarray):
+        """
+        values: (M, N)
+        limits: (M,)
+        returns: (M, N) where each row[i,j] > limits[i] is
+                 replaced by mean(values[i, mask_i])
+        """
+        mask = values > limits[:, None]           # (M, N)
+        sums = np.sum(values * mask, axis=1)    # (M,)
+        counts = np.sum(mask, axis=1)        # (M,)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            overflow_mean = sums / counts         # (M,)
+        # do the replacement
+        return np.where(mask, overflow_mean[:, None], values)
 
     def vec_to_pred(
             self,

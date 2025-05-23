@@ -537,7 +537,7 @@ def store_and_show_mean_result():
     ax1.grid(True)
     ax1.set_xlabel("runtime fraction")
     fig.tight_layout()
-    fig.savefig("./plots/run1 to 0.2 random baseline (dynamic timeout)/average_results.png", dpi=300)
+    fig.savefig("./plots/run3 to 0.2 random baseline (dynamic timeout)/average_results.png", dpi=300)
 
 
 def determine_tresholds(
@@ -611,13 +611,12 @@ def determine_tresholds(
     ax1.grid(True)
     ax1.set_xlabel("runtime fraction")
     fig.tight_layout()
-    fig.savefig(f"./plots/run1 to 0.2 random baseline (dynamic timeout)/{solver_string}_results.png", dpi=300)
+    fig.savefig(f"./plots/run3 to 0.2 random baseline (dynamic timeout)/{solver_string}_results.png", dpi=300)
 
     return thresholds
 
 
 def get_stats(df_rated, df_runtimes, par_2_scores_series, par_2_scores, runtimes, thresholds, solver_index, acc_calculator: accuracy, progress: str):
-    cross_acc = acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)
     diff = acc_calculator.vec_to_diff(thresholds, runtimes, par_2_scores, par_2_scores.mean())
     par_2_scores = np.ascontiguousarray(
         par_2_scores_series, dtype=np.float32
@@ -631,6 +630,7 @@ def get_stats(df_rated, df_runtimes, par_2_scores_series, par_2_scores, runtimes
     true_acc = acc_calculator.vec_to_true_acc(
         thresholds, runtimes_rated, par_2_scores, solver_index
     )
+    cross_acc = acc_calculator.vec_to_cross_acc(thresholds, runtimes_rated, par_2_scores)
     runtime_frac = vec_to_single_runtime_frac(thresholds, runtimes_unrated, solver_index)
     print(f"{progress} cross accuracy is {cross_acc}")
     print(f"{progress} true acc would be {true_acc}")
@@ -654,6 +654,7 @@ if __name__ == "__main__":
         df: pd.DataFrame = pickle.load(file).copy()
 
     print(df)
+
 
     df_runtimes = df.replace([np.inf, -np.inf], 5000)
 
@@ -711,10 +712,6 @@ if __name__ == "__main__":
 
         print("before adding solver back in, here are the stats:")
 
-        cross_acc = acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)
-
-        print(f"cross accuracy is {cross_acc}")
-
         acc_calculator.print_key_signature(thresholds, runtimes, par_2_scores)
 
         par_2_diff = acc_calculator.vec_to_diff(thresholds, runtimes, par_2_scores, par_2_scores.mean())
@@ -729,9 +726,12 @@ if __name__ == "__main__":
         runtimes = np.ascontiguousarray(
             df_runtimes.copy(), dtype=np.float32
         )
+        runtimes_rated = np.ascontiguousarray(
+            df_rated.copy(), dtype=np.float32
+        )
 
         true_acc = acc_calculator.vec_to_true_acc(
-            thresholds, runtimes, par_2_scores, solver_index
+            thresholds, runtimes_rated, par_2_scores, solver_index
         )
 
         runtime_frac = vec_to_single_runtime_frac(thresholds, runtimes, solver_index)
@@ -740,7 +740,7 @@ if __name__ == "__main__":
 
         print(f"with a runtime fraction of {runtime_frac} for the new solver")
 
-        print(f"the cross accuracy is {acc_calculator.vec_to_cross_acc(thresholds, runtimes, par_2_scores)}")
+        print(f"the cross accuracy is {acc_calculator.vec_to_cross_acc(thresholds, runtimes_rated, par_2_scores)}")
 
         acc_calculator.print_key_signature(thresholds, runtimes, par_2_scores)
 
