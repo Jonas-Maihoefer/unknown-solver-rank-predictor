@@ -102,16 +102,16 @@ class accuracy:
         scalings = actu_par2_mean / pred_par2_mean
         par2_error_per_solver_per_selected_instance = np.abs(new_par_2_scores_when_adding_thresh_to_instance_i * scalings[:, None] - actu_par2[None, :])
         total_error_per_selected_instance = par2_error_per_solver_per_selected_instance.sum(axis=1)      # (5355,)
-        best_val = total_error_per_selected_instance[valid_mask].min()
+        best_total_error = total_error_per_selected_instance[valid_mask].min()
 
         # 6) pick all within tol of the minimum
-        best_mask = np.isclose(total_error_per_selected_instance, best_val, atol=tol)
+        best_mask = np.isclose(total_error_per_selected_instance, best_total_error, atol=tol)
         if allowed_idxs is None:
             best_idxs = np.where(best_mask & valid_mask)[0]
         else:
             best_idxs = allowed_idxs[best_mask & valid_mask]
 
-        return best_idxs, best_val
+        return best_idxs, best_total_error
 
     def find_all_best_indices_max_cross_acc(
             self,
