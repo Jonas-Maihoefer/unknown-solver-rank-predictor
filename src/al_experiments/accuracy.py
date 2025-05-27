@@ -100,7 +100,7 @@ class accuracy:
         # 4) compute similarity for each candidate
         pred_par2_mean = new_par_2_scores_when_adding_thresh_to_instance_i.mean(axis=1)    # (5355,)
         scalings = actu_par2_mean / pred_par2_mean
-        par2_error_per_solver_per_selected_instance = np.abs(new_par_2_scores_when_adding_thresh_to_instance_i * scalings[:, None] - actu_par2[None, :]) # (5355, 27)
+        par2_error_per_solver_per_selected_instance = np.abs(new_par_2_scores_when_adding_thresh_to_instance_i * scalings[:, None] - actu_par2[None, :]) # (5355, allowed_idxs.size)
         total_error_per_selected_instance = par2_error_per_solver_per_selected_instance.sum(axis=1)      # (5355,)
         best_total_error = total_error_per_selected_instance[valid_mask].min()
 
