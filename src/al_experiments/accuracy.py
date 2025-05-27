@@ -48,8 +48,8 @@ class accuracy:
             self,
             thresholds: np.ndarray[np.floating[np.float32]],
             runtimes: np.ndarray[np.floating[np.float32]],
-            actu,
-            mean_actu: float,
+            actu_par2,
+            actu_par2_mean: float,
             runtime_to_add: float,
             allowed_idxs:  np.ndarray = None,
             tol: float = 1e-8
@@ -98,14 +98,14 @@ class accuracy:
         new_par_2_scores_when_adding_thresh_to_instance_i = old_par_2[None, :] + (new_scores_adding_thresh_to_every_instance - old_scores) / self.number_of_instances  # (5355, allowed_idxs.size)
 
         # 4) compute similarity for each candidate
-        preds_mean_sub = new_par_2_scores_when_adding_thresh_to_instance_i.mean(axis=1)    # (5355,)
-        scalings_sub = mean_actu / preds_mean_sub
-        errs_sub = np.abs(new_par_2_scores_when_adding_thresh_to_instance_i * scalings_sub[:, None] - actu[None, :])
-        sims_sub = errs_sub.sum(axis=1)      # (5355,)
-        best_val = sims_sub[valid_mask].min()
+        pred_par2_mean = new_par_2_scores_when_adding_thresh_to_instance_i.mean(axis=1)    # (5355,)
+        scalings = actu_par2_mean / pred_par2_mean
+        par2_error_per_solver_per_selected_instance = np.abs(new_par_2_scores_when_adding_thresh_to_instance_i * scalings[:, None] - actu_par2[None, :])
+        total_error_per_selected_instance = par2_error_per_solver_per_selected_instance.sum(axis=1)      # (5355,)
+        best_val = total_error_per_selected_instance[valid_mask].min()
 
         # 6) pick all within tol of the minimum
-        best_mask = np.isclose(sims_sub, best_val, atol=tol)
+        best_mask = np.isclose(total_error_per_selected_instance, best_val, atol=tol)
         if allowed_idxs is None:
             best_idxs = np.where(best_mask & valid_mask)[0]
         else:
