@@ -10,6 +10,7 @@ class accuracy:
     stored_accs = {}
     _letters = np.frombuffer((string.ascii_lowercase + "AB").encode('ascii'), dtype=np.uint8)
     number_of_instances = 5355
+    number_of_solvers = 28
     number_of_reduced_solvers = 27
     pairs = (number_of_reduced_solvers * (number_of_reduced_solvers - 1))
     n = 0
@@ -19,12 +20,12 @@ class accuracy:
             thresholds: np.ndarray[np.floating[np.float32]],
             runtimes: np.ndarray[np.floating[np.float32]],
             par_2_scores,
-            mean_par_2_score: float,
+            min_par_2_score: float,
             runtime_to_add: float,
             prev_max_acc: float,
             prev_min_diff: float
     ):
-        best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, mean_par_2_score, runtime_to_add)
+        best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, min_par_2_score, runtime_to_add)
         if (best_instances.size == 0):
             return thresholds, prev_max_acc, -1 
         if self.sub_optimal_diff_mining(min_diff, prev_min_diff):
@@ -49,7 +50,7 @@ class accuracy:
             thresholds: np.ndarray[np.floating[np.float32]],
             runtimes: np.ndarray[np.floating[np.float32]],
             actu_par2,
-            actu_par2_mean: float,
+            actu_par2_min: float,
             runtime_to_add: float,
             allowed_idxs:  np.ndarray = None,
             tol: float = 1e-8
@@ -75,16 +76,25 @@ class accuracy:
         # extract only the K rows we care about
         if allowed_idxs is not None:
             thresholds = thresholds[allowed_idxs]          # (5355,)
-            runtimes = runtimes[allowed_idxs, :]         # (5355, allowed_idxs.size)
+            runtimes = runtimes[allowed_idxs, :]         # (5355, 27)
+
+
+
+        new_alive_instances = np.eye(self.number_of_instances, dtype=bool)
+        already_alive_instances = thresholds != 0
+        take_old_instances = already_alive_instances * ~new_alive_instances
+
+        number_of_living_instances = already_alive_instances.sum()
+        one_more_living_instance = number_of_living_instances + 1
 
 
         # 1) original score‐matrix on the subset
-        old_scores = self.replace_by_overflow_mean(runtimes, thresholds)             # (5355, allowed_idxs.size)
+        old_scores = self.replace_by_overflow_mean(runtimes, thresholds)             # (5355, 27)
 
         #print("old scores")
         #print(old_scores)
 
-        old_par_2 = old_scores.mean(axis=0)               # (allowed_idxs.size,)
+        old_par_2 = old_scores.mean(axis=0)               # (27,)
 
         #print("old scores")
         #print(old_scores)
@@ -92,17 +102,24 @@ class accuracy:
         # 2) scores with thresholds + x on the subset
         new_thresh = thresholds + runtime_to_add
         valid_mask = (new_thresh < 5000)
-        new_scores_adding_thresh_to_every_instance = self.replace_by_overflow_mean(runtimes, new_thresh)        # (5355, allowed_idxs.size)
+        new_scores_adding_thresh_to_every_instance = self.replace_by_overflow_mean(runtimes, new_thresh)        # (5355, 27)
 
-        # 3) candidate predictions for each allowed i
-        new_par_2_scores_when_adding_thresh_to_instance_i = old_par_2[None, :] + (new_scores_adding_thresh_to_every_instance - old_scores) / self.number_of_instances  # (5355, allowed_idxs.size)
+        total_solver_runtime = old_scores[already_alive_instances, :].sum(axis=0)  # (27,)
 
+        new_total_runtime_adding_thresh_to_instance_i = np.where(already_alive_instances[:, None], total_solver_runtime[None, :] + ((new_scores_adding_thresh_to_every_instance - old_scores)), total_solver_runtime[None, :] + (new_scores_adding_thresh_to_every_instance))
+
+
+        #print(pd.DataFrame(new_total_runtime_adding_thresh_to_instance_i))
         # 4) compute similarity for each candidate
-        pred_par2_mean = new_par_2_scores_when_adding_thresh_to_instance_i.mean(axis=1)    # (5355,)
-        scalings = actu_par2_mean / pred_par2_mean
-        par2_error_per_solver_per_selected_instance = np.abs(new_par_2_scores_when_adding_thresh_to_instance_i * scalings[:, None] - actu_par2[None, :]) # (5355, allowed_idxs.size)
-        total_error_per_selected_instance = par2_error_per_solver_per_selected_instance.sum(axis=1)      # (5355,)
+        total_min = new_total_runtime_adding_thresh_to_instance_i.min(axis=1)    # (5355,)
+        temp = new_total_runtime_adding_thresh_to_instance_i - total_min[:, None]
+        means = np.mean(temp, 1)
+        means[means == 0] = 0.001
+        error_per_solver_per_selected_instance = np.abs((temp) * (304.823517/means)[:, None] - (actu_par2[None, :] - actu_par2_min))  # (5355, 27)
+
+        total_error_per_selected_instance = error_per_solver_per_selected_instance.sum(axis=1)      # (5355,)
         best_total_error = total_error_per_selected_instance[valid_mask].min()
+        print(f"best={best_total_error}")
 
         # 6) pick all within tol of the minimum
         best_mask = np.isclose(total_error_per_selected_instance, best_total_error, atol=tol)
@@ -193,6 +210,25 @@ class accuracy:
             best_idx = allowed_idxs[best_mask & valid_mask]
 
         return best_idx, best_acc
+
+    def is_new_sum_correct(self, sum: np.ndarray, new_scores_adding_thresh_to_every_instance, thresholds, old_scores):
+        par_2_choosing_instance_i = []
+        for i in range(5355):
+            total_runtime = []
+            for j in range(5355):
+                if i == j:
+                    total_runtime.append(new_scores_adding_thresh_to_every_instance[j])
+                elif thresholds[j] == 0:
+                    continue
+                else:
+                    total_runtime.append(old_scores[j])
+            all_runtimes = pd.DataFrame(total_runtime)
+            par_2_choosing_instance_i.append(all_runtimes.sum(axis=0))
+        correct_sums = pd.DataFrame(par_2_choosing_instance_i)
+        print("manual")
+        print(correct_sums)
+        print("faster")
+        print(pd.DataFrame(sum))
 
     def replace_by_overflow_mean(self, values: np.ndarray, limits: np.ndarray):
         """
@@ -319,7 +355,16 @@ class accuracy:
         pred_par_2 = true_par_2.copy()
         pred_par_2[index] = pred_par_2_for_this_solver
         return self.calc_true_acc_1(true_par_2, pred_par_2, index)
-
+    
+    def vec_to_true_acc_2(
+            self,
+            thresholds: np.ndarray[np.floating[np.float32]],
+            runtimes: np.ndarray[np.floating[np.float32]],
+            true_par_2: np.ndarray,
+            index: int      
+    ):
+        scores = self.replace_by_overflow_mean(runtimes, thresholds)
+        
     def determine_acc(self, actu: np.ndarray, pred: np.ndarray):
         key = self.pred_vec_to_key(pred)
 
