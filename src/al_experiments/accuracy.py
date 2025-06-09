@@ -1,43 +1,165 @@
 import string
 import time
+from typing import List, Tuple
 import numpy as np
 import pandas as pd
 from statistics import mean, pstdev
 
 
-class accuracy:
+class Accuracy:
 
     stored_accs = {}
-    _letters = np.frombuffer((string.ascii_lowercase + "AB").encode('ascii'), dtype=np.uint8)
+    _letters = np.frombuffer(
+        (string.ascii_lowercase + "AB").encode('ascii'),
+        dtype=np.uint8
+    )
     number_of_instances = 5355
     number_of_solvers = 28
     number_of_reduced_solvers = 27
     pairs = (number_of_reduced_solvers * (number_of_reduced_solvers - 1))
-    n = 0
 
-    def add_runtime(
+    def __init__(
             self,
-            thresholds: np.ndarray[np.floating[np.float32]],
-            runtimes: np.ndarray[np.floating[np.float32]],
+            total_runtime,
+            break_after_runtime_fraction,
+            sample_result_after_iterations,
+            sorted_runtimes: np.ndarray,
             par_2_scores,
-            min_par_2_score: float,
-            runtime_to_add: float,
+            mean_par_2_score: float,
+            par_2_score_removed_solver: float,
+            runtime_of_removed_solver: np.ndarray
+    ):
+        self.total_runtime = total_runtime
+        self.break_after_runtime_fraction = break_after_runtime_fraction
+        self.sample_result_after_iterations = sample_result_after_iterations
+        self.sorted_runtimes = sorted_runtimes
+        self.par_2_scores = par_2_scores
+        self.mean_par_2_score = mean_par_2_score
+        self.par_2_score_removed_solver = par_2_score_removed_solver
+        self.runtime_of_removed_solver = runtime_of_removed_solver
+        self.n = 0
+        self.used_runtime = 0
+        self.pred = np.ascontiguousarray(
+            np.full((27,), 0), dtype=np.float32
+        )
+        self.solver_results = []
+
+    def add_runtime_fast(
+            self,
+            thresholds: np.ndarray,
             prev_max_acc: float,
             prev_min_diff: float
     ):
-        best_instances, min_diff = self.find_best_index_min_diff(thresholds, runtimes, par_2_scores, min_par_2_score, runtime_to_add)
-        if (best_instances.size == 0):
-            return thresholds, prev_max_acc, -1 
-        if self.sub_optimal_diff_mining(min_diff, prev_min_diff):
-            runtime_to_add *= 2
-            if runtime_to_add >= 5000:
-                self.n += 1
-                return thresholds, prev_max_acc, prev_min_diff * 1.01
-            print(f"again with {runtime_to_add}")
 
-        thresholds[best_instances[0]] += runtime_to_add
+        # TODO: this can be moved to constructor
+        dtype = [('idx', np.int64), ('val', np.float64)]
+        new_arr = np.array([
+            np.array(self.sorted_runtimes[i], dtype=dtype)
+            for i in range(self.number_of_instances)
+        ], dtype=object)
+
+    def add_runtime(
+            self,
+            thresholds: np.ndarray,
+            prev_max_acc: float,
+            prev_min_diff: float
+    ):
+        best_score = 100000000000000000000000
+        best_pred = None
+        best_index = None
+        best_total_added_runtime = None
+
+        for index, runtime_list in enumerate(self.sorted_runtimes):
+            #print(f"looking at instance {index}")
+            #print("this is its runtime list:")
+            #print(runtime_list)
+            included_solvers = thresholds[index]
+            if included_solvers == self.number_of_reduced_solvers:
+                continue
+            #print(f"currently, there are {included_solvers} solvers added")
+            solver, added_runtime = runtime_list[included_solvers]
+            #print(f"solver {solver} is the next to be added. It has {added_runtime}s runtime.")
+            if included_solvers == 0:
+                prev_added_runtime = 0
+            else:
+                _, prev_added_runtime = runtime_list[included_solvers-1]
+            total_added_runtime = (
+                self.number_of_reduced_solvers - included_solvers
+            ) * (added_runtime - prev_added_runtime)
+            #print(f"adding this runtime to the instance would add {(added_runtime - prev_added_runtime)}s to {(self.number_of_reduced_solvers - included_solvers)} solvers, so {total_added_runtime}s in total.")
+            prev_penalty = prev_added_runtime * 2
+            new_penalty = added_runtime * 2
+            new_pred = self.pred.copy()
+            new_pred[solver] += (added_runtime - prev_penalty)
+            #print(f"the pred of solver {solver} is now {new_pred[solver]}")
+            #print("here are the remaining preds:")
+            timeout_mask = self.get_timeout_mask(runtime_list, included_solvers)
+            new_pred[timeout_mask] += (new_penalty - prev_penalty)
+            #print(new_pred)
+            diff = self.similarity(self.par_2_scores, new_pred, self.mean_par_2_score)
+            score = diff * total_added_runtime
+            #print(f"diff is {diff}")
+            #print(f"score is {score}")
+            if score < best_score:
+                #print(f"{best_score} is better than the previos score of {best_score}")
+                #print(f"storing this index ({index})")
+                best_score = score
+                best_pred = new_pred
+                best_index = index
+                best_total_added_runtime = total_added_runtime
+
+        self.pred = best_pred
+        thresholds[best_index] += 1
+        self.used_runtime += best_total_added_runtime
+        if self.n % self.sample_result_after_iterations == 0:
+            self.solver_results.append(
+                self.sample_result(thresholds, best_score)
+            )
         self.n += 1
+        if (self.used_runtime/self.total_runtime > self.break_after_runtime_fraction):
+            return thresholds, prev_max_acc, -1
         return thresholds, prev_max_acc, prev_min_diff
+
+    def get_timeout_mask(self, runtime_list, index):
+        # turn your Python list-of-tuples into a structured array
+        arr = np.array(runtime_list, dtype=[('idx', np.int64), ('val', np.float64)])
+        return arr['idx'][index+1:]
+
+    def sample_result(self, thresholds: np.ndarray, best_score=0):
+        runtime_frac = self.used_runtime/self.total_runtime
+        cross_acc = self.calc_cross_acc_2(self.par_2_scores, self.pred)
+
+        new_pred = 0
+        for index, runtime_list in enumerate(self.sorted_runtimes):
+            if thresholds[index] == 0:
+                timeout = 0
+            else:
+                _, timeout = runtime_list[thresholds[index]-1]
+            if timeout > self.runtime_of_removed_solver[index]:
+                new_pred += self.runtime_of_removed_solver[index]
+            else:
+                new_pred += 2 * timeout
+        all_par_2_scores = np.append(
+            self.par_2_scores, self.par_2_score_removed_solver
+        )
+        all_pred = np.append(self.pred, new_pred)
+        true_acc = self.calc_true_acc_1(
+            all_par_2_scores,
+            all_pred,
+            self.number_of_reduced_solvers
+        )
+        print(f"actual key is {self.pred_vec_to_key(all_par_2_scores)}")
+        print(f"pred key is   {self.pred_vec_to_key(all_pred)}")
+        print(f"best score is {best_score}")
+        print(f"cross acc is {cross_acc}")
+        print(f"with this, the new total is {self.used_runtime} giving a fraction of {runtime_frac}")
+        print(f"true acc is {true_acc}")
+        return {
+            "runtime_frac": runtime_frac,
+            "cross_acc": cross_acc,
+            "true_acc": true_acc,
+            "diff": best_score
+        }
 
     def sub_optimal_acc_maxing(self, new_acc: float, prev_acc: float):
         return new_acc <= prev_acc
@@ -48,7 +170,7 @@ class accuracy:
     def find_best_index_min_diff(
             self,
             thresholds: np.ndarray[np.floating[np.float32]],
-            runtimes: np.ndarray[np.floating[np.float32]],
+            sorted_runtimes: np.ndarray,
             actu_par2,
             actu_par2_min: float,
             runtime_to_add: float,
@@ -325,7 +447,7 @@ class accuracy:
             runtimes: np.ndarray[np.floating[np.float32]],
             true_par_2,
             true_par_2_mean: float,
-            removed_index: int 
+            removed_index: int
     ):
         pred_par_2 = np.delete(self.vec_to_pred(thresholds, runtimes), removed_index)
 
@@ -355,7 +477,7 @@ class accuracy:
         pred_par_2 = true_par_2.copy()
         pred_par_2[index] = pred_par_2_for_this_solver
         return self.calc_true_acc_1(true_par_2, pred_par_2, index)
-    
+
     def vec_to_true_acc_2(
             self,
             thresholds: np.ndarray[np.floating[np.float32]],
@@ -364,7 +486,7 @@ class accuracy:
             index: int      
     ):
         scores = self.replace_by_overflow_mean(runtimes, thresholds)
-        
+
     def determine_acc(self, actu: np.ndarray, pred: np.ndarray):
         key = self.pred_vec_to_key(pred)
 
