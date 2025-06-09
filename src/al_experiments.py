@@ -17,7 +17,7 @@ number_of_instances = 5355
 # config
 break_after_solvers = 100
 break_after_runtime_fraction = 0.1
-sample_result_after_iterations = 200
+sample_result_after_iterations = 1000
 # total_runtime = 25860323 s
 # global results
 result_tracker = []
@@ -31,7 +31,10 @@ def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
         # get sorted indices based on runtime
         sorted_idx = np.argsort(row)
         # create list of (solver_index, runtime) tuples
-        sorted_runtimes.append([(int(i), float(row[i])) for i in sorted_idx])
+        tuples = [(int(i), float(row[i])) for i in sorted_idx]
+        # add zero element
+        tuples.insert(0, (-1, 0))
+        sorted_runtimes.append(tuples)
 
     return sorted_runtimes
 
@@ -208,7 +211,7 @@ def determine_tresholds(
     min_diff = 999999999.0
 
     while True:
-        thresholds, max_acc, min_diff = acc_calculator.add_runtime(
+        thresholds, max_acc, min_diff = acc_calculator.add_runtime_fast(
             thresholds, max_acc, min_diff
         )
         if min_diff == -1:

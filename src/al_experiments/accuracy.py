@@ -17,6 +17,7 @@ class Accuracy:
     number_of_solvers = 28
     number_of_reduced_solvers = 27
     pairs = (number_of_reduced_solvers * (number_of_reduced_solvers - 1))
+    instance_idx = np.arange(number_of_instances)
 
     def __init__(
             self,
@@ -43,6 +44,14 @@ class Accuracy:
             np.full((27,), 0), dtype=np.float32
         )
         self.solver_results = []
+        self.dtype = [('idx', np.int64), ('runtime', np.float64)]
+
+        # 1) allocate a (n_runs, L) structured array
+        self.sorted_rt = np.empty((self.number_of_instances, self.number_of_solvers), dtype=self.dtype)
+
+        # 2) fill it in
+        for i in range(self.number_of_instances):
+            self.sorted_rt[i, :] = self.sorted_runtimes[i]
 
     def add_runtime_fast(
             self,
@@ -50,13 +59,88 @@ class Accuracy:
             prev_max_acc: float,
             prev_min_diff: float
     ):
+        remaining_mask = thresholds < self.number_of_reduced_solvers
+        valid_instances = self.instance_idx[remaining_mask]
 
-        # TODO: this can be moved to constructor
-        dtype = [('idx', np.int64), ('val', np.float64)]
-        new_arr = np.array([
-            np.array(self.sorted_runtimes[i], dtype=dtype)
-            for i in range(self.number_of_instances)
-        ], dtype=object)
+        current_solver = self.sorted_rt[self.instance_idx, thresholds]
+        next_solver = np.empty(self.number_of_instances, dtype=self.dtype)
+        next_solver[:] = (-1, -1.)
+        next_solver[valid_instances] = self.sorted_rt[valid_instances, thresholds[valid_instances] + 1]
+
+        #print("extracted best next")
+        #print(next_solver)
+
+        total_added_runtime = (
+                self.number_of_reduced_solvers - thresholds
+            ) * (next_solver['runtime'] - current_solver['runtime'])
+
+        #print("total added runtime")
+        #print(total_added_runtime)
+
+        current_penalty = current_solver['runtime'] * 2
+        #print("current_penalty")
+        #print(current_penalty)
+        next_penalty = next_solver['runtime'] * 2
+        #print("next_penalty")
+        #print(next_penalty)
+        new_pred = np.tile(self.pred, (self.number_of_instances, 1))
+        new_pred[self.instance_idx, next_solver['idx']] += (next_solver['runtime'] - current_penalty)
+
+        index_mask = np.arange(self.number_of_solvers)[None, :] > thresholds[:, None] + 1
+        index_mask = np.where(index_mask, self.sorted_rt['idx'] + 1, 0)
+        timeout_mask = np.zeros_like(self.sorted_rt, dtype=bool)
+        timeout_mask[self.instance_idx[:, None], index_mask] = True
+        timeout_mask = timeout_mask[:, 1:]
+
+
+        delta = next_penalty - current_penalty
+        new_pred += timeout_mask * delta[:, None]
+        #print("new pred with all instances")
+        #print(new_pred)
+
+        #print("mean pred")
+        #print(new_pred.mean(axis=1))
+        #print(new_pred.mean(axis=1).shape)
+
+
+        scaling = self.mean_par_2_score / new_pred.mean(axis=1)
+        #print("scaling")
+        #print(scaling)
+        #print(scaling.shape)
+
+        similarity = np.abs((new_pred * scaling[:, None]) - self.par_2_scores).sum(axis=1)
+        #print("similarity")
+        #print(similarity)
+        #print(similarity.shape)
+
+        score = (similarity * total_added_runtime)
+        #print("fast")
+        #for sc in score:
+        #    print(sc, end=", ")
+
+        #print()
+        #print()
+        #print("score")
+        #print(score)
+        #print(score.shape)
+        #print(np.nanmin(score))
+
+        best_idx = np.nanargmin(score[remaining_mask])
+        best_idx = self.instance_idx[remaining_mask][best_idx]
+
+        # update
+        self.pred = new_pred[best_idx]
+        thresholds[best_idx] += 1
+        self.used_runtime += total_added_runtime[best_idx]
+        self.n += 1
+
+        if self.n % self.sample_result_after_iterations == 0:
+            self.solver_results.append(
+                self.sample_result(thresholds, score[best_idx])
+            )
+        if (self.used_runtime/self.total_runtime > self.break_after_runtime_fraction):
+            return thresholds, prev_max_acc, -1
+        return thresholds, prev_max_acc, prev_min_diff
 
     def add_runtime(
             self,
@@ -69,7 +153,9 @@ class Accuracy:
         best_index = None
         best_total_added_runtime = None
 
-        for index, runtime_list in enumerate(self.sorted_runtimes):
+        #print("slow")
+
+        for index, runtime_list in enumerate(self.delete_s): # DEPRECATED! needs a version without solver tuple (-1, 0)
             #print(f"looking at instance {index}")
             #print("this is its runtime list:")
             #print(runtime_list)
@@ -98,6 +184,7 @@ class Accuracy:
             #print(new_pred)
             diff = self.similarity(self.par_2_scores, new_pred, self.mean_par_2_score)
             score = diff * total_added_runtime
+            #print(score, end=", ")
             #print(f"diff is {diff}")
             #print(f"score is {score}")
             if score < best_score:
@@ -108,9 +195,13 @@ class Accuracy:
                 best_index = index
                 best_total_added_runtime = total_added_runtime
 
+        #print()
+
         self.pred = best_pred
         thresholds[best_index] += 1
         self.used_runtime += best_total_added_runtime
+        print(f"SLOW: added rt: {best_total_added_runtime}, new pred mean: {best_pred.mean()} ")
+        print(f"fast method gives {delete_idx}: {delete_min} this gives {best_index}: {best_score}")
         if self.n % self.sample_result_after_iterations == 0:
             self.solver_results.append(
                 self.sample_result(thresholds, best_score)
@@ -132,6 +223,7 @@ class Accuracy:
         new_pred = 0
         for index, runtime_list in enumerate(self.sorted_runtimes):
             if thresholds[index] == 0:
+                # TODO: refactor, this should now be trivial
                 timeout = 0
             else:
                 _, timeout = runtime_list[thresholds[index]-1]
