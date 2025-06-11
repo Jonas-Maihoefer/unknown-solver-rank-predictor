@@ -19,7 +19,8 @@ number_of_instances = 5355
 # config
 break_after_solvers = 100
 break_after_runtime_fraction = 2
-sample_result_after_iterations = 200
+total_samples = 500
+sample_result_after_iterations = number_of_instances * (number_of_solvers - 1) / total_samples
 # total_runtime = 25860323 s
 # global results
 result_tracker = []
@@ -105,7 +106,7 @@ def vec_to_single_runtime_frac(
     return used_runtime / total_runtime
 
 
-def compute_average_grid(list_of_dfs, grid_size=100):
+def compute_average_grid(list_of_dfs, grid_size=total_samples):
     """
     Given a list of DataFrames, each with 'runtime_frac' and measurements
     ['cross_acc', 'true_acc', 'diff'], interpolate each onto a common grid
@@ -274,13 +275,7 @@ def get_stats(df_rated, df_runtimes, par_2_scores_series, par_2_scores, runtimes
     return {"runtime_frac": runtime_frac, "cross_acc": cross_acc, "true_acc": true_acc, "diff": diff}
 
 
-if __name__ == "__main__":
-
-    push_notification("start test")
-
-    plot_generator = PlotGenerator()
-    #plot_generator.create_progress_plot()
-
+def run_experiment():
     with open(
         "../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl",
         "rb"
@@ -389,15 +384,14 @@ if __name__ == "__main__":
 
     store_and_show_mean_result()
 
-    """     # 3. Plot the histogram
-    plt.figure(figsize=(10, 6))
-    plt.hist(max_runtime, bins='auto')
-    plt.xlabel("total runtime (seconds)")
-    plt.ylabel("Count")
-    plt.title("Histogram of restricted runtime per SAT instance")
-    plt.grid(True, linestyle="--", alpha=0.5)
-    plt.tight_layout()
-    # Show or save
-    plt.show()
-    #plt.savefig("instance_histogram.png", dpi=300) """
 
+if __name__ == "__main__":
+
+    plot_generator = PlotGenerator()
+    plot_generator.create_progress_plot()
+
+    push_notification("start experiment")
+
+    run_experiment()
+
+    push_notification("ended experiment")
