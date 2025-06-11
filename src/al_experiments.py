@@ -188,7 +188,7 @@ def store_and_show_mean_result():
     ax1.grid(True)
     ax1.set_xlabel("runtime fraction")
     fig.tight_layout()
-    fig.savefig("./plots/quantized runtime min diff/average_results.png", dpi=300)
+    fig.savefig("./plots/test-delete/average_results.png", dpi=300)
 
 
 def determine_tresholds(
@@ -246,7 +246,7 @@ def determine_tresholds(
     ax1.grid(True)
     ax1.set_xlabel("runtime fraction")
     fig.tight_layout()
-    fig.savefig(f"./plots/quantized runtime min diff/{solver_string}_results.png", dpi=300)
+    fig.savefig(f"./plots/test-delete/{solver_string}_results.png", dpi=300)
 
     return thresholds
 
