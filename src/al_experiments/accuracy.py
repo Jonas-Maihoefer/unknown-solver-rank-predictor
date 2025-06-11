@@ -92,6 +92,7 @@ class Accuracy:
         # copy previos pred to all instances
         new_pred = np.tile(self.pred, (self.number_of_instances, 1))
         # change pred for the next added solver
+        next_solver['runtime'][next_solver['runtime'] == 5000] = 10000
         new_pred[self.instance_idx, next_solver['idx']] += (next_solver['runtime'] - current_penalty)
 
         # build a mask of which solvers still timeout with the new thresh
