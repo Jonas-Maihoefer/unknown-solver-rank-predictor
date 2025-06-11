@@ -19,7 +19,7 @@ number_of_instances = 5355
 # config
 break_after_solvers = 100
 break_after_runtime_fraction = 2
-sample_result_after_iterations = 5000
+sample_result_after_iterations = 200
 # total_runtime = 25860323 s
 # global results
 result_tracker = []
