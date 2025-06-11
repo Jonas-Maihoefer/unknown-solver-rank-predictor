@@ -18,8 +18,7 @@ reduced_square_of_solvers = number_of_solvers*(number_of_solvers-1)
 number_of_instances = 5355
 # config
 break_after_solvers = 100
-break_after_runtime_fraction = 0.1
-sample_result_after_iterations = 1000
+sample_result_after_iterations = 5000
 # total_runtime = 25860323 s
 # global results
 result_tracker = []
@@ -188,7 +187,7 @@ def store_and_show_mean_result():
     ax1.grid(True)
     ax1.set_xlabel("runtime fraction")
     fig.tight_layout()
-    fig.savefig("./plots/test-delete/average_results.png", dpi=300)
+    fig.savefig("./plots/quantized runtime min diff to 1/average_results.png", dpi=300)
 
 
 def determine_tresholds(
@@ -246,7 +245,7 @@ def determine_tresholds(
     ax1.grid(True)
     ax1.set_xlabel("runtime fraction")
     fig.tight_layout()
-    fig.savefig(f"./plots/test-delete/{solver_string}_results.png", dpi=300)
+    fig.savefig(f"./plots/quantized runtime min diff to 1/{solver_string}_results.png", dpi=300)
 
     return thresholds
 
