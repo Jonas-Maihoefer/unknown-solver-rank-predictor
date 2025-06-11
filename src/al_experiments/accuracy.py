@@ -113,7 +113,7 @@ class Accuracy:
         #print(similarity)
         #print(similarity.shape)
 
-        score = (similarity * total_added_runtime)
+        score = similarity #* total_added_runtime
         #print("fast")
         #for sc in score:
         #    print(sc, end=", ")
@@ -143,16 +143,13 @@ class Accuracy:
         return thresholds, prev_max_acc, prev_min_diff
 
     def sample_result(self, thresholds: np.ndarray, best_score=0):
+
         runtime_frac = self.used_runtime/self.total_runtime
         cross_acc = self.calc_cross_acc_2(self.par_2_scores, self.pred)
 
         new_pred = 0
         for index, runtime_list in enumerate(self.sorted_runtimes):
-            if thresholds[index] == 0:
-                # TODO: refactor, this should now be trivial
-                timeout = 0
-            else:
-                _, timeout = runtime_list[thresholds[index]-1]
+            _, timeout = runtime_list[thresholds[index]]
             if timeout > self.runtime_of_removed_solver[index]:
                 new_pred += self.runtime_of_removed_solver[index]
             else:

@@ -8,6 +8,8 @@ from al_experiments.helper import push_notification
 from al_experiments.accuracy import Accuracy
 from scipy.interpolate import interp1d
 
+from al_experiments.plot_generator import PlotGenerator
+
 # constants
 number_of_solvers = 28
 solver_fraction = 1/number_of_solvers
@@ -186,7 +188,7 @@ def store_and_show_mean_result():
     ax1.grid(True)
     ax1.set_xlabel("runtime fraction")
     fig.tight_layout()
-    fig.savefig("./plots/test-delete/average_results.png", dpi=300)
+    fig.savefig("./plots/quantized runtime min diff/average_results.png", dpi=300)
 
 
 def determine_tresholds(
@@ -244,7 +246,7 @@ def determine_tresholds(
     ax1.grid(True)
     ax1.set_xlabel("runtime fraction")
     fig.tight_layout()
-    fig.savefig(f"./plots/test-delete/{solver_string}_results.png", dpi=300)
+    fig.savefig(f"./plots/quantized runtime min diff/{solver_string}_results.png", dpi=300)
 
     return thresholds
 
@@ -275,6 +277,9 @@ def get_stats(df_rated, df_runtimes, par_2_scores_series, par_2_scores, runtimes
 if __name__ == "__main__":
 
     push_notification("start test")
+
+    plot_generator = PlotGenerator()
+    plot_generator.create_progress_plot()
 
     with open(
         "../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl",
