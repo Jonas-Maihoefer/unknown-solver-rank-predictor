@@ -49,3 +49,16 @@ class PlotGenerator:
         # Show or save
         plt.show()
         #plt.savefig("instance_histogram.png", dpi=300)
+
+    def histogramms():
+        """     # 3. Plot the histogram
+        plt.figure(figsize=(10, 6))
+        plt.hist(max_runtime, bins='auto')
+        plt.xlabel("total runtime (seconds)")
+        plt.ylabel("Count")
+        plt.title("Histogram of restricted runtime per SAT instance")
+        plt.grid(True, linestyle="--", alpha=0.5)
+        plt.tight_layout()
+        # Show or save
+        plt.show()
+        #plt.savefig("instance_histogram.png", dpi=300) """
