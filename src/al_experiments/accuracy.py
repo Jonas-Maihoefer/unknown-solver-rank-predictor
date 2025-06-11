@@ -59,10 +59,14 @@ class Accuracy:
             prev_max_acc: float,
             prev_min_diff: float
     ):
+        # instances not maxed out yet
         remaining_mask = thresholds < self.number_of_reduced_solvers
         valid_instances = self.instance_idx[remaining_mask]
 
+        # current solver + its rt bearly solving the instance
         current_solver = self.sorted_rt[self.instance_idx, thresholds]
+
+        # next solver + its rt that would solve the instance if threshold is raised
         next_solver = np.empty(self.number_of_instances, dtype=self.dtype)
         next_solver[:] = (-1, -1.)
         next_solver[valid_instances] = self.sorted_rt[valid_instances, thresholds[valid_instances] + 1]
@@ -70,6 +74,7 @@ class Accuracy:
         #print("extracted best next")
         #print(next_solver)
 
+        # raising the thresh adds total_added_runtime seconds to instance i
         total_added_runtime = (
                 self.number_of_reduced_solvers - thresholds
             ) * (next_solver['runtime'] - current_solver['runtime'])
@@ -83,9 +88,13 @@ class Accuracy:
         next_penalty = next_solver['runtime'] * 2
         #print("next_penalty")
         #print(next_penalty)
+
+        # copy previos pred to all instances
         new_pred = np.tile(self.pred, (self.number_of_instances, 1))
+        # change pred for the next added solver
         new_pred[self.instance_idx, next_solver['idx']] += (next_solver['runtime'] - current_penalty)
 
+        # build a mask of which solvers still timeout with the new thresh
         index_mask = np.arange(self.number_of_solvers)[None, :] > thresholds[:, None] + 1
         index_mask = np.where(index_mask, self.sorted_rt['idx'] + 1, 0)
         timeout_mask = np.zeros_like(self.sorted_rt, dtype=bool)
@@ -138,7 +147,7 @@ class Accuracy:
             self.solver_results.append(
                 self.sample_result(thresholds, score[best_idx])
             )
-        if (self.used_runtime/self.total_runtime > self.break_after_runtime_fraction):
+        if (self.used_runtime/self.total_runtime > self.break_after_runtime_fraction) or len(valid_instances) <= 1:
             return thresholds, prev_max_acc, -1
         return thresholds, prev_max_acc, prev_min_diff
 
@@ -150,7 +159,14 @@ class Accuracy:
         new_pred = 0
         for index, runtime_list in enumerate(self.sorted_runtimes):
             _, timeout = runtime_list[thresholds[index]]
-            if timeout > self.runtime_of_removed_solver[index]:
+            # is instance maxed out?
+            if thresholds[index] == self.number_of_reduced_solvers:
+                # is solver runtime 5000?
+                if self.runtime_of_removed_solver[index] == 5000:
+                    new_pred += 10000
+                else:
+                    new_pred += self.runtime_of_removed_solver[index]
+            elif timeout > self.runtime_of_removed_solver[index]:
                 new_pred += self.runtime_of_removed_solver[index]
             else:
                 new_pred += 2 * timeout
@@ -520,7 +536,7 @@ class Accuracy:
         self.stored_accs[key] = acc
         return acc
 
-    def pred_vec_to_key(self, pred: np.ndarray) -> int | None:
+    def pred_vec_to_key(self, pred: np.ndarray):
         """
         Sorts a 1D C‑contiguous float array `pred` (len ≤ 28) and returns
         a string of letters corresponding to the original indices in ascending order.

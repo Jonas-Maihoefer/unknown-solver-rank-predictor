@@ -279,7 +279,7 @@ if __name__ == "__main__":
     push_notification("start test")
 
     plot_generator = PlotGenerator()
-    plot_generator.create_progress_plot()
+    #plot_generator.create_progress_plot()
 
     with open(
         "../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl",
