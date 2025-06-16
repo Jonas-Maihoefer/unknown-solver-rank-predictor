@@ -18,8 +18,8 @@ square_of_solvers = number_of_solvers * number_of_solvers
 reduced_square_of_solvers = number_of_solvers*(number_of_solvers-1)
 number_of_instances = 5355
 # global config
-break_after_solvers = 200
-break_after_runtime_fraction = 0.0025  # 0.655504 # determined by 0e993e00
+break_after_solvers = 2
+break_after_runtime_fraction = 0.655504  # determined by 0e993e00
 total_samples = 500  # max is 5354 because of sample_result_after_instances
 sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
 sample_result_after_instances = int(number_of_instances / total_samples)
@@ -382,7 +382,7 @@ def run_experiment(experiment_config: ExperimentConfig):
         all_var_sel_results.append(variance_selection_results)
 
         plot_generator.plot_solver_results(
-            solver_results, random_selection_results, all_var_sel_results, solver_string
+            solver_results, random_selection_results, variance_selection_results, solver_string
         )
 
     store_and_show_mean_result()
@@ -393,10 +393,10 @@ if __name__ == "__main__":
     git_hash = get_git_commit_hash()
 
     plot_generator = PlotGenerator(git_hash)
-    plot_generator.create_progress_plot()
+    #plot_generator.create_progress_plot()
 
     # experiment config
-    experiment_config = ExperimentConfig(static_timeout)
+    experiment_config = ExperimentConfig(quantized_min_diff)
 
     print(f"start experiment on {git_hash}")
 

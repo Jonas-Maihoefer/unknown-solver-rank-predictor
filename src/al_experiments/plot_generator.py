@@ -42,13 +42,19 @@ class PlotGenerator:
         ax2.plot(
             avg_var_sel_results["runtime_frac"],
             avg_var_sel_results["true_acc"],
-            'o-x',
+            'm-x',
             label="true_acc_variance_based_instance_selection"
         )
         ax2.set_ylabel("cross_acc", color='b')
         ax2.set_ylabel("true_acc", color='r')
         plt.title("average over all solvers")
         # optional: add grids and legends
+        h1, l1 = ax1.get_legend_handles_labels()
+        h2, l2 = ax2.get_legend_handles_labels()
+
+        # one legend on ax1 (or fig.legend())
+        ax1.legend(h1 + h2, l1 + l2, loc='best')
+
         ax1.grid(True)
         ax1.set_xlabel("runtime fraction")
         fig.tight_layout()
@@ -83,12 +89,18 @@ class PlotGenerator:
         )
         ax2.plot(
             var_sel_results["runtime_frac"], var_sel_results["true_acc"],
-            'o-x', label="true_acc_variance_based_instance_selection"
+            'm-x', label="true_acc_variance_based_instance_selection"
         )
         ax2.set_ylabel("cross_acc", color='b')
         ax2.set_ylabel("true_acc", color='r')
 
         plt.title(f"dynamic timeouts for solver {solver_string}")
+
+        h1, l1 = ax1.get_legend_handles_labels()
+        h2, l2 = ax2.get_legend_handles_labels()
+
+        # one legend on ax1 (or fig.legend())
+        ax1.legend(h1 + h2, l1 + l2, loc='best')
 
         # optional: add grids and legends
         ax1.grid(True)
@@ -147,7 +159,7 @@ class PlotGenerator:
         #plt.plot(random_baseline_whole_instances_runtime_frac, random_baseline_whole_instances_true_acc, label="random instances")
         plt.plot(random_baseline_whole_instances_runtime_frac_2, random_baseline_whole_instances_true_acc_2, label="random instances 2")
         plt.plot(sub_optimal_variance_based_selection_diff_runtime_fraction, sub_optimal_variance_based_selection_diff_true_acc, label="suboptimal variance-based-selection")
-        plt.plot(optimal_variance_based_selection_diff_runtime_fraction, optimal_variance_based_selection_diff_true_acc, label="optimal variance-based-selection")
+        #plt.plot(optimal_variance_based_selection_diff_runtime_fraction, optimal_variance_based_selection_diff_true_acc, label="optimal variance-based-selection")
         #plt.plot(random_baseline_dynamic_timeout_runtime_frac, random_baseline_dynamic_timeout_true_acc, label="random dynamic timeout")
         plt.plot(variance_based_selection_runtime_frac, variance_based_selection_true_acc, label="variance based selection first run")
         #plt.plot(dynamic_timeout_optimized_runtime_frac, dynamic_timeout_optimized_true_acc, label="dynamic timeout optimized")

@@ -107,9 +107,9 @@ def variance_based_selection_1(
     timeouts = sorted_runtimes['runtime'][instance_idx, thresholds[instance_idx]]
     runtimes = sorted_runtimes['runtime'].copy()
 
-    runtimes[np.isclose(runtimes, 0.0, rtol=1e-09, atol=1e-09)] = np.nan
-    runtimes[runtimes == 5000.0] = 10000.0
-    runtimes[runtimes > timeouts[:, None]] = timeouts * 2
+    runtimes[runtimes > timeouts[:, None]] = np.nan
+    runtimes[:, 0] = np.nan
+    runtimes[runtimes == 0.0] = 0.001
 
     variances = np.nanvar(runtimes, axis=1)
     means = np.nanmean(runtimes, axis=1)
@@ -119,6 +119,16 @@ def variance_based_selection_1(
     score = score[possible_instances]
 
     best_idx = possible_instances[np.nanargmax(score)]
+
+    print("possible instances")
+    print(possible_instances)
+    print(len(possible_instances))
+    print("sorted_runtimes")
+    print(sorted_runtimes[possible_instances[0]])
+    print("last solver")
+    print(sorted_runtimes[possible_instances[0]][thresholds[possible_instances[0]]])
+    print("runtimes")
+    print(runtimes[possible_instances[0]])
 
     return best_idx
 
@@ -133,13 +143,17 @@ def variance_based_selection_2(
     scores = sorted_runtimes['runtime'].copy()
     runtimes = sorted_runtimes['runtime'].copy()
 
-    scores[np.isclose(scores, 0.0, rtol=1e-09, atol=1e-09)] = np.nan
+    scores[:, 0] = np.nan
+    scores[scores == 0.0] = 0.001
     scores[scores == 5000.0] = 10000.0
     scores = np.where(
         scores >= timeouts[:, None],
         timeouts[:, None] * 2,
         scores
     )
+
+    runtimes[:, 0] = np.nan
+    runtimes[runtimes == 0.0] = 0.001
 
     runtimes = np.where(
         runtimes >= timeouts[:, None],
@@ -153,6 +167,9 @@ def variance_based_selection_2(
     score: np.ndarray = variances/mean_rts
 
     score = score[possible_instances]
+
+    print(possible_instances)
+    print(len(possible_instances))
 
     best_idx = possible_instances[np.nanargmax(score)]
 
