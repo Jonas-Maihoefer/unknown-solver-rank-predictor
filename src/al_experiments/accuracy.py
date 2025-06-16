@@ -37,7 +37,8 @@ class Accuracy:
         self.par_2_scores = par_2_scores
         self.mean_par_2_score = mean_par_2_score
         self.par_2_score_removed_solver = par_2_score_removed_solver
-        self.runtime_of_removed_solver = runtime_of_removed_solver
+        self.rt_removed_solver = runtime_of_removed_solver
+        self.total_rt_removed_solver = runtime_of_removed_solver.sum()
         self.n = 0
         self.used_runtime = 0
         self.pred = np.ascontiguousarray(
@@ -135,14 +136,13 @@ class Accuracy:
         self.pred = new_pred[best_idx]
         thresholds[best_idx] += 1
         self.used_runtime += total_added_runtime[best_idx]
-        self.n += 1
 
         if self.n % self.sample_result_after_iterations == 0:
-            self.solver_results.append(
-                self.sample_result(thresholds, score[best_idx])
-            )
-        if (self.used_runtime/self.total_runtime > self.break_after_runtime_fraction) or len(valid_instances) <= 1:
-            return thresholds, prev_max_acc, -1
+            new_result = self.sample_result(thresholds, self.pred, score[best_idx])
+            self.solver_results.append(new_result)
+            if new_result['runtime_frac'] > self.break_after_runtime_fraction:
+                return thresholds, prev_max_acc, -1
+        self.n += 1
         return thresholds, prev_max_acc, prev_min_diff
 
     def add_runtime_random_quantized(
@@ -185,44 +185,47 @@ class Accuracy:
 
         self.pred = new_pred
         thresholds[best_idx] += 1
-        self.n += 1
 
         if self.n % self.sample_result_after_iterations == 0:
-            self.solver_results.append(
-                self.sample_result(thresholds)
-            )
-        if (self.used_runtime/self.total_runtime > self.break_after_runtime_fraction) or len(valid_instances) <= 1:
-            return thresholds, prev_max_acc, -1
+            new_result = self.sample_result(thresholds, self.pred)
+            self.solver_results.append(new_result)
+            if new_result['runtime_frac'] > self.break_after_runtime_fraction:
+                return thresholds, prev_max_acc, -1
+        self.n += 1
         return thresholds, prev_max_acc, prev_min_diff
 
-    def sample_result(self, thresholds: np.ndarray, best_score=0):
+    def sample_result(self, thresholds: np.ndarray, pred: np.ndarray, best_score=0):
 
-        runtime_frac = self.used_runtime/self.total_runtime
-        cross_acc = self.calc_cross_acc_2(self.par_2_scores, self.pred)
+        cross_acc = self.calc_cross_acc_2(self.par_2_scores, pred)
 
         new_pred = 0
+        used_rt_removed_solver = 0
         for index, runtime_list in enumerate(self.sorted_rt):
             _, timeout = runtime_list[thresholds[index]]
             # is instance maxed out?
             if thresholds[index] == self.number_of_reduced_solvers:
                 # is solver runtime 5000?
-                if self.runtime_of_removed_solver[index] == 5000:
+                used_rt_removed_solver += self.rt_removed_solver[index]
+                if self.rt_removed_solver[index] == 5000:
                     new_pred += 10000
                 else:
-                    new_pred += self.runtime_of_removed_solver[index]
-            elif timeout > self.runtime_of_removed_solver[index]:
-                new_pred += self.runtime_of_removed_solver[index]
+                    new_pred += self.rt_removed_solver[index]
+            elif timeout > self.rt_removed_solver[index]:
+                used_rt_removed_solver += self.rt_removed_solver[index]
+                new_pred += self.rt_removed_solver[index]
             else:
+                used_rt_removed_solver += timeout
                 new_pred += 2 * timeout
         all_par_2_scores = np.append(
             self.par_2_scores, self.par_2_score_removed_solver
         )
-        all_pred = np.append(self.pred, new_pred)
+        all_pred = np.append(pred, new_pred)
         true_acc = self.calc_true_acc_1(
             all_par_2_scores,
             all_pred,
             self.number_of_reduced_solvers
         )
+        runtime_frac = used_rt_removed_solver / self.total_rt_removed_solver
         print(f"actual key is {self.pred_vec_to_key(all_par_2_scores)}")
         print(f"pred key is   {self.pred_vec_to_key(all_pred)}")
         print(f"best score is {best_score}")

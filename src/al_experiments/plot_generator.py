@@ -1,10 +1,86 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 
 class PlotGenerator:
-    def __init__(self):
-        pass
+    def __init__(self, git_hash):
+        self.git_hash = git_hash
+
+    def plot_timeout_results_avg(self, avg_results):
+        # create main plot and a twin y-axis
+        fig, ax1 = plt.subplots()
+        ax2 = ax1.twinx()
+        ax1.plot(
+            avg_results["runtime_frac"],
+            avg_results["diff"], 'g-o',
+            label="diff"
+        )
+        ax1.set_ylabel("diff", color='g')
+        ax2.plot(
+            avg_results["runtime_frac"],
+            avg_results["cross_acc"],
+            'b-s',
+            label="cross_acc"
+        )
+        ax2.plot(
+            avg_results["runtime_frac"],
+            avg_results["true_acc"],
+            'r-x',
+            label="true_acc"
+        )
+        ax2.set_ylabel("cross_acc", color='b')
+        ax2.set_ylabel("true_acc", color='r')
+        plt.title("average over all solvers")
+        # optional: add grids and legends
+        ax1.grid(True)
+        ax1.set_xlabel("runtime fraction")
+        fig.tight_layout()
+        fig.savefig(f"./plots/{self.git_hash}/average_results.png", dpi=300)
+
+    def plot_solver_results(
+        self, solver_results, selection_results, solver_string
+    ):
+        # create main plot and a twin y-axis
+        fig, ax1 = plt.subplots()
+
+        ax2 = ax1.twinx()
+
+        ax1.plot(
+            solver_results["runtime_frac"], solver_results["diff"],
+            'g-o', label="diff"
+        )
+        ax1.set_ylabel("diff", color='g')
+
+        ax2.plot(
+            solver_results["runtime_frac"], solver_results["cross_acc"],
+            'b-s', label="cross_acc_timeout_selection"
+        )
+        ax2.plot(
+            solver_results["runtime_frac"], solver_results["true_acc"],
+            'r-x', label="true_acc_timeout_selection"
+        )
+        ax2.plot(
+            selection_results["runtime_frac"], selection_results["true_acc"],
+            'y-x', label="true_acc_instance_selection"
+        )
+        ax2.set_ylabel("cross_acc", color='b')
+        ax2.set_ylabel("true_acc", color='r')
+
+        plt.title(f"dynamic timeouts for solver {solver_string}")
+
+        # optional: add grids and legends
+        ax1.grid(True)
+        ax1.set_xlabel("runtime fraction")
+        fig.tight_layout()
+
+        out_dir = f"./plots/{self.git_hash}"
+        out_path = os.path.join(out_dir, f"{solver_string}_results.png")
+
+        # create the directory (and any parents) if it doesn't exist
+        os.makedirs(out_dir, exist_ok=True)
+
+        fig.savefig(out_path, dpi=300)
 
     def create_progress_plot(self):
         random_baseline_whole_instances_runtime_frac = np.array([0.012854, 0.014792, 0.016731, 0.018669, 0.020608, 0.022546, 0.024485, 0.026423, 0.028362, 0.030300, 0.032239, 0.034177, 0.036116, 0.038054, 0.039993, 0.041931, 0.043869, 0.045808, 0.047746, 0.049685, 0.051623, 0.053562, 0.055500, 0.057439, 0.059377, 0.061316, 0.063254, 0.065193, 0.067131, 0.069070, 0.071008, 0.072946, 0.074885, 0.076823, 0.078762, 0.080700, 0.082639, 0.084577, 0.086516, 0.088454, 0.090393, 0.092331, 0.094270, 0.096208, 0.098147, 0.100085, 0.102023, 0.103962, 0.105900, 0.107839, 0.109777, 0.111716, 0.113654, 0.115593, 0.117531, 0.119470, 0.121408, 0.123347, 0.125285, 0.127223, 0.129162, 0.131100, 0.133039, 0.134977, 0.136916, 0.138854, 0.140793, 0.142731, 0.144670, 0.146608, 0.148547, 0.150485, 0.152424, 0.154362, 0.156300, 0.158239, 0.160177, 0.162116, 0.164054, 0.165993, 0.167931, 0.169870, 0.171808, 0.173747, 0.175685, 0.177624, 0.179562, 0.181501, 0.183439, 0.185377, 0.187316, 0.189254, 0.191193, 0.193131, 0.195070, 0.197008, 0.198947, 0.200885, 0.202824, 0.204762])   

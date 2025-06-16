@@ -3,13 +3,15 @@ import pandas as pd
 import time
 import random
 import pickle
+import subprocess
 import matplotlib.pyplot as plt
+from al_experiments.experiment_config import ExperimentConfig
 from al_experiments.helper import push_notification
 from al_experiments.accuracy import Accuracy
 from scipy.interpolate import interp1d
 
 from al_experiments.plot_generator import PlotGenerator
-from instance_selector import InstanceSelector
+from al_experiments.instance_selector import InstanceSelector, choose_instances_random
 
 # constants
 number_of_solvers = 28
@@ -17,14 +19,28 @@ solver_fraction = 1/number_of_solvers
 square_of_solvers = number_of_solvers * number_of_solvers
 reduced_square_of_solvers = number_of_solvers*(number_of_solvers-1)
 number_of_instances = 5355
-# config
-break_after_solvers = 100
-break_after_runtime_fraction = 0.655504 # determined by 0e993e00
-total_samples = 500
+# global config
+break_after_solvers = 200
+break_after_runtime_fraction = 0.0025  # 0.655504 # determined by 0e993e00
+total_samples = 500  # max is 5354 because of sample_result_after_instances
 sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
+sample_result_after_instances = int(number_of_instances / total_samples)
 # total_runtime = 25860323 s
 # global results
-result_tracker = []
+all_timeout_results = []
+all_selection_results = []
+
+
+def get_git_commit_hash():
+    # runs: git rev-parse HEAD
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        check=True,  # raises CalledProcessError on non-zero exit
+    )
+    # decode bytes to str, strip newline
+    return result.stdout.decode("utf-8").strip()[:8]
 
 
 def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
@@ -160,59 +176,26 @@ def compute_average_grid(list_of_dfs, grid_size=total_samples):
 
 
 def store_and_show_mean_result():
-    avg_results = compute_average_grid(result_tracker, grid_size=100)
+    avg_results = compute_average_grid(all_timeout_results, grid_size=100)
 
     pd.set_option('display.max_rows', total_samples * 2)
     print(avg_results)
     pd.reset_option("display.max_rows")
-
-    # create main plot and a twin y-axis
-    fig, ax1 = plt.subplots()
-
-    ax2 = ax1.twinx()
-
-    ax1.plot(
-        avg_results["runtime_frac"],
-        avg_results["diff"], 'g-o',
-        label="diff"
-    )
-    ax1.set_ylabel("diff", color='g')
-
-    ax2.plot(
-        avg_results["runtime_frac"],
-        avg_results["cross_acc"],
-        'b-s',
-        label="cross_acc"
-    )
-    ax2.plot(
-        avg_results["runtime_frac"],
-        avg_results["true_acc"],
-        'r-x',
-        label="true_acc"
-    )
-    ax2.set_ylabel("cross_acc", color='b')
-    ax2.set_ylabel("true_acc", color='r')
-
-    plt.title("average over all solvers")
-
-    # optional: add grids and legends
-    ax1.grid(True)
-    ax1.set_xlabel("runtime fraction")
-    fig.tight_layout()
-    fig.savefig("./plots/average_results.png", dpi=300)
+    plot_generator.plot_timeout_results_avg(avg_results)
 
 
-def determine_tresholds(
-        total_runtime: float,
-        par_2_scores: np.ndarray[np.floating[np.float32]],
-        sorted_runtimes: np.ndarray,
+def static_timeout(
         acc_calculator: Accuracy,
-        progress: str,
         solver_string: str,
-        solver_index: int,
-        par_2_scores_series,
-        df_runtimes,
-        df_rated,
+) -> np.ndarray[np.floating[np.float32]]:
+    return np.ascontiguousarray(
+        np.full((5355,), 27, dtype=np.int32)
+    )
+
+
+def quantized_min_diff(
+        acc_calculator: Accuracy,
+        solver_string: str,
 ) -> np.ndarray[np.floating[np.float32]]:
 
     # initialize tresholds with 0
@@ -230,34 +213,6 @@ def determine_tresholds(
         if min_diff == -1:
             break
     print(f"took {(time.time_ns() - start) / 1_000_000_000}s")
-
-    solver_results = acc_calculator.solver_results
-
-    del solver_results[0]
-    solver_results = pd.DataFrame(solver_results)
-
-    result_tracker.append(solver_results)
-
-    # create main plot and a twin y-axis
-    fig, ax1 = plt.subplots()
-
-    ax2 = ax1.twinx()
-
-    ax1.plot(solver_results["runtime_frac"], solver_results["diff"], 'g-o', label="diff")
-    ax1.set_ylabel("diff", color='g')
-
-    ax2.plot(solver_results["runtime_frac"], solver_results["cross_acc"], 'b-s', label="cross_acc")
-    ax2.plot(solver_results["runtime_frac"], solver_results["true_acc"], 'r-x', label="true_acc")
-    ax2.set_ylabel("cross_acc", color='b')
-    ax2.set_ylabel("true_acc", color='r')
-
-    plt.title(f"dynamic vector for solver {solver_string}")
-
-    # optional: add grids and legends
-    ax1.grid(True)
-    ax1.set_xlabel("runtime fraction")
-    fig.tight_layout()
-    fig.savefig(f"./plots/{solver_string}_results.png", dpi=300)
 
     return thresholds
 
@@ -285,7 +240,7 @@ def get_stats(df_rated, df_runtimes, par_2_scores_series, par_2_scores, runtimes
     return {"runtime_frac": runtime_frac, "cross_acc": cross_acc, "true_acc": true_acc, "diff": diff}
 
 
-def run_experiment():
+def run_experiment(experiment_config: ExperimentConfig):
     with open(
         "../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl",
         "rb"
@@ -348,22 +303,9 @@ def run_experiment():
             par_2_score_removed_solver, runtime_of_removed_solver
         )
 
-        # selector = InstanceSelector(np.array([]), sorted_runtimes)
-
-        #selector.choose_instances_random()
-
         # determine thresholds for perfect differentiation of remaining solvers
-        thresholds = determine_tresholds(
-            total_runtime,
-            par_2_scores,
-            sorted_runtimes,
-            acc_calculator,
-            f"{index+1}/{random_solver_order.__len__()}",
-            solver_string,
-            solver_index,
-            par_2_scores_series,
-            df_runtimes,
-            df_rated
+        thresholds = experiment_config.determine_thresholds(
+            acc_calculator, solver_string
         )
 
         print("here is the calculated threshold vector:")
@@ -375,7 +317,7 @@ def run_experiment():
 
         print("here are the results")
 
-        last_results = acc_calculator.sample_result(thresholds)
+        last_results = acc_calculator.sample_result(thresholds, acc_calculator.pred)
 
         results.iloc[
             solver_index, results.columns.get_loc('Par2Diff')
@@ -398,18 +340,45 @@ def run_experiment():
 
         print(f"took {0} calculation steps")
 
-        choose_instances(thresholds, sorted_runtimes)
+        selector = InstanceSelector(
+            thresholds, sorted_runtimes, acc_calculator,
+            sample_result_after_instances, choose_instances_random
+        )
+
+        selector.make_selection()
+
+        selection_results = selector.results
+
+        solver_results = acc_calculator.solver_results
+
+        """  if len(solver_results) > 0:
+            del solver_results[0] """
+
+        solver_results = pd.DataFrame(solver_results)
+        selection_results = pd.DataFrame(selection_results)
+
+        all_timeout_results.append(solver_results)
+        all_selection_results.append(selector.results)
+
+        plot_generator.plot_solver_results(
+            solver_results, selection_results, solver_string
+        )
 
     store_and_show_mean_result()
 
 
 if __name__ == "__main__":
 
-    plot_generator = PlotGenerator()
-    plot_generator.create_progress_plot()
+    git_hash = get_git_commit_hash()
 
-    push_notification("start experiment")
+    plot_generator = PlotGenerator(git_hash)
+    #plot_generator.create_progress_plot()
 
-    run_experiment()
+    # experiment config
+    experiment_config = ExperimentConfig(quantized_min_diff)
 
-    push_notification("ended experiment")
+    print(f"start experiment on {git_hash}")
+
+    run_experiment(experiment_config)
+
+    print("ended experiment")
