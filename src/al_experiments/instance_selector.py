@@ -98,11 +98,37 @@ def choose_instances_random(
     return np.random.choice(possible_instances)
 
 
-def variance_based_selection(
+def variance_based_selection_1(
         possible_instances: np.ndarray,
         thresholds: np.ndarray,
         sorted_runtimes: np.ndarray
 ):
+    """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
+    timeouts = sorted_runtimes['runtime'][instance_idx, thresholds[instance_idx]]
+    runtimes = sorted_runtimes['runtime'].copy()
+
+    runtimes[np.isclose(runtimes, 0.0, rtol=1e-09, atol=1e-09)] = np.nan
+    runtimes[runtimes == 5000.0] = 10000.0
+    runtimes[runtimes > timeouts[:, None]] = timeouts * 2
+
+    variances = np.nanvar(runtimes, axis=1)
+    means = np.nanmean(runtimes, axis=1)
+
+    score: np.ndarray = variances/means
+
+    score = score[possible_instances]
+
+    best_idx = possible_instances[np.nanargmax(score)]
+
+    return best_idx
+
+
+def variance_based_selection_2(
+        possible_instances: np.ndarray,
+        thresholds: np.ndarray,
+        sorted_runtimes: np.ndarray
+):
+    """this methods works slightly worse than `variance_based_selection_1` (tested in e99fb452 (this version) vs 697d3971 (version 1))"""
     timeouts = sorted_runtimes['runtime'][instance_idx, thresholds[instance_idx]]
     scores = sorted_runtimes['runtime'].copy()
     runtimes = sorted_runtimes['runtime'].copy()
