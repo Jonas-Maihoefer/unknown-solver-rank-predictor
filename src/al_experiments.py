@@ -4,9 +4,7 @@ import time
 import random
 import pickle
 import subprocess
-import matplotlib.pyplot as plt
 from al_experiments.experiment_config import ExperimentConfig
-from al_experiments.helper import push_notification
 from al_experiments.accuracy import Accuracy
 from scipy.interpolate import interp1d
 
@@ -176,12 +174,20 @@ def compute_average_grid(list_of_dfs, grid_size=total_samples):
 
 
 def store_and_show_mean_result():
-    avg_results = compute_average_grid(all_timeout_results, grid_size=100)
+
+    if not all_timeout_results[0].empty:
+        avg_timeout_results = compute_average_grid(all_timeout_results, grid_size=total_samples)
+    else:
+        avg_timeout_results = None
+    avg_selection_results = compute_average_grid(all_selection_results, grid_size=total_samples)
 
     pd.set_option('display.max_rows', total_samples * 2)
-    print(avg_results)
+    print("avg_timeout_results")
+    print(avg_timeout_results)
+    print("avg_selection_results")
+    print(avg_selection_results)
     pd.reset_option("display.max_rows")
-    plot_generator.plot_timeout_results_avg(avg_results)
+    plot_generator.plot_avg_results(avg_timeout_results, avg_selection_results)
 
 
 def static_timeout(
@@ -358,7 +364,7 @@ def run_experiment(experiment_config: ExperimentConfig):
         selection_results = pd.DataFrame(selection_results)
 
         all_timeout_results.append(solver_results)
-        all_selection_results.append(selector.results)
+        all_selection_results.append(selection_results)
 
         plot_generator.plot_solver_results(
             solver_results, selection_results, solver_string
@@ -375,7 +381,7 @@ if __name__ == "__main__":
     #plot_generator.create_progress_plot()
 
     # experiment config
-    experiment_config = ExperimentConfig(quantized_min_diff)
+    experiment_config = ExperimentConfig(static_timeout)
 
     print(f"start experiment on {git_hash}")
 

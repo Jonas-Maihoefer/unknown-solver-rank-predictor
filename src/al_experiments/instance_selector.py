@@ -78,8 +78,12 @@ class InstanceSelector:
             combined_mask = not_choosen_yet & has_timeout
             possible_instances = self.instance_idx[combined_mask]
 
-        #print("pred:")
-        #print(self.pred)
+        # sample last result
+        self.results.append(
+            self.acc_calculator.sample_result(
+                self.choosen_thresholds, self.pred
+            )
+        )
 
 
 def choose_instances_random(

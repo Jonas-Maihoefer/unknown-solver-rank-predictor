@@ -7,27 +7,34 @@ class PlotGenerator:
     def __init__(self, git_hash):
         self.git_hash = git_hash
 
-    def plot_timeout_results_avg(self, avg_results):
+    def plot_avg_results(self, avg_timeout_results, avg_selection_results):
         # create main plot and a twin y-axis
         fig, ax1 = plt.subplots()
         ax2 = ax1.twinx()
-        ax1.plot(
-            avg_results["runtime_frac"],
-            avg_results["diff"], 'g-o',
-            label="diff"
-        )
-        ax1.set_ylabel("diff", color='g')
+        if avg_timeout_results is not None:
+            ax1.plot(
+                avg_timeout_results["runtime_frac"],
+                avg_timeout_results["diff"], 'g-o',
+                label="diff"
+            )
+            ax1.set_ylabel("diff", color='g')
+            ax2.plot(
+                avg_timeout_results["runtime_frac"],
+                avg_timeout_results["cross_acc"],
+                'b-s',
+                label="cross_acc_timeout_selection"
+            )
+            ax2.plot(
+                avg_timeout_results["runtime_frac"],
+                avg_timeout_results["true_acc"],
+                'r-x',
+                label="true_acc_timeout_selection"
+            )
         ax2.plot(
-            avg_results["runtime_frac"],
-            avg_results["cross_acc"],
-            'b-s',
-            label="cross_acc"
-        )
-        ax2.plot(
-            avg_results["runtime_frac"],
-            avg_results["true_acc"],
-            'r-x',
-            label="true_acc"
+            avg_selection_results["runtime_frac"],
+            avg_selection_results["true_acc"],
+            'y-x',
+            label="true_acc_instance_selection"
         )
         ax2.set_ylabel("cross_acc", color='b')
         ax2.set_ylabel("true_acc", color='r')
@@ -46,20 +53,21 @@ class PlotGenerator:
 
         ax2 = ax1.twinx()
 
-        ax1.plot(
-            solver_results["runtime_frac"], solver_results["diff"],
-            'g-o', label="diff"
-        )
-        ax1.set_ylabel("diff", color='g')
+        if len(solver_results) > 0:
+            ax1.plot(
+                solver_results["runtime_frac"], solver_results["diff"],
+                'g-o', label="diff"
+            )
+            ax1.set_ylabel("diff", color='g')
 
-        ax2.plot(
-            solver_results["runtime_frac"], solver_results["cross_acc"],
-            'b-s', label="cross_acc_timeout_selection"
-        )
-        ax2.plot(
-            solver_results["runtime_frac"], solver_results["true_acc"],
-            'r-x', label="true_acc_timeout_selection"
-        )
+            ax2.plot(
+                solver_results["runtime_frac"], solver_results["cross_acc"],
+                'b-s', label="cross_acc_timeout_selection"
+            )
+            ax2.plot(
+                solver_results["runtime_frac"], solver_results["true_acc"],
+                'r-x', label="true_acc_timeout_selection"
+            )
         ax2.plot(
             selection_results["runtime_frac"], selection_results["true_acc"],
             'y-x', label="true_acc_instance_selection"
