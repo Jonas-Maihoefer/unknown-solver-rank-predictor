@@ -103,17 +103,27 @@ def variance_based_selection(
         sorted_runtimes: np.ndarray
 ):
     timeouts = sorted_runtimes['runtime'][instance_idx, thresholds[instance_idx]]
+    scores = sorted_runtimes['runtime'].copy()
     runtimes = sorted_runtimes['runtime'].copy()
 
-    runtimes[np.isclose(runtimes, 0.0, rtol=1e-09, atol=1e-09)] = np.nan
-    runtimes[runtimes == 5000.0] = 10000.0
-    runtimes[runtimes > timeouts[:, None]] = timeouts * 2
-    #runtimes[sorted_runtimes['idx'][included_solvers + 1:]]
+    scores[np.isclose(scores, 0.0, rtol=1e-09, atol=1e-09)] = np.nan
+    scores[scores == 5000.0] = 10000.0
+    scores = np.where(
+        scores >= timeouts[:, None],
+        timeouts[:, None] * 2,
+        scores
+    )
 
-    variances = np.nanvar(runtimes, axis=1)
-    means = np.nanmean(runtimes, axis=1)
+    runtimes = np.where(
+        runtimes >= timeouts[:, None],
+        timeouts[:, None],
+        runtimes
+    )
 
-    score: np.ndarray = variances/means
+    variances = np.nanvar(scores, axis=1)
+    mean_rts = np.nanmean(runtimes, axis=1)
+
+    score: np.ndarray = variances/mean_rts
 
     score = score[possible_instances]
 
