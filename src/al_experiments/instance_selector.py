@@ -1,7 +1,10 @@
+from statistics import pstdev
 import numpy as np
 
 from al_experiments.accuracy import Accuracy
 
+number_of_instances = 5355
+instance_idx = np.arange(number_of_instances)
 
 class InstanceSelector:
     number_of_instances = 5355
@@ -92,3 +95,25 @@ def choose_instances_random(
         sorted_runtimes: np.ndarray
 ):
     return np.random.choice(possible_instances)
+
+
+def variance_based_selection(
+        possible_instances: np.ndarray,
+        thresholds: np.ndarray,
+        sorted_runtimes: np.ndarray
+):
+    timeouts = sorted_runtimes['runtime'][instance_idx, thresholds[instance_idx]]
+    runtimes = sorted_runtimes['runtime'].copy()
+    runtimes[runtimes >= timeouts[:, None]] = np.nan
+    runtimes[runtimes == 0.0] = np.nan
+
+    variances = np.nanvar(runtimes, axis=1)
+    means = np.nanmean(runtimes, axis=1)
+
+    score: np.ndarray = variances/means
+
+    score = score[possible_instances]
+
+    best_idx = possible_instances[np.nanargmax(score)]
+
+    return best_idx

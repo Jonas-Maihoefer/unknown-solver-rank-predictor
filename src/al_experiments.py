@@ -9,7 +9,7 @@ from al_experiments.accuracy import Accuracy
 from scipy.interpolate import interp1d
 
 from al_experiments.plot_generator import PlotGenerator
-from al_experiments.instance_selector import InstanceSelector, choose_instances_random
+from al_experiments.instance_selector import InstanceSelector, choose_instances_random, variance_based_selection
 
 # constants
 number_of_solvers = 28
@@ -348,7 +348,7 @@ def run_experiment(experiment_config: ExperimentConfig):
 
         selector = InstanceSelector(
             thresholds, sorted_runtimes, acc_calculator,
-            sample_result_after_instances, choose_instances_random
+            sample_result_after_instances, variance_based_selection
         )
 
         selector.make_selection()
