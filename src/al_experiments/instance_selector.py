@@ -120,16 +120,6 @@ def variance_based_selection_1(
 
     best_idx = possible_instances[np.nanargmax(score)]
 
-    print("possible instances")
-    print(possible_instances)
-    print(len(possible_instances))
-    print("sorted_runtimes")
-    print(sorted_runtimes[possible_instances[0]])
-    print("last solver")
-    print(sorted_runtimes[possible_instances[0]][thresholds[possible_instances[0]]])
-    print("runtimes")
-    print(runtimes[possible_instances[0]])
-
     return best_idx
 
 
@@ -167,9 +157,6 @@ def variance_based_selection_2(
     score: np.ndarray = variances/mean_rts
 
     score = score[possible_instances]
-
-    print(possible_instances)
-    print(len(possible_instances))
 
     best_idx = possible_instances[np.nanargmax(score)]
 
