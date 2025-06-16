@@ -53,7 +53,7 @@ class Accuracy:
         for i in range(self.number_of_instances):
             self.sorted_rt[i, :] = self.sorted_runtimes[i]
 
-    def add_runtime_fast(
+    def add_runtime_quantized(
             self,
             thresholds: np.ndarray,
             prev_max_acc: float,
@@ -147,6 +147,27 @@ class Accuracy:
         if self.n % self.sample_result_after_iterations == 0:
             self.solver_results.append(
                 self.sample_result(thresholds, score[best_idx])
+            )
+        if (self.used_runtime/self.total_runtime > self.break_after_runtime_fraction) or len(valid_instances) <= 1:
+            return thresholds, prev_max_acc, -1
+        return thresholds, prev_max_acc, prev_min_diff
+
+    def add_runtime_random_quantized(
+            self,
+            thresholds: np.ndarray,
+            prev_max_acc: float,
+            prev_min_diff: float
+    ):
+        # instances not maxed out yet
+        remaining_mask = thresholds < self.number_of_reduced_solvers
+        valid_instances = self.instance_idx[remaining_mask]
+        best_idx = np.random.choice(valid_instances)
+        thresholds[best_idx] += 1
+        self.n += 1
+
+        if self.n % self.sample_result_after_iterations == 0:
+            self.solver_results.append(
+                self.sample_result(thresholds)
             )
         if (self.used_runtime/self.total_runtime > self.break_after_runtime_fraction) or len(valid_instances) <= 1:
             return thresholds, prev_max_acc, -1

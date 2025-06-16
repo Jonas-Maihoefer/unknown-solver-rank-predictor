@@ -20,7 +20,7 @@ number_of_instances = 5355
 break_after_solvers = 100
 break_after_runtime_fraction = 2
 total_samples = 500
-sample_result_after_iterations = number_of_instances * (number_of_solvers - 1) / total_samples
+sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
 # total_runtime = 25860323 s
 # global results
 result_tracker = []
@@ -152,7 +152,7 @@ def compute_average_grid(list_of_dfs, grid_size=total_samples):
 def store_and_show_mean_result():
     avg_results = compute_average_grid(result_tracker, grid_size=100)
 
-    pd.set_option('display.max_rows', 110)
+    pd.set_option('display.max_rows', total_samples * 2)
     print(avg_results)
     pd.reset_option("display.max_rows")
 
@@ -214,7 +214,7 @@ def determine_tresholds(
     min_diff = 999999999.0
 
     while True:
-        thresholds, max_acc, min_diff = acc_calculator.add_runtime_fast(
+        thresholds, max_acc, min_diff = acc_calculator.add_runtime_quantized(
             thresholds, max_acc, min_diff
         )
         if min_diff == -1:
@@ -283,6 +283,8 @@ def run_experiment():
         df: pd.DataFrame = pickle.load(file).copy()
 
     print(df)
+
+    print(f"sample result after {sample_result_after_iterations} iterations")
 
     df_runtimes = df.replace([np.inf, -np.inf], 5000)
 
