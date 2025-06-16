@@ -162,6 +162,35 @@ class Accuracy:
         remaining_mask = thresholds < self.number_of_reduced_solvers
         valid_instances = self.instance_idx[remaining_mask]
         best_idx = np.random.choice(valid_instances)
+
+        runtime_list = self.sorted_runtimes[best_idx]
+
+        included_solvers = thresholds[best_idx]
+
+        #print(f"currently, there are {included_solvers} solvers added")
+
+        prev_solver, prev_added_runtime = runtime_list[included_solvers]
+
+        #print(f"solver {prev_solver} is the current last. It has {prev_added_runtime}s runtime.")
+
+        solver, added_runtime = runtime_list[included_solvers+1]
+
+        #print(f"next solver is solver {solver}. It has {added_runtime}s runtime.")
+
+        prev_penalty = prev_added_runtime * 2
+        new_penalty = added_runtime * 2
+        new_pred = self.pred.copy()
+        new_pred[solver] += (added_runtime - prev_penalty)
+        #print("here is the previous pred:")
+        #print(self.pred)
+        #print(f"the pred of solver {solver} is now {new_pred[solver]}")
+        #print("here are the remaining preds:")
+        new_arr = np.array(runtime_list, dtype=[('idx', np.int64), ('val', np.float64)])
+        timeout_mask = new_arr['idx'][included_solvers+2:]
+        new_pred[timeout_mask] += (new_penalty - prev_penalty)
+        #print(new_pred)
+
+        self.pred = new_pred
         thresholds[best_idx] += 1
         self.n += 1
 
