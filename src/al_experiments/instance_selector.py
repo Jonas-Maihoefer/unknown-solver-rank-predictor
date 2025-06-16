@@ -6,6 +6,7 @@ from al_experiments.accuracy import Accuracy
 number_of_instances = 5355
 instance_idx = np.arange(number_of_instances)
 
+
 class InstanceSelector:
     number_of_instances = 5355
     instance_idx = np.arange(number_of_instances)
