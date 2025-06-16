@@ -104,8 +104,11 @@ def variance_based_selection(
 ):
     timeouts = sorted_runtimes['runtime'][instance_idx, thresholds[instance_idx]]
     runtimes = sorted_runtimes['runtime'].copy()
-    runtimes[runtimes >= timeouts[:, None]] = np.nan
-    runtimes[runtimes == 0.0] = np.nan
+
+    runtimes[np.isclose(runtimes, 0.0, rtol=1e-09, atol=1e-09)] = np.nan
+    runtimes[runtimes == 5000.0] = 10000.0
+    runtimes[runtimes >= timeouts[:, None]] = timeouts * 2
+    #runtimes[sorted_runtimes['idx'][included_solvers + 1:]]
 
     variances = np.nanvar(runtimes, axis=1)
     means = np.nanmean(runtimes, axis=1)
