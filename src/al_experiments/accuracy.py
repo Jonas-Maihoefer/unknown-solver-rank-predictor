@@ -24,7 +24,7 @@ class Accuracy:
             total_runtime,
             break_after_runtime_fraction,
             sample_result_after_iterations,
-            sorted_runtimes: np.ndarray,
+            sorted_rt: np.ndarray,
             par_2_scores,
             mean_par_2_score: float,
             par_2_score_removed_solver: float,
@@ -33,7 +33,7 @@ class Accuracy:
         self.total_runtime = total_runtime
         self.break_after_runtime_fraction = break_after_runtime_fraction
         self.sample_result_after_iterations = sample_result_after_iterations
-        self.sorted_runtimes = sorted_runtimes
+        self.sorted_rt = sorted_rt
         self.par_2_scores = par_2_scores
         self.mean_par_2_score = mean_par_2_score
         self.par_2_score_removed_solver = par_2_score_removed_solver
@@ -45,13 +45,6 @@ class Accuracy:
         )
         self.solver_results = []
         self.dtype = [('idx', np.int64), ('runtime', np.float64)]
-
-        # 1) allocate a (n_runs, L) structured array
-        self.sorted_rt = np.empty((self.number_of_instances, self.number_of_solvers), dtype=self.dtype)
-
-        # 2) fill it in
-        for i in range(self.number_of_instances):
-            self.sorted_rt[i, :] = self.sorted_runtimes[i]
 
     def add_runtime_quantized(
             self,
@@ -163,7 +156,7 @@ class Accuracy:
         valid_instances = self.instance_idx[remaining_mask]
         best_idx = np.random.choice(valid_instances)
 
-        runtime_list = self.sorted_runtimes[best_idx]
+        runtime_list = self.sorted_rt[best_idx]
 
         included_solvers = thresholds[best_idx]
 
@@ -208,7 +201,7 @@ class Accuracy:
         cross_acc = self.calc_cross_acc_2(self.par_2_scores, self.pred)
 
         new_pred = 0
-        for index, runtime_list in enumerate(self.sorted_runtimes):
+        for index, runtime_list in enumerate(self.sorted_rt):
             _, timeout = runtime_list[thresholds[index]]
             # is instance maxed out?
             if thresholds[index] == self.number_of_reduced_solvers:
@@ -252,7 +245,7 @@ class Accuracy:
     def find_best_index_min_diff(
             self,
             thresholds: np.ndarray[np.floating[np.float32]],
-            sorted_runtimes: np.ndarray,
+            sorted_rt: np.ndarray,
             actu_par2,
             actu_par2_min: float,
             runtime_to_add: float,

@@ -9,6 +9,7 @@ from al_experiments.accuracy import Accuracy
 from scipy.interpolate import interp1d
 
 from al_experiments.plot_generator import PlotGenerator
+from instance_selector import InstanceSelector
 
 # constants
 number_of_solvers = 28
@@ -18,7 +19,7 @@ reduced_square_of_solvers = number_of_solvers*(number_of_solvers-1)
 number_of_instances = 5355
 # config
 break_after_solvers = 100
-break_after_runtime_fraction = 2
+break_after_runtime_fraction = 0.655504 # determined by 0e993e00
 total_samples = 500
 sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
 # total_runtime = 25860323 s
@@ -29,7 +30,8 @@ result_tracker = []
 def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
     data = runtimes.values
 
-    sorted_runtimes = []
+    sorted_runtimes_list = []
+
     for row in data:
         # get sorted indices based on runtime
         sorted_idx = np.argsort(row)
@@ -37,9 +39,17 @@ def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
         tuples = [(int(i), float(row[i])) for i in sorted_idx]
         # add zero element
         tuples.insert(0, (-1, 0))
-        sorted_runtimes.append(tuples)
+        sorted_runtimes_list.append(tuples)
 
-    return sorted_runtimes
+    dtype = [('idx', np.int64), ('runtime', np.float64)]
+    # 1) allocate a (n_runs, L) structured array
+    sorted_rt = np.empty((number_of_instances, number_of_solvers), dtype=dtype)
+
+    # 2) fill it in
+    for i in range(number_of_instances):
+        sorted_rt[i, :] = sorted_runtimes_list[i]
+
+    return sorted_rt
 
 
 def determine_runtime_fraction(df: pd.DataFrame, runtime_limits: pd.Series):
@@ -338,6 +348,10 @@ def run_experiment():
             par_2_score_removed_solver, runtime_of_removed_solver
         )
 
+        # selector = InstanceSelector(np.array([]), sorted_runtimes)
+
+        #selector.choose_instances_random()
+
         # determine thresholds for perfect differentiation of remaining solvers
         thresholds = determine_tresholds(
             total_runtime,
@@ -383,6 +397,8 @@ def run_experiment():
         print(results.mean())
 
         print(f"took {0} calculation steps")
+
+        choose_instances(thresholds, sorted_runtimes)
 
     store_and_show_mean_result()
 
