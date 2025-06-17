@@ -393,7 +393,7 @@ if __name__ == "__main__":
     git_hash = get_git_commit_hash()
 
     plot_generator = PlotGenerator(git_hash)
-    #plot_generator.create_progress_plot()
+    plot_generator.create_progress_plot()
 
     # experiment config
     experiment_config = ExperimentConfig(quantized_min_diff)
