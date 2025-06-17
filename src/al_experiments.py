@@ -18,7 +18,7 @@ square_of_solvers = number_of_solvers * number_of_solvers
 reduced_square_of_solvers = number_of_solvers*(number_of_solvers-1)
 number_of_instances = 5355
 # global config
-break_after_solvers = 2
+break_after_solvers = 200
 break_after_runtime_fraction = 0.655504  # determined by 0e993e00
 total_samples = 500  # max is 5354 because of sample_result_after_instances
 sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
