@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Set the number of threads for parallel math libraries
 export OMP_NUM_THREADS=16
 export OPENBLAS_NUM_THREADS=16
