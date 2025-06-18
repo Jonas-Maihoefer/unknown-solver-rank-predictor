@@ -28,6 +28,7 @@ sample_result_after_instances = int(number_of_instances / total_samples)
 all_timeout_results = []
 all_random_sel_results = []
 all_var_sel_results = []
+all_var_sel_2_results = []
 
 
 def get_git_commit_hash():
@@ -182,6 +183,7 @@ def store_and_show_mean_result():
         avg_timeout_results = None
     avg_random_sel_results = compute_average_grid(all_random_sel_results, grid_size=total_samples)
     avg_var_sel_results = compute_average_grid(all_var_sel_results, grid_size=total_samples)
+    avg_var_sel_2_results = compute_average_grid(all_var_sel_2_results, grid_size=total_samples)
 
     pd.set_option('display.max_rows', total_samples * 2)
     print("avg_timeout_results")
@@ -190,9 +192,12 @@ def store_and_show_mean_result():
     print(avg_random_sel_results)
     print("avg_var_sel_results")
     print(avg_var_sel_results)
+    print("avg_var_sel_2_results")
+    print(avg_var_sel_2_results)
     pd.reset_option("display.max_rows")
     plot_generator.plot_avg_results(
-        avg_timeout_results, avg_random_sel_results, avg_var_sel_results
+        avg_timeout_results, avg_random_sel_results,
+        avg_var_sel_results, avg_var_sel_2_results
     )
 
 
@@ -362,11 +367,18 @@ def run_experiment(experiment_config: ExperimentConfig):
             sample_result_after_instances, variance_based_selection_1
         )
 
+        variance_based_selector_2 = InstanceSelector(
+            thresholds, sorted_runtimes, acc_calculator,
+            sample_result_after_instances, variance_based_selection_2
+        )
+
         random_selector.make_selection()
         variance_based_selector.make_selection()
+        variance_based_selector_2.make_selection()
 
         random_selection_results = random_selector.results
         variance_selection_results = variance_based_selector.results
+        variance_selection_2_results = variance_based_selector_2.results
 
         solver_results = acc_calculator.solver_results
 
@@ -376,13 +388,15 @@ def run_experiment(experiment_config: ExperimentConfig):
         solver_results = pd.DataFrame(solver_results)
         random_selection_results = pd.DataFrame(random_selection_results)
         variance_selection_results = pd.DataFrame(variance_selection_results)
+        variance_selection_2_results = pd.DataFrame(variance_selection_2_results)
 
         all_timeout_results.append(solver_results)
         all_random_sel_results.append(random_selection_results)
         all_var_sel_results.append(variance_selection_results)
+        all_var_sel_2_results.append(variance_selection_2_results)
 
         plot_generator.plot_solver_results(
-            solver_results, random_selection_results, variance_selection_results, solver_string
+            solver_results, random_selection_results, variance_selection_results, variance_selection_2_results, solver_string
         )
 
     store_and_show_mean_result()
@@ -393,7 +407,7 @@ if __name__ == "__main__":
     git_hash = get_git_commit_hash()
 
     plot_generator = PlotGenerator(git_hash)
-    plot_generator.create_progress_plot()
+    #plot_generator.create_progress_plot()
 
     # experiment config
     experiment_config = ExperimentConfig(quantized_min_diff)

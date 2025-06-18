@@ -8,8 +8,8 @@ class PlotGenerator:
         self.git_hash = git_hash
 
     def plot_avg_results(
-            self, avg_timeout_results,
-            avg_random_sel_results, avg_var_sel_results
+            self, avg_timeout_results, avg_random_sel_results,
+            avg_var_sel_results, avg_var_sel_2_results
     ):
         # create main plot and a twin y-axis
         fig, ax1 = plt.subplots()
@@ -17,33 +17,34 @@ class PlotGenerator:
         if avg_timeout_results is not None:
             ax1.plot(
                 avg_timeout_results["runtime_frac"],
-                avg_timeout_results["diff"], 'g-o',
+                avg_timeout_results["diff"],
                 label="diff"
             )
             ax1.set_ylabel("diff", color='g')
             ax2.plot(
                 avg_timeout_results["runtime_frac"],
                 avg_timeout_results["cross_acc"],
-                'b-s',
                 label="cross_acc_timeout_selection"
             )
             ax2.plot(
                 avg_timeout_results["runtime_frac"],
                 avg_timeout_results["true_acc"],
-                'r-x',
                 label="true_acc_timeout_selection"
             )
         ax2.plot(
             avg_random_sel_results["runtime_frac"],
             avg_random_sel_results["true_acc"],
-            'y-x',
             label="true_acc_random_instance_selection"
         )
         ax2.plot(
             avg_var_sel_results["runtime_frac"],
             avg_var_sel_results["true_acc"],
-            'm-x',
             label="true_acc_variance_based_instance_selection"
+        )
+        ax2.plot(
+            avg_var_sel_2_results["runtime_frac"],
+            avg_var_sel_2_results["true_acc"],
+            label="true_acc_variance_based_instance_selection_2"
         )
         ax2.set_ylabel("cross_acc", color='b')
         ax2.set_ylabel("true_acc", color='r')
@@ -61,7 +62,7 @@ class PlotGenerator:
         fig.savefig(f"./plots/{self.git_hash}/average_results.png", dpi=300)
 
     def plot_solver_results(
-        self, solver_results, random_sel_results, var_sel_results, solver_string
+        self, solver_results, random_sel_results, var_sel_results, var_sel_2_results, solver_string
     ):
         # create main plot and a twin y-axis
         fig, ax1 = plt.subplots()
@@ -71,25 +72,29 @@ class PlotGenerator:
         if len(solver_results) > 0:
             ax1.plot(
                 solver_results["runtime_frac"], solver_results["diff"],
-                'g-o', label="diff"
+                label="diff"
             )
             ax1.set_ylabel("diff", color='g')
 
             ax2.plot(
                 solver_results["runtime_frac"], solver_results["cross_acc"],
-                'b-s', label="cross_acc_timeout_selection"
+                label="cross_acc_timeout_selection"
             )
             ax2.plot(
                 solver_results["runtime_frac"], solver_results["true_acc"],
-                'r-x', label="true_acc_timeout_selection"
+                label="true_acc_timeout_selection"
             )
         ax2.plot(
             random_sel_results["runtime_frac"], random_sel_results["true_acc"],
-            'y-x', label="true_acc_random_instance_selection"
+            label="true_acc_random_instance_selection"
         )
         ax2.plot(
             var_sel_results["runtime_frac"], var_sel_results["true_acc"],
-            'm-x', label="true_acc_variance_based_instance_selection"
+            label="true_acc_variance_based_instance_selection"
+        )
+        ax2.plot(
+            var_sel_2_results["runtime_frac"], var_sel_2_results["true_acc"],
+            label="true_acc_variance_based_instance_selection_2"
         )
         ax2.set_ylabel("cross_acc", color='b')
         ax2.set_ylabel("true_acc", color='r')
@@ -164,22 +169,23 @@ class PlotGenerator:
         plt.figure(figsize=(10, 6))
         #plt.plot(random_baseline_whole_instances_runtime_frac, random_baseline_whole_instances_true_acc, label="random instances")
         #plt.plot(random_baseline_whole_instances_runtime_frac_2, random_baseline_whole_instances_true_acc_2, label="random instances 2")
-        plt.plot(sub_optimal_variance_based_selection_diff_runtime_fraction, sub_optimal_variance_based_selection_diff_true_acc, label="variance-based-selection")
+        #plt.plot(sub_optimal_variance_based_selection_diff_runtime_fraction, sub_optimal_variance_based_selection_diff_true_acc, label="variance-based-selection")
         #plt.plot(optimal_variance_based_selection_diff_runtime_fraction, optimal_variance_based_selection_diff_true_acc, label="optimal variance-based-selection")
-        #plt.plot(random_baseline_dynamic_timeout_runtime_frac, random_baseline_dynamic_timeout_true_acc, label="random dynamic timeout")
+        plt.plot(random_baseline_dynamic_timeout_runtime_frac, random_baseline_dynamic_timeout_true_acc, label="random dynamic timeout")
         #plt.plot(variance_based_selection_runtime_frac, variance_based_selection_true_acc, label="variance based selection first run")
-        #plt.plot(dynamic_timeout_optimized_runtime_frac, dynamic_timeout_optimized_true_acc, label="dynamic timeout optimized")
-        #plt.plot(dynamic_timeout_quantized_selection_runtime_fraction, dynamic_timeout_quantized_selection_true_acc, label="min diff*rt")
-        #plt.plot(dynamic_timeout_quantized_min_diff_runtime_fraction, dynamic_timeout_quantized_min_diff_true_acc, label="min diff")
-        #plt.plot(dynamic_timeout_quantized_min_diff_runtime_fraction_2, dynamic_timeout_quantized_min_diff_true_acc_2, label="min diff")
+        plt.plot(dynamic_timeout_optimized_runtime_frac, dynamic_timeout_optimized_true_acc, label="dynamic timeout optimized")
+        plt.plot(dynamic_timeout_quantized_selection_runtime_fraction, dynamic_timeout_quantized_selection_true_acc, label="min diff*rt")
+        plt.plot(dynamic_timeout_quantized_min_diff_runtime_fraction, dynamic_timeout_quantized_min_diff_true_acc, label="min diff")
+        plt.plot(dynamic_timeout_quantized_min_diff_runtime_fraction_2, dynamic_timeout_quantized_min_diff_true_acc_2, label="min diff")
 
-        plt.plot(quantized_diff_var_sel_runtime_fraction, quantized_diff_var_sel_true_acc, label="choose variance based after timeout precalculation")
-        #plt.plot(quantized_diff_precalc_runtime_fraction, quantized_diff_precalc_true_acc, label="timeout precalculation")
+        #plt.plot(quantized_diff_var_sel_runtime_fraction, quantized_diff_var_sel_true_acc, label="choose variance based after timeout precalculation")
+        plt.plot(quantized_diff_precalc_runtime_fraction, quantized_diff_precalc_true_acc, label="timeout precalculation")
 
         plt.plot(al_low_delta_rt, al_high_delta_acc, marker='o', linestyle='None', label='active learning')
         plt.legend()
         plt.xlabel("Fraction of Runtime")
         plt.xlim(right=1)
+        plt.ylim(0, 1.05)
         plt.ylabel("Ranking Accuracy")
         plt.title("Comparision of different instance selection methods")
         plt.grid(True, linestyle="--", alpha=0.5)
