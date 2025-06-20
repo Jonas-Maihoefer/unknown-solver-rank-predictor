@@ -307,7 +307,7 @@ def run_experiment(experiment_config: ExperimentConfig):
         )
         par_2_score_removed_solver = par_2_scores_series[solver_index]
         runtime_of_removed_solver = np.ascontiguousarray(
-            df_runtimes.iloc[:, solver_index], dtype=np.float32
+            np.asarray(df_runtimes.iloc[:, solver_index].values), dtype=np.float32
         )
         par_2_scores = np.ascontiguousarray(
             reduced_par_2_scores_series, dtype=np.float32
