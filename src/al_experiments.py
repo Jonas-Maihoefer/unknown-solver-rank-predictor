@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy
 import time
 import random
 import pickle
@@ -62,11 +63,16 @@ def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
     for i, row in enumerate(data):
         # get sorted indices based on runtime
         sorted_idx = np.argsort(row)
-        # create list of (solver_index, runtime) tuples
-        tuples = [(int(i), float(row[i])) for i in sorted_idx]
+        # create numpy array of (solver_index, runtime) tuples
+        tmp = numpy.empty(number_of_solvers, dtype=dtype)
         # add zero element
-        tuples.insert(0, (-1, 0))
-        sorted_rt[i, :] = np.array(tuples, dtype=dtype)
+        tmp[0] = (-1, 0.0)
+
+        for j, solver_idx in enumerate(sorted_idx, start=1):
+            tmp[j] = (int(solver_idx), float(row[solver_idx]))
+
+        # copy that entire row into the CuPy array
+        sorted_rt[i, :] = np.asarray(tmp)
 
     return sorted_rt
 
