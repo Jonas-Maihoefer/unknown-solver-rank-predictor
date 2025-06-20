@@ -94,8 +94,8 @@ def determine_runtime_fraction(df: pd.DataFrame, runtime_limits: pd.Series):
 
 
 def vec_to_runtime_frac(
-        thresholds: np.ndarray[np.floating[np.float32]],
-        runtimes: np.ndarray[np.floating[np.float32]],
+        thresholds,
+        runtimes,
         total_runtime: float
 ):
     """
