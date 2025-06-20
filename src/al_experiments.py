@@ -43,6 +43,10 @@ def get_git_commit_hash():
     return result.stdout.decode("utf-8").strip()[:8]
 
 
+git_hash = get_git_commit_hash()
+plot_generator = PlotGenerator(git_hash)
+
+
 def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
     data = runtimes.values
 
@@ -402,18 +406,19 @@ def run_experiment(experiment_config: ExperimentConfig):
     store_and_show_mean_result()
 
 
+def start():
+    #plot_generator.create_progress_plot()
+
+    # experiment config
+    experiment_config = ExperimentConfig(quantized_min_diff)
+
+    print(f"start experiment on {git_hash}")
+
+    run_experiment(experiment_config)
+
+    print("ended experiment")
 
 
-git_hash = get_git_commit_hash()
+if __name__ == "__main__":
 
-plot_generator = PlotGenerator(git_hash)
-#plot_generator.create_progress_plot()
-
-# experiment config
-experiment_config = ExperimentConfig(quantized_min_diff)
-
-print(f"start experiment on {git_hash}")
-
-run_experiment(experiment_config)
-
-print("ended experiment")
+    start()
