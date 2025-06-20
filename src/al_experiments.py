@@ -53,17 +53,17 @@ def get_git_commit_hash():
 def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
     """
     Converts a DataFrame of runtimes to a structured CuPy array, sorted by runtime,
-    using an efficient, vectorized approach.
+    using an efficient, vectorized approach with the correct indexing syntax.
     """
     data = runtimes.values
     n_instances, n_solvers = data.shape
-
+    
     # 1) Transfer the initial data to the GPU in one go
     data_np = np.asarray(data)
 
     # 2) Perform argsort on the entire matrix along the rows (axis=1)
     sorted_indices = np.argsort(data_np, axis=1)
-
+    
     # 3) Use the sorted indices to gather the runtimes in the correct order
     sorted_runtimes_vals = np.take_along_axis(data_np, sorted_indices, axis=1)
 
@@ -73,18 +73,21 @@ def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
         ('runtime', np.float64),
     ])
 
-    # 5) Create the final structured array on the GPU, with space for the prepended column
+    # 5) Create the final structured array on the GPU
     sorted_rt = np.empty((n_instances, n_solvers + 1), dtype=dtype)
 
-    # 6) Fill the columns of the structured array using slicing (very fast)
-    # Fill the first column with the special (-1, 0.0) value
-    sorted_rt['idx'][:, 0] = -1
-    sorted_rt['runtime'][:, 0] = 0.0
-
-    # Fill the remaining columns with the sorted indices and values
-    sorted_rt['idx'][:, 1:] = sorted_indices
-    sorted_rt['runtime'][:, 1:] = sorted_runtimes_vals
-
+    # 6) Fill the columns using the corrected syntax: slice first, then field name.
+    
+    # Get a view of the first column, then set the fields for that view
+    first_col_view = sorted_rt[:, 0]
+    first_col_view['idx'] = -1
+    first_col_view['runtime'] = 0.0
+    
+    # Get a view of the remaining columns, then set the fields for that view
+    remaining_cols_view = sorted_rt[:, 1:]
+    remaining_cols_view['idx'] = sorted_indices
+    remaining_cols_view['runtime'] = sorted_runtimes_vals
+    
     return sorted_rt
 
 
