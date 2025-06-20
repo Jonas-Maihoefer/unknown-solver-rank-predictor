@@ -310,7 +310,7 @@ def run_experiment(experiment_config: ExperimentConfig):
             np.asarray(df_runtimes.iloc[:, solver_index].values), dtype=np.float32
         )
         par_2_scores = np.ascontiguousarray(
-            reduced_par_2_scores_series, dtype=np.float32
+            np.asarray(reduced_par_2_scores_series.values), dtype=np.float32
         )
         mean_par_2_score = par_2_scores.mean()
         reduced_df_runtimes = df_runtimes.drop(
