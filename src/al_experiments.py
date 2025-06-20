@@ -52,27 +52,21 @@ def get_git_commit_hash():
 def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
     data = runtimes.values
 
-    sorted_runtimes_list = []
+    # 1) allocate a (n_runs, L) structured array
+    dtype = np.dtype([
+        ('idx',     np.int64),
+        ('runtime', np.float64),
+    ])
+    sorted_rt = np.empty((number_of_instances, number_of_solvers), dtype=dtype)
 
-    for row in data:
+    for i, row in enumerate(data):
         # get sorted indices based on runtime
         sorted_idx = np.argsort(row)
         # create list of (solver_index, runtime) tuples
         tuples = [(int(i), float(row[i])) for i in sorted_idx]
         # add zero element
         tuples.insert(0, (-1, 0))
-        sorted_runtimes_list.append(tuples)
-
-    dtype = np.dtype([
-        ('idx',     np.int64),
-        ('runtime', np.float64),
-    ])
-    # 1) allocate a (n_runs, L) structured array
-    sorted_rt = np.empty((number_of_instances, number_of_solvers), dtype=dtype)
-
-    # 2) fill it in
-    for i in range(number_of_instances):
-        sorted_rt[i, :] = sorted_runtimes_list[i]
+        sorted_rt[i, :] = np.array(tuples, dtype=dtype)
 
     return sorted_rt
 
