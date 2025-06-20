@@ -13,7 +13,6 @@ from al_experiments.instance_selector import InstanceSelector, choose_instances_
 useCupy = True
 
 if useCupy:
-    import numpy
     import cupy as np
 else:
     import numpy as np
@@ -115,8 +114,8 @@ def vec_to_runtime_frac(
 
 
 def vec_to_single_runtime_frac(
-        thresholds: np.ndarray[np.floating[np.float32]],
-        runtimes: np.ndarray[np.floating[np.float32]],
+        thresholds,
+        runtimes,
         index: int
 ):
     """
@@ -211,7 +210,7 @@ def store_and_show_mean_result():
 def static_timeout(
         acc_calculator: Accuracy,
         solver_string: str,
-) -> np.ndarray[np.floating[np.float32]]:
+):
     return np.ascontiguousarray(
         np.full((5355,), 27, dtype=np.int32)
     )
@@ -220,7 +219,7 @@ def static_timeout(
 def quantized_min_diff(
         acc_calculator: Accuracy,
         solver_string: str,
-) -> np.ndarray[np.floating[np.float32]]:
+):
 
     # initialize tresholds with 0
     thresholds = np.ascontiguousarray(

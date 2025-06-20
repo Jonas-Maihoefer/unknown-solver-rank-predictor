@@ -1,7 +1,12 @@
 from statistics import pstdev
-import numpy as np
-
 from al_experiments.accuracy import Accuracy
+
+useCupy = True
+
+if useCupy:
+    import cupy as np
+else:
+    import numpy as np
 
 number_of_instances = 5355
 instance_idx = np.arange(number_of_instances)
@@ -15,8 +20,8 @@ class InstanceSelector:
 
     def __init__(
             self,
-            thresholds: np.ndarray,
-            sorted_rt: np.ndarray,
+            thresholds,
+            sorted_rt,
             acc_calculator: Accuracy,
             sample_intervall: int,
             choosing_fn
@@ -91,17 +96,17 @@ class InstanceSelector:
 
 
 def choose_instances_random(
-        possible_instances: np.ndarray,
-        thresholds: np.ndarray,
-        sorted_runtimes: np.ndarray
+        possible_instances,
+        thresholds,
+        sorted_runtimes
 ):
     return np.random.choice(possible_instances)
 
 
 def variance_based_selection_1(
-        possible_instances: np.ndarray,
-        thresholds: np.ndarray,
-        sorted_runtimes: np.ndarray
+        possible_instances,
+        thresholds,
+        sorted_runtimes
 ):
     """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
     timeouts = sorted_runtimes['runtime'][instance_idx, thresholds[instance_idx]]
@@ -114,7 +119,7 @@ def variance_based_selection_1(
     variances = np.nanvar(runtimes, axis=1)
     means = np.nanmean(runtimes, axis=1)
 
-    score: np.ndarray = variances/means
+    score = variances/means
 
     score = score[possible_instances]
 
@@ -124,9 +129,9 @@ def variance_based_selection_1(
 
 
 def variance_based_selection_2(
-        possible_instances: np.ndarray,
-        thresholds: np.ndarray,
-        sorted_runtimes: np.ndarray
+        possible_instances,
+        thresholds,
+        sorted_runtimes
 ):
     """this methods works slightly worse than `variance_based_selection_1` (tested in e99fb452 (this version) vs 697d3971 (version 1))"""
     timeouts = sorted_runtimes['runtime'][instance_idx, thresholds[instance_idx]]
@@ -154,7 +159,7 @@ def variance_based_selection_2(
     variances = np.nanvar(scores, axis=1)
     mean_rts = np.nanmean(runtimes, axis=1)
 
-    score: np.ndarray = variances/mean_rts
+    score = variances/mean_rts
 
     score = score[possible_instances]
 

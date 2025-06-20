@@ -1,9 +1,12 @@
 import string
-import time
-from typing import List, Tuple
-import numpy as np
 import pandas as pd
-from statistics import mean, pstdev
+
+useCupy = True
+
+if useCupy:
+    import cupy as np
+else:
+    import numpy as np
 
 
 class Accuracy:
@@ -24,11 +27,11 @@ class Accuracy:
             total_runtime,
             break_after_runtime_fraction,
             sample_result_after_iterations,
-            sorted_rt: np.ndarray,
+            sorted_rt,
             par_2_scores,
             mean_par_2_score: float,
             par_2_score_removed_solver: float,
-            runtime_of_removed_solver: np.ndarray
+            runtime_of_removed_solver
     ):
         self.total_runtime = total_runtime
         self.break_after_runtime_fraction = break_after_runtime_fraction
@@ -49,7 +52,7 @@ class Accuracy:
 
     def add_runtime_quantized(
             self,
-            thresholds: np.ndarray,
+            thresholds,
             prev_max_acc: float,
             prev_min_diff: float
     ):
@@ -147,7 +150,7 @@ class Accuracy:
 
     def add_runtime_random_quantized(
             self,
-            thresholds: np.ndarray,
+            thresholds,
             prev_max_acc: float,
             prev_min_diff: float
     ):
@@ -194,7 +197,7 @@ class Accuracy:
         self.n += 1
         return thresholds, prev_max_acc, prev_min_diff
 
-    def sample_result(self, thresholds: np.ndarray, pred: np.ndarray, best_score=0):
+    def sample_result(self, thresholds, pred, best_score=0):
 
         cross_acc = self.calc_cross_acc_2(self.par_2_scores, pred)
 
@@ -247,8 +250,8 @@ class Accuracy:
 
     def find_best_index_min_diff(
             self,
-            thresholds: np.ndarray[np.floating[np.float32]],
-            sorted_rt: np.ndarray,
+            thresholds,
+            sorted_rt,
             actu_par2,
             actu_par2_min: float,
             runtime_to_add: float,
@@ -332,12 +335,12 @@ class Accuracy:
 
     def find_all_best_indices_max_cross_acc(
             self,
-            thresholds: np.ndarray[np.floating[np.float32]],
-            runtimes: np.ndarray[np.floating[np.float32]],
+            thresholds,
+            runtimes,
             actu_par_2,
             mean_actu: float,
             runtime_to_add: float,
-            allowed_idxs:  np.ndarray = None,
+            allowed_idxs=None,
             punishment: float = 10000.0,
             tol: float = 1e-8
     ):
@@ -411,7 +414,7 @@ class Accuracy:
 
         return best_idx, best_acc
 
-    def is_new_sum_correct(self, sum: np.ndarray, new_scores_adding_thresh_to_every_instance, thresholds, old_scores):
+    def is_new_sum_correct(self, sum, new_scores_adding_thresh_to_every_instance, thresholds, old_scores):
         par_2_choosing_instance_i = []
         for i in range(5355):
             total_runtime = []
@@ -430,7 +433,7 @@ class Accuracy:
         print("faster")
         print(pd.DataFrame(sum))
 
-    def replace_by_overflow_mean(self, values: np.ndarray, limits: np.ndarray):
+    def replace_by_overflow_mean(self, values, limits):
         """
         values: (M, N)
         limits: (M,)
@@ -447,8 +450,8 @@ class Accuracy:
 
     def vec_to_pred(
             self,
-            thresholds: np.ndarray[np.floating[np.float32]],
-            runtimes: np.ndarray[np.floating[np.float32]],
+            thresholds,
+            runtimes,
             punishment: int = 10000
     ):
         """
@@ -488,8 +491,8 @@ class Accuracy:
 
     def vec_to_pred_punish_thresh(
             self,
-            thresholds: np.ndarray[np.floating[np.float32]],
-            runtimes: np.ndarray[np.floating[np.float32]],
+            thresholds,
+            runtimes,
     ):
         """
         thresholds: 1D array‑like of shape (5355,)
@@ -511,8 +514,8 @@ class Accuracy:
 
     def print_key_signature(
             self,
-            thresholds: np.ndarray[np.floating[np.float32]],
-            runtimes: np.ndarray[np.floating[np.float32]],
+            thresholds,
+            runtimes,
             actu
     ):
         pred = self.vec_to_pred(thresholds, runtimes)
@@ -521,8 +524,8 @@ class Accuracy:
 
     def vec_to_diff(
             self,
-            thresholds: np.ndarray[np.floating[np.float32]],
-            runtimes: np.ndarray[np.floating[np.float32]],
+            thresholds,
+            runtimes,
             true_par_2,
             true_par_2_mean: float,
             removed_index: int
@@ -533,8 +536,8 @@ class Accuracy:
 
     def vec_to_cross_acc(
             self,
-            thresholds: np.ndarray[np.floating[np.float32]],
-            runtimes: np.ndarray[np.floating[np.float32]],
+            thresholds,
+            runtimes,
             true_par_2
     ):
         pred_par_2 = self.vec_to_pred(thresholds, runtimes, 10000)
@@ -545,9 +548,9 @@ class Accuracy:
 
     def vec_to_true_acc(
             self,
-            thresholds: np.ndarray[np.floating[np.float32]],
-            runtimes: np.ndarray[np.floating[np.float32]],
-            true_par_2: np.ndarray,
+            thresholds,
+            runtimes,
+            true_par_2,
             index: int
     ):
         pred_par_2_for_this_solver = self.vec_to_pred(thresholds, runtimes, 10000)[index]
@@ -558,14 +561,14 @@ class Accuracy:
 
     def vec_to_true_acc_2(
             self,
-            thresholds: np.ndarray[np.floating[np.float32]],
-            runtimes: np.ndarray[np.floating[np.float32]],
-            true_par_2: np.ndarray,
+            thresholds,
+            runtimes,
+            true_par_2,
             index: int      
     ):
         scores = self.replace_by_overflow_mean(runtimes, thresholds)
 
-    def determine_acc(self, actu: np.ndarray, pred: np.ndarray):
+    def determine_acc(self, actu, pred):
         key = self.pred_vec_to_key(pred)
 
         # no uniue ordering found
@@ -583,7 +586,7 @@ class Accuracy:
         self.stored_accs[key] = acc
         return acc
 
-    def pred_vec_to_key(self, pred: np.ndarray):
+    def pred_vec_to_key(self, pred):
         """
         Sorts a 1D C‑contiguous float array `pred` (len ≤ 28) and returns
         a string of letters corresponding to the original indices in ascending order.
@@ -601,7 +604,7 @@ class Accuracy:
         letters_u8 = self._letters[idx]
         return bytes(letters_u8).decode('ascii')
 
-    def similarity(self, actu: np.ndarray, pred: np.ndarray, mean_actu: float):
+    def similarity(self, actu, pred, mean_actu: float):
         """
         L1‐distance after scaling pred so its mean matches mean_actu
         """
@@ -629,7 +632,7 @@ class Accuracy:
         return average
 
     def calc_cross_acc_2(
-            self, actu: np.ndarray, pred: np.ndarray
+            self, actu, pred
     ) -> float:
         # compute all pairwise differences
         # shape is (n, n)
@@ -645,7 +648,7 @@ class Accuracy:
         #   average = (1/(n*(n-1))) * concordant
         return concordant / (actu.size * (actu.size - 1))
 
-    def calc_cross_acc_3(self, actu: np.ndarray, pred: np.ndarray):
+    def calc_cross_acc_3(self, actu, pred):
         # Compute pairwise differences
         pred_diff = pred[:, None] - pred
         true_diff = actu[:, None] - actu
@@ -658,7 +661,7 @@ class Accuracy:
 
         return rank_accuracies.mean()
 
-    def calc_true_acc_1(self, actu: np.ndarray, pred: np.ndarray, index: int):
+    def calc_true_acc_1(self, actu, pred, index: int):
         acc = 0
         pred_index = pred[index]
         actu_index = actu[index]
@@ -668,7 +671,7 @@ class Accuracy:
                 acc += 1
         return acc / (solvers - 1)
 
-    def calc_true_acc_2(self, actu: np.ndarray, pred: np.ndarray, index: int) -> float:
+    def calc_true_acc_2(self, actu, pred, index: int) -> float:
         """
         DEPRECATED! implemented with A and not A'
         """
