@@ -261,13 +261,7 @@ def get_stats(df_rated, df_runtimes, par_2_scores_series, par_2_scores, runtimes
     return {"runtime_frac": runtime_frac, "cross_acc": cross_acc, "true_acc": true_acc, "diff": diff}
 
 
-def run_experiment(experiment_config: ExperimentConfig):
-    with open(
-        "../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl",
-        "rb"
-    ) as file:
-        df: pd.DataFrame = pickle.load(file).copy()
-
+def run_experiment(experiment_config: ExperimentConfig, df):
     print(df)
 
     print(f"sample result after {sample_result_after_iterations} iterations")
@@ -406,7 +400,7 @@ def run_experiment(experiment_config: ExperimentConfig):
     store_and_show_mean_result()
 
 
-def start():
+def start(df):
     #plot_generator.create_progress_plot()
 
     # experiment config
@@ -414,11 +408,16 @@ def start():
 
     print(f"start experiment on {git_hash}")
 
-    run_experiment(experiment_config)
+    run_experiment(experiment_config, df)
 
     print("ended experiment")
 
 
 if __name__ == "__main__":
+    with open(
+        "../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl",
+        "rb"
+    ) as file:
+        df: pd.DataFrame = pickle.load(file).copy()
 
-    start()
+    start(df)
