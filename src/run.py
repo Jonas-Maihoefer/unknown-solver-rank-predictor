@@ -1,5 +1,5 @@
 import sys
-from al_experiments import start
+from main import start
 
 USE_CUPY = True  # os.getenv("USE_CUPY") == "1"    # or set to "true", however you like
 
