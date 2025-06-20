@@ -402,18 +402,18 @@ def run_experiment(experiment_config: ExperimentConfig):
     store_and_show_mean_result()
 
 
-if __name__ == "__main__":
 
-    git_hash = get_git_commit_hash()
 
-    plot_generator = PlotGenerator(git_hash)
-    #plot_generator.create_progress_plot()
+git_hash = get_git_commit_hash()
 
-    # experiment config
-    experiment_config = ExperimentConfig(quantized_min_diff)
+plot_generator = PlotGenerator(git_hash)
+#plot_generator.create_progress_plot()
 
-    print(f"start experiment on {git_hash}")
+# experiment config
+experiment_config = ExperimentConfig(quantized_min_diff)
 
-    run_experiment(experiment_config)
+print(f"start experiment on {git_hash}")
 
-    print("ended experiment")
+run_experiment(experiment_config)
+
+print("ended experiment")
