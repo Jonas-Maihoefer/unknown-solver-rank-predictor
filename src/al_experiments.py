@@ -50,30 +50,32 @@ def get_git_commit_hash():
     return result.stdout.decode("utf-8").strip()[:8]
 
 
-def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
+def convert_to_sorted_runtimes_loop_fixed(runtimes: pd.DataFrame):
     data = runtimes.values
+    number_of_instances, number_of_solvers = data.shape
 
-    # 1) allocate a (n_runs, L) structured array
+    # 1) Define the structured dtype for both NumPy and CuPy
     dtype = numpy.dtype([
-        ('idx',     np.int64),
-        ('runtime', np.float64),
+        ('idx',     numpy.int64),
+        ('runtime', numpy.float64),
     ])
+
+    # 2) Allocate a (n_runs, n_solvers + 1) CuPy array to match the intended logic
     sorted_rt = np.empty((number_of_instances, number_of_solvers), dtype=dtype)
 
+    # Use numpy on the npU since we are iterating here
     for i, row in enumerate(data):
         # get sorted indices based on runtime
-        sorted_idx = np.argsort(row)
-        # create numpy array of (solver_index, runtime) tuples
-        tmp = numpy.empty(number_of_solvers, dtype=dtype
-                          )
-        # add zero element
-        tmp[0] = (-1, 0.0)
+        sorted_idx = numpy.argsort(row)
 
-        for j, solver_idx in enumerate(sorted_idx, start=1):
-            tmp[j] = (int(solver_idx), float(row[solver_idx]))
+        # Create a Python list of tuples for the row's data
+        # This is more robust for CuPy conversion
+        row_data = [(-1, 0.0)] # Add the initial element
+        row_data.extend([(int(idx), float(row[idx])) for idx in sorted_idx])
 
-        # copy that entire row into the CuPy array
-        sorted_rt[i, :] = np.asarray(tmp)
+        # copy the list of tuples for the entire row into the CuPy array
+        # CuPy handles this conversion gracefully
+        sorted_rt[i, :] = np.asarray(row_data, dtype=dtype)
 
     return sorted_rt
 
