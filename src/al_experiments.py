@@ -63,7 +63,10 @@ def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
         tuples.insert(0, (-1, 0))
         sorted_runtimes_list.append(tuples)
 
-    dtype = [('idx', np.int64), ('runtime', np.float64)]
+    dtype = np.dtype([
+        ('idx',     np.int64),
+        ('runtime', np.float64),
+    ])
     # 1) allocate a (n_runs, L) structured array
     sorted_rt = np.empty((number_of_instances, number_of_solvers), dtype=dtype)
 

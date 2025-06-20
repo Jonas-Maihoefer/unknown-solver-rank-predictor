@@ -48,7 +48,10 @@ class Accuracy:
             np.full((27,), 0), dtype=np.float32
         )
         self.solver_results = []
-        self.dtype = [('idx', np.int64), ('runtime', np.float64)]
+        self.dtype = np.dtype([
+            ('idx',     np.int64),
+            ('runtime', np.float64),
+        ])
 
     def add_runtime_quantized(
             self,
