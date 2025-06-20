@@ -50,7 +50,7 @@ def get_git_commit_hash():
     return result.stdout.decode("utf-8").strip()[:8]
 
 
-def convert_to_sorted_runtimes_loop_fixed(runtimes: pd.DataFrame):
+def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
     data = runtimes.values
     number_of_instances, number_of_solvers = data.shape
 
