@@ -1,4 +1,3 @@
-import numpy as np
 import pandas as pd
 import time
 import random
@@ -10,6 +9,14 @@ from scipy.interpolate import interp1d
 
 from al_experiments.plot_generator import PlotGenerator
 from al_experiments.instance_selector import InstanceSelector, choose_instances_random, variance_based_selection_1, variance_based_selection_2
+
+useCupy = True
+
+if useCupy:
+    import numpy
+    import cupy as np
+else:
+    import numpy as np
 
 # constants
 number_of_solvers = 28
