@@ -51,31 +51,39 @@ def get_git_commit_hash():
 
 
 def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
+    """
+    Converts a DataFrame of runtimes to a structured CuPy array, sorted by runtime,
+    using an efficient, vectorized approach.
+    """
     data = runtimes.values
-    number_of_instances, number_of_solvers = data.shape
+    n_instances, n_solvers = data.shape
 
-    # 1) Define the structured dtype for both NumPy and CuPy
-    dtype = numpy.dtype([
-        ('idx',     numpy.int64),
-        ('runtime', numpy.float64),
+    # 1) Transfer the initial data to the GPU in one go
+    data_np = np.asarray(data)
+
+    # 2) Perform argsort on the entire matrix along the rows (axis=1)
+    sorted_indices = np.argsort(data_np, axis=1)
+
+    # 3) Use the sorted indices to gather the runtimes in the correct order
+    sorted_runtimes_vals = np.take_along_axis(data_np, sorted_indices, axis=1)
+
+    # 4) Define the structured dtype
+    dtype = np.dtype([
+        ('idx',     np.int64),
+        ('runtime', np.float64),
     ])
 
-    # 2) Allocate a (n_runs, n_solvers + 1) CuPy array to match the intended logic
-    sorted_rt = np.empty((number_of_instances, number_of_solvers), dtype=dtype)
+    # 5) Create the final structured array on the GPU, with space for the prepended column
+    sorted_rt = np.empty((n_instances, n_solvers + 1), dtype=dtype)
 
-    # Use numpy on the npU since we are iterating here
-    for i, row in enumerate(data):
-        # get sorted indices based on runtime
-        sorted_idx = numpy.argsort(row)
+    # 6) Fill the columns of the structured array using slicing (very fast)
+    # Fill the first column with the special (-1, 0.0) value
+    sorted_rt['idx'][:, 0] = -1
+    sorted_rt['runtime'][:, 0] = 0.0
 
-        # Create a Python list of tuples for the row's data
-        # This is more robust for CuPy conversion
-        row_data = [(-1, 0.0)] # Add the initial element
-        row_data.extend([(int(idx), float(row[idx])) for idx in sorted_idx])
-
-        # copy the list of tuples for the entire row into the CuPy array
-        # CuPy handles this conversion gracefully
-        sorted_rt[i, :] = np.asarray(row_data, dtype=dtype)
+    # Fill the remaining columns with the sorted indices and values
+    sorted_rt['idx'][:, 1:] = sorted_indices
+    sorted_rt['runtime'][:, 1:] = sorted_runtimes_vals
 
     return sorted_rt
 
