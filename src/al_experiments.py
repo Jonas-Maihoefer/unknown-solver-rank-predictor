@@ -74,7 +74,7 @@ def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
     ])
 
     # 5) Create the final structured array on the GPU, with space for the prepended column
-    sorted_rt = np.empty((n_instances, n_solvers + 1), dtype=dtype)
+    sorted_rt = np.empty((n_instances, n_solvers), dtype=dtype)
 
     # 6) Fill the columns of the structured array using slicing (very fast)
     # Fill the first column with the special (-1, 0.0) value
