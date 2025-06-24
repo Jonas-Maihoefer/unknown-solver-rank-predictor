@@ -209,7 +209,7 @@ class Accuracy:
 
         new_pred = 0
         used_rt_removed_solver = 0
-        for index, runtime_list in enumerate(self.sorted_rt[self.idx]):
+        for index, runtime_list in enumerate(self.sorted_rt[self.rt]):
             timeout = runtime_list[thresholds[index]]
             # is instance maxed out?
             if thresholds[index] == number_of_reduced_solvers:
