@@ -6,7 +6,7 @@ import pickle
 import subprocess
 from al_experiments.determine_timeout import quantized_min_diff
 from al_experiments.experiment_config import ExperimentConfig
-from al_experiments.accuracy import Accuracy, select_best_idx
+from al_experiments.accuracy import Accuracy, select_best_idx, select_idx_softmax
 from scipy.interpolate import interp1d
 
 from al_experiments.plot_generator import PlotGenerator

@@ -690,7 +690,28 @@ class Accuracy:
         return np.mean(correct)
 
 
-def select_best_idx(score, remaining_mask):
+def select_best_idx(score, remaining_mask, temp=1):
     best_idx = np.nanargmin(score[remaining_mask])
     best_idx = instance_idx[remaining_mask][best_idx]
     return best_idx
+
+
+def select_idx_softmax(score, remaining_mask, temp=1):
+    valid_scores = score[remaining_mask]
+    valid_scores = valid_scores - np.min(valid_scores)
+    print("scores:")
+    for sc in valid_scores:
+        print(sc, end=", ")
+    print()
+    std_dev = np.std(valid_scores)
+    if std_dev == 0:
+        std_dev = 1
+    print(std_dev)
+    tau = std_dev * temp
+    weights = np.power(np.e, -np.divide(valid_scores, tau))
+    print("weights:")
+    for w in weights:
+        print(w, end=", ")
+    print()
+    print()
+    return select_best_idx(score, remaining_mask)
