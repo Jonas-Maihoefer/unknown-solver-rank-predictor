@@ -1,7 +1,10 @@
 import string
 import pandas as pd
+import os
 
-useCupy = True
+useCupy = os.getenv("USECUDA", "0") == "1"
+
+print(f"use cuda: {os.getenv('USECUDA', 'not set')}")
 
 if useCupy:
     import cupy as np
@@ -21,6 +24,8 @@ class Accuracy:
     number_of_reduced_solvers = 27
     pairs = (number_of_reduced_solvers * (number_of_reduced_solvers - 1))
     instance_idx = np.arange(number_of_instances)
+    idx = 0
+    rt = 1
 
     def __init__(
             self,
@@ -48,7 +53,6 @@ class Accuracy:
             np.full((27,), 0), dtype=np.float32
         )
         self.solver_results = []
-        self.dtype = [('idx', np.int64), ('runtime', np.float64)]
 
     def add_runtime_quantized(
             self,
@@ -61,12 +65,17 @@ class Accuracy:
         valid_instances = self.instance_idx[remaining_mask]
 
         # current solver + its rt bearly solving the instance
-        current_solver = self.sorted_rt[self.instance_idx, thresholds]
+        current_solver = self.sorted_rt[self.idx][self.instance_idx, thresholds], self.sorted_rt[self.rt][self.instance_idx, thresholds]
 
         # next solver + its rt that would solve the instance if threshold is raised
-        next_solver = np.empty(self.number_of_instances, dtype=self.dtype)
-        next_solver[:] = (-1, -1.)
-        next_solver[valid_instances] = self.sorted_rt[valid_instances, thresholds[valid_instances] + 1]
+        next_solver = (
+            np.empty(self.number_of_instances, dtype=int),
+            np.empty(self.number_of_instances, dtype=float)
+        )
+        next_solver[self.idx][:] = -1
+        next_solver[self.rt][:] = -1
+        next_solver[self.idx][valid_instances] = self.sorted_rt[self.idx][valid_instances, thresholds[valid_instances] + 1]
+        next_solver[self.rt][valid_instances] = self.sorted_rt[self.rt][valid_instances, thresholds[valid_instances] + 1]
 
         #print("extracted best next")
         #print(next_solver)
@@ -74,28 +83,29 @@ class Accuracy:
         # raising the thresh adds total_added_runtime seconds to instance i
         total_added_runtime = (
                 self.number_of_reduced_solvers - thresholds
-            ) * (next_solver['runtime'] - current_solver['runtime'])
+            ) * (next_solver[self.rt] - current_solver[self.rt])
 
         #print("total added runtime")
         #print(total_added_runtime)
 
-        current_penalty = current_solver['runtime'] * 2
+        current_penalty = current_solver[self.rt] * 2
         #print("current_penalty")
         #print(current_penalty)
-        next_penalty = next_solver['runtime'] * 2
+        next_penalty = next_solver[self.rt] * 2
         #print("next_penalty")
         #print(next_penalty)
 
         # copy previos pred to all instances
         new_pred = np.tile(self.pred, (self.number_of_instances, 1))
         # change pred for the next added solver
-        next_solver['runtime'][next_solver['runtime'] == 5000] = 10000
-        new_pred[self.instance_idx, next_solver['idx']] += (next_solver['runtime'] - current_penalty)
+        next_solver[self.rt][next_solver[self.rt] == 5000] = 10000
+
+        new_pred[self.instance_idx, next_solver[self.idx]] += (next_solver[self.rt] - current_penalty)
 
         # build a mask of which solvers still timeout with the new thresh
         index_mask = np.arange(self.number_of_solvers)[None, :] > thresholds[:, None] + 1
-        index_mask = np.where(index_mask, self.sorted_rt['idx'] + 1, 0)
-        timeout_mask = np.zeros_like(self.sorted_rt, dtype=bool)
+        index_mask = np.where(index_mask, self.sorted_rt[self.idx] + 1, 0)
+        timeout_mask = np.zeros_like(self.sorted_rt[self.idx], dtype=bool)
         timeout_mask[self.instance_idx[:, None], index_mask] = True
         timeout_mask = timeout_mask[:, 1:]
 
@@ -203,8 +213,8 @@ class Accuracy:
 
         new_pred = 0
         used_rt_removed_solver = 0
-        for index, runtime_list in enumerate(self.sorted_rt):
-            _, timeout = runtime_list[thresholds[index]]
+        for index, runtime_list in enumerate(self.sorted_rt[self.idx]):
+            timeout = runtime_list[thresholds[index]]
             # is instance maxed out?
             if thresholds[index] == self.number_of_reduced_solvers:
                 # is solver runtime 5000?

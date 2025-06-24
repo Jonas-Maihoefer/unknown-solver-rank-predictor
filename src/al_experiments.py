@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import time
 import random
@@ -10,7 +11,7 @@ from scipy.interpolate import interp1d
 from al_experiments.plot_generator import PlotGenerator
 from al_experiments.instance_selector import InstanceSelector, choose_instances_random, variance_based_selection_1, variance_based_selection_2
 
-useCupy = True
+useCupy = os.getenv("USECUDA", "0") == "1"
 
 if useCupy:
     import cupy as np
@@ -50,28 +51,37 @@ def get_git_commit_hash():
 
 
 def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
-    data = runtimes.values
+    runtimes = runtimes.values
 
+    sorted_idx_list = []
     sorted_runtimes_list = []
 
-    for row in data:
+    for row in runtimes:
+        inner_idx_list = []
+        inner_sorted_rts = []
+
         # get sorted indices based on runtime
         sorted_idx = np.argsort(row)
-        # create list of (solver_index, runtime) tuples
-        tuples = [(int(i), float(row[i])) for i in sorted_idx]
+
+        # print(sorted_idx)
+
         # add zero element
-        tuples.insert(0, (-1, 0))
-        sorted_runtimes_list.append(tuples)
+        inner_idx_list.insert(0, -1)
+        inner_sorted_rts.insert(0, 0.0)
 
-    dtype = [('idx', np.int64), ('runtime', np.float64)]
-    # 1) allocate a (n_runs, L) structured array
-    sorted_rt = np.empty((number_of_instances, number_of_solvers), dtype=dtype)
+        for i in sorted_idx:
+            inner_idx_list.append(int(i))
+            inner_sorted_rts.append(float(row[i]))
 
-    # 2) fill it in
-    for i in range(number_of_instances):
-        sorted_rt[i, :] = sorted_runtimes_list[i]
+        sorted_idx_list.append(inner_idx_list)
+        sorted_runtimes_list.append(inner_sorted_rts)
 
-    return sorted_rt
+    sorted_idx = np.array(sorted_idx_list, dtype=int)
+
+    #print(sorted_idx)
+    sorted_rt = np.array(sorted_runtimes_list)
+
+    return sorted_idx, sorted_rt
 
 
 def determine_runtime_fraction(df: pd.DataFrame, runtime_limits: pd.Series):

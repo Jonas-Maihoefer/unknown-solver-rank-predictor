@@ -1,7 +1,7 @@
-from statistics import pstdev
+import os
 from al_experiments.accuracy import Accuracy
 
-useCupy = True
+useCupy = os.getenv("USECUDA", "0") == "1"
 
 if useCupy:
     import cupy as np
