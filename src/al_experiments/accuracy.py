@@ -1,7 +1,7 @@
 import string
 import pandas as pd
 import os
-from al_experiments.constants import number_of_solvers, number_of_reduced_solvers, reduced_solver_pairs, number_of_instances, instance_idx
+from al_experiments.constants import number_of_solvers, number_of_reduced_solvers, reduced_solver_pairs, number_of_instances, instance_idx, idx, rt
 
 
 useCupy = os.getenv("USECUDA", "0") == "1"
@@ -19,8 +19,6 @@ class Accuracy:
         (string.ascii_lowercase + "AB").encode('ascii'),
         dtype=np.uint8
     )
-    idx = 0
-    rt = 1
 
     def __init__(
             self,
@@ -62,17 +60,17 @@ class Accuracy:
         valid_instances = instance_idx[remaining_mask]
 
         # current solver + its rt bearly solving the instance
-        current_solver = self.sorted_rt[self.idx][instance_idx, thresholds], self.sorted_rt[self.rt][instance_idx, thresholds]
+        current_solver = self.sorted_rt[idx][instance_idx, thresholds], self.sorted_rt[rt][instance_idx, thresholds]
 
         # next solver + its rt that would solve the instance if threshold is raised
         next_solver = (
             np.empty(number_of_instances, dtype=int),
             np.empty(number_of_instances, dtype=float)
         )
-        next_solver[self.idx][:] = -1
-        next_solver[self.rt][:] = -1
-        next_solver[self.idx][valid_instances] = self.sorted_rt[self.idx][valid_instances, thresholds[valid_instances] + 1]
-        next_solver[self.rt][valid_instances] = self.sorted_rt[self.rt][valid_instances, thresholds[valid_instances] + 1]
+        next_solver[idx][:] = -1
+        next_solver[rt][:] = -1
+        next_solver[idx][valid_instances] = self.sorted_rt[idx][valid_instances, thresholds[valid_instances] + 1]
+        next_solver[rt][valid_instances] = self.sorted_rt[rt][valid_instances, thresholds[valid_instances] + 1]
 
         #print("extracted best next")
         #print(next_solver)
@@ -80,29 +78,29 @@ class Accuracy:
         # raising the thresh adds total_added_runtime seconds to instance i
         total_added_runtime = (
                 number_of_reduced_solvers - thresholds
-            ) * (next_solver[self.rt] - current_solver[self.rt])
+            ) * (next_solver[rt] - current_solver[rt])
 
         #print("total added runtime")
         #print(total_added_runtime)
 
-        current_penalty = current_solver[self.rt] * 2
+        current_penalty = current_solver[rt] * 2
         #print("current_penalty")
         #print(current_penalty)
-        next_penalty = next_solver[self.rt] * 2
+        next_penalty = next_solver[rt] * 2
         #print("next_penalty")
         #print(next_penalty)
 
         # copy previos pred to all instances
         new_pred = np.tile(self.pred, (number_of_instances, 1))
         # change pred for the next added solver
-        next_solver[self.rt][next_solver[self.rt] == 5000] = 10000
+        next_solver[rt][next_solver[rt] == 5000] = 10000
 
-        new_pred[instance_idx, next_solver[self.idx]] += (next_solver[self.rt] - current_penalty)
+        new_pred[instance_idx, next_solver[idx]] += (next_solver[rt] - current_penalty)
 
         # build a mask of which solvers still timeout with the new thresh
         index_mask = np.arange(number_of_solvers)[None, :] > thresholds[:, None] + 1
-        index_mask = np.where(index_mask, self.sorted_rt[self.idx] + 1, 0)
-        timeout_mask = np.zeros_like(self.sorted_rt[self.idx], dtype=bool)
+        index_mask = np.where(index_mask, self.sorted_rt[idx] + 1, 0)
+        timeout_mask = np.zeros_like(self.sorted_rt[idx], dtype=bool)
         timeout_mask[instance_idx[:, None], index_mask] = True
         timeout_mask = timeout_mask[:, 1:]
 
@@ -209,7 +207,7 @@ class Accuracy:
 
         new_pred = 0
         used_rt_removed_solver = 0
-        for index, runtime_list in enumerate(self.sorted_rt[self.rt]):
+        for index, runtime_list in enumerate(self.sorted_rt[rt]):
             timeout = runtime_list[thresholds[index]]
             # is instance maxed out?
             if thresholds[index] == number_of_reduced_solvers:

@@ -1,6 +1,8 @@
 import os
+
+import pandas as pd
 from al_experiments.accuracy import Accuracy
-from al_experiments.constants import number_of_reduced_solvers, number_of_instances, instance_idx
+from al_experiments.constants import number_of_reduced_solvers, number_of_instances, instance_idx, idx, rt
 
 
 useCupy = os.getenv("USECUDA", "0") == "1"
@@ -51,21 +53,23 @@ class InstanceSelector:
             )
             included_solvers = self.thresholds[new_instance]
             self.choosen_thresholds[new_instance] = included_solvers
-            runtimes = self.sorted_rt[new_instance]
-            solver, timeout = runtimes[included_solvers]
+            runtimes = self.sorted_rt[rt][new_instance]
+            idxs = self.sorted_rt[idx][new_instance]
+            timeout = runtimes[included_solvers]
             #print(f"last included solver is solver {solver}")
-            included = runtimes[:included_solvers + 1]
+            included_idxs = idxs[:included_solvers + 1]
+            included_runtimes = runtimes[:included_solvers + 1]
             #print("included")
             #print(included)
-            excluded = runtimes[included_solvers + 1:]
+            excluded_idxs = idxs[included_solvers + 1:]
             #print("excluded")
             #print(excluded)
 
             if timeout == 5000:
-                included['runtime'][included['runtime'] == 5000] = 10000
+                included_runtimes[included_runtimes == 5000] = 10000
 
-            self.pred[included['idx']] += included['runtime']
-            self.pred[excluded['idx']] += timeout * 2
+            self.pred[included_idxs] += included_runtimes
+            self.pred[excluded_idxs] += timeout * 2
 
             if self.n % self.sample_intervall == 0:
                 self.results.append(
@@ -104,8 +108,8 @@ def variance_based_selection_1(
         sorted_runtimes
 ):
     """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
-    timeouts = sorted_runtimes['runtime'][instance_idx, thresholds[instance_idx]]
-    runtimes = sorted_runtimes['runtime'].copy()
+    timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
+    runtimes = sorted_runtimes[rt].copy()
 
     runtimes[runtimes > timeouts[:, None]] = np.nan
     runtimes[:, 0] = np.nan
@@ -129,9 +133,10 @@ def variance_based_selection_2(
         sorted_runtimes
 ):
     """this methods works slightly worse than `variance_based_selection_1` (tested in e99fb452 (this version) vs 697d3971 (version 1))"""
-    timeouts = sorted_runtimes['runtime'][instance_idx, thresholds[instance_idx]]
-    scores = sorted_runtimes['runtime'].copy()
-    runtimes = sorted_runtimes['runtime'].copy()
+    timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
+
+    scores = sorted_runtimes[rt].copy()
+    runtimes = sorted_runtimes[rt].copy()
 
     scores[:, 0] = np.nan
     scores[scores == 0.0] = 0.001
@@ -158,6 +163,11 @@ def variance_based_selection_2(
 
     score = score[possible_instances]
 
-    best_idx = possible_instances[np.nanargmax(score)]
+    if np.isnan(score).all():
+        best_idx = 0
+    else:
+        best_idx = np.nanargmax(score)
+
+    best_idx = possible_instances[best_idx]
 
     return best_idx
