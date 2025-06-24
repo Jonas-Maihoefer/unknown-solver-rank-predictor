@@ -340,8 +340,6 @@ def run_experiment(experiment_config: ExperimentConfig):
 
         print(results.mean())
 
-        print(f"took {0} calculation steps")
-
         random_selector = InstanceSelector(
             thresholds, sorted_runtimes, acc_calculator,
             sample_result_after_instances, choose_instances_random
