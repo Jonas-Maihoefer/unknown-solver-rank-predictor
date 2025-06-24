@@ -1,5 +1,7 @@
 import os
 from al_experiments.accuracy import Accuracy
+from al_experiments.constants import number_of_reduced_solvers, number_of_instances, instance_idx
+
 
 useCupy = os.getenv("USECUDA", "0") == "1"
 
@@ -8,15 +10,8 @@ if useCupy:
 else:
     import numpy as np
 
-number_of_instances = 5355
-instance_idx = np.arange(number_of_instances)
-
 
 class InstanceSelector:
-    number_of_instances = 5355
-    instance_idx = np.arange(number_of_instances)
-    number_of_solvers = 28
-    number_of_reduced_solvers = 27
 
     def __init__(
             self,
@@ -36,17 +31,17 @@ class InstanceSelector:
         self.choosen_instances = []
         self.results = []
         self.choosen_thresholds = np.ascontiguousarray(
-            np.full((self.number_of_instances,), 0), dtype=np.int32
+            np.full((number_of_instances,), 0), dtype=np.int32
         )
         self.pred = np.ascontiguousarray(
-            np.full((self.number_of_reduced_solvers,), 0), dtype=np.float32
+            np.full((number_of_reduced_solvers,), 0), dtype=np.float32
         )
 
     def make_selection(self):
-        not_choosen_yet = ~np.isin(self.instance_idx, self.choosen_instances)
+        not_choosen_yet = ~np.isin(instance_idx, self.choosen_instances)
         has_timeout = self.thresholds != 0
         combined_mask = not_choosen_yet & has_timeout
-        possible_instances = self.instance_idx[combined_mask]
+        possible_instances = instance_idx[combined_mask]
 
         while (len(possible_instances) > 0):
             #print("possible instances")
@@ -82,10 +77,10 @@ class InstanceSelector:
 
             # prepare next loop
             self.choosen_instances.append(new_instance)
-            not_choosen_yet = ~np.isin(self.instance_idx, self.choosen_instances)
+            not_choosen_yet = ~np.isin(instance_idx, self.choosen_instances)
             has_timeout = self.thresholds != 0
             combined_mask = not_choosen_yet & has_timeout
-            possible_instances = self.instance_idx[combined_mask]
+            possible_instances = instance_idx[combined_mask]
 
         # sample last result
         self.results.append(

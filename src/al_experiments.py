@@ -4,26 +4,24 @@ import time
 import random
 import pickle
 import subprocess
+from al_experiments.determine_timeout import quantized_min_diff
 from al_experiments.experiment_config import ExperimentConfig
-from al_experiments.accuracy import Accuracy
+from al_experiments.accuracy import Accuracy, select_best_idx
 from scipy.interpolate import interp1d
 
 from al_experiments.plot_generator import PlotGenerator
 from al_experiments.instance_selector import InstanceSelector, choose_instances_random, variance_based_selection_1, variance_based_selection_2
+from al_experiments.constants import number_of_solvers, number_of_instances
 
 useCupy = os.getenv("USECUDA", "0") == "1"
+
+print(f"use cuda: {os.getenv('USECUDA', 'not set')}")
 
 if useCupy:
     import cupy as np
 else:
     import numpy as np
 
-# constants
-number_of_solvers = 28
-solver_fraction = 1/number_of_solvers
-square_of_solvers = number_of_solvers * number_of_solvers
-reduced_square_of_solvers = number_of_solvers*(number_of_solvers-1)
-number_of_instances = 5355
 # global config
 break_after_solvers = 200
 break_after_runtime_fraction = 0.655504  # determined by 0e993e00
@@ -36,6 +34,9 @@ all_timeout_results = []
 all_random_sel_results = []
 all_var_sel_results = []
 all_var_sel_2_results = []
+
+# experiment config
+experiment_configs = ExperimentConfig(quantized_min_diff, select_best_idx)
 
 
 def get_git_commit_hash():
@@ -217,39 +218,6 @@ def store_and_show_mean_result():
     )
 
 
-def static_timeout(
-        acc_calculator: Accuracy,
-        solver_string: str,
-):
-    return np.ascontiguousarray(
-        np.full((5355,), 27, dtype=np.int32)
-    )
-
-
-def quantized_min_diff(
-        acc_calculator: Accuracy,
-        solver_string: str,
-):
-
-    # initialize tresholds with 0
-    thresholds = np.ascontiguousarray(
-        np.full((5355,), 0, dtype=np.int32)
-    )
-    start = time.time_ns()
-    max_acc = 0
-    min_diff = 999999999.0
-
-    while True:
-        thresholds, max_acc, min_diff = acc_calculator.add_runtime_quantized(
-            thresholds, max_acc, min_diff
-        )
-        if min_diff == -1:
-            break
-    print(f"took {(time.time_ns() - start) / 1_000_000_000}s")
-
-    return thresholds
-
-
 def get_stats(df_rated, df_runtimes, par_2_scores_series, par_2_scores, runtimes, thresholds, solver_index, acc_calculator: Accuracy, progress: str):
     runtimes_rated = np.ascontiguousarray(
         df_rated.copy(), dtype=np.float32
@@ -333,7 +301,8 @@ def run_experiment(experiment_config: ExperimentConfig):
             total_runtime, break_after_runtime_fraction,
             sample_result_after_iterations,
             sorted_runtimes, par_2_scores, mean_par_2_score,
-            par_2_score_removed_solver, runtime_of_removed_solver
+            par_2_score_removed_solver, runtime_of_removed_solver,
+            experiment_config.select_idx
         )
 
         # determine thresholds for perfect differentiation of remaining solvers
@@ -425,11 +394,8 @@ if __name__ == "__main__":
     plot_generator = PlotGenerator(git_hash)
     #plot_generator.create_progress_plot()
 
-    # experiment config
-    experiment_config = ExperimentConfig(quantized_min_diff)
-
     print(f"start experiment on {git_hash}")
 
-    run_experiment(experiment_config)
+    run_experiment(experiment_configs)
 
     print("ended experiment")
