@@ -597,7 +597,7 @@ class Accuracy:
         returns None if any values in `pred` are exactly duplicated.
         """
         # 1) get sorted indices & sorted values
-        idx = np.argsort(pred, kind='quicksort')
+        idx = np.argsort(pred, kind=None)
         sv = pred[idx]
 
         # 2) detect duplicates in one vectorized call
