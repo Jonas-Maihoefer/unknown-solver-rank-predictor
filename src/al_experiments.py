@@ -23,7 +23,7 @@ else:
     import numpy as np
 
 # global config
-break_after_solvers = 15
+break_after_solvers = 3
 break_after_runtime_fraction = 0.15 #0.655504  # determined by 0e993e00
 total_samples = 500  # max is 5354 because of sample_result_after_instances
 sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
@@ -39,8 +39,8 @@ experiment_configs = ExperimentConfig(
     determine_thresholds=quantized_min_diff,
     select_idx=select_best_idx,
     rt_weights=[10, 5.0, 2.5, 1.25, 0.625, 0.3125, 0.15625, 0.078125, 0.0390625, 0.01953125, 0.009765625, 0.0048828125, 0.00244140625, 0.001220703125, 0.0006103515625, 0.00030517578125, 0.000152587890625, 7.62939453125e-05, 3.814697265625e-05, 1.9073486328125e-05, 9.5367431640625e-06, 4.76837158203125e-06, 2.384185791015625e-06, 1.1920928955078125e-06],
-    instance_selections=[],
-    individual_solver_plots=False
+    instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2],
+    individual_solver_plots=True
 )
 
 
@@ -299,6 +299,12 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight=0.0):
     results['TrueAcc'] = None
     results['RuntimeFrac'] = None
 
+    # initialize global result dict with empty lists
+    for instance_selection in experiment_config.instance_selections:
+        if instance_selection.__name__ == "no_selection":
+            continue
+        all_instance_selection_results[instance_selection.__name__] = []
+
     random_solver_order = list(range(28))
 
     random.shuffle(random_solver_order)
@@ -348,6 +354,7 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight=0.0):
 
         for threshold in thresholds:
             print(f"{threshold}", end=", ")
+        print()
 
         print(f"adding solver {par_2_scores_series.index[solver_index]} back in")
 
@@ -377,12 +384,6 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight=0.0):
         solver_results = pd.DataFrame(acc_calculator.solver_results)
         all_timeout_results.append(solver_results)
 
-        # initialize global result dict with empty lists
-        for instance_selection in experiment_config.instance_selections:
-            if instance_selection.__name__ == "no_selection":
-                continue
-            all_instance_selection_results[instance_selection.__name__] = []
-
         for instance_selection in experiment_config.instance_selections:
             print(f"select instances based on method {instance_selection.__name__}")
             if instance_selection.__name__ == "no_selection":
@@ -398,7 +399,6 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight=0.0):
             all_instance_selection_results[instance_selection.__name__].append(
                 selection_results
             )
-
         if experiment_config.individual_solver_plots:
             plot_generator.plot_solver_results(
                 solver_results,
