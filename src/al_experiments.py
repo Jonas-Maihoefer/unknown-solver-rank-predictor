@@ -23,20 +23,24 @@ else:
     import numpy as np
 
 # global config
-break_after_solvers = 200
-break_after_runtime_fraction = 0.655504  # determined by 0e993e00
+break_after_solvers = 15
+break_after_runtime_fraction = 0.15 #0.655504  # determined by 0e993e00
 total_samples = 500  # max is 5354 because of sample_result_after_instances
 sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
 sample_result_after_instances = int(number_of_instances / total_samples)
 # total_runtime = 25860323 s
 # global results
 all_timeout_results = []
-all_random_sel_results = []
-all_var_sel_results = []
-all_var_sel_2_results = []
+all_instance_selection_results = {}
 
 # experiment config
-experiment_configs = ExperimentConfig(quantized_min_diff, create_softmax_fn(temp=0.01))
+experiment_configs = ExperimentConfig(
+    determine_thresholds=quantized_min_diff,
+    select_idx=select_best_idx,
+    rt_weights=[10],  # [10, 5.0, 2.5, 1.25, 0.625, 0.3125, 0.15625, 0.078125, 0.0390625, 0.01953125, 0.009765625, 0.0048828125, 0.00244140625, 0.001220703125, 0.0006103515625, 0.00030517578125, 0.000152587890625, 7.62939453125e-05, 3.814697265625e-05, 1.9073486328125e-05, 9.5367431640625e-06, 4.76837158203125e-06, 2.384185791015625e-06, 1.1920928955078125e-06],
+    instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2],
+    individual_solver_plots=True
+)
 
 
 def get_git_commit_hash():
@@ -196,25 +200,29 @@ def store_and_show_mean_result():
 
     if not all_timeout_results[0].empty:
         avg_timeout_results = compute_average_grid(all_timeout_results, grid_size=total_samples)
+        for param in ["runtime_frac", "cross_acc", "true_acc", "diff"]:
+            print(f"{plot_generator.git_hash}_timeout_precalc_{param} = np.array([", end="")
+            for val in avg_timeout_results[param]:
+                print(val, end=", ")
+            print("])")
     else:
         avg_timeout_results = None
-    avg_random_sel_results = compute_average_grid(all_random_sel_results, grid_size=total_samples)
-    avg_var_sel_results = compute_average_grid(all_var_sel_results, grid_size=total_samples)
-    avg_var_sel_2_results = compute_average_grid(all_var_sel_2_results, grid_size=total_samples)
 
-    pd.set_option('display.max_rows', total_samples * 2)
-    print("avg_timeout_results")
-    print(avg_timeout_results)
-    print("avg_random_sel_results")
-    print(avg_random_sel_results)
-    print("avg_var_sel_results")
-    print(avg_var_sel_results)
-    print("avg_var_sel_2_results")
-    print(avg_var_sel_2_results)
-    pd.reset_option("display.max_rows")
+    avg_instance_selection_results = {}
+    for function_name, results in all_instance_selection_results.items():
+        if len(results) == 0:
+            continue
+        avg_instance_selection_results[function_name] = (
+            compute_average_grid(results, grid_size=total_samples)
+        )
+        for param in ["runtime_frac", "cross_acc", "true_acc", "diff"]:
+            print(f"{plot_generator.git_hash}_{function_name}_{param} = np.array([", end="")
+            for val in avg_instance_selection_results[function_name][param]:
+                print(val, end=", ")
+            print("])")
+
     plot_generator.plot_avg_results(
-        avg_timeout_results, avg_random_sel_results,
-        avg_var_sel_results, avg_var_sel_2_results
+        avg_timeout_results, avg_instance_selection_results
     )
 
 
@@ -239,6 +247,12 @@ def get_stats(df_rated, df_runtimes, par_2_scores_series, par_2_scores, runtimes
     print(f"{progress} difference of both scores is {diff}")
 
     return {"runtime_frac": runtime_frac, "cross_acc": cross_acc, "true_acc": true_acc, "diff": diff}
+
+
+def run_multi_parameter_experiments(experiment_config: ExperimentConfig):
+    for rt_weight in experiment_config.rt_weights:
+        print(f"running with a runtime weight of {rt_weight}")
+        run_experiment(experiment_config)
 
 
 def run_experiment(experiment_config: ExperimentConfig):
@@ -344,47 +358,37 @@ def run_experiment(experiment_config: ExperimentConfig):
 
         print(results.mean())
 
-        random_selector = InstanceSelector(
-            thresholds, sorted_runtimes, acc_calculator,
-            sample_result_after_instances, choose_instances_random
-        )
-
-        variance_based_selector = InstanceSelector(
-            thresholds, sorted_runtimes, acc_calculator,
-            sample_result_after_instances, variance_based_selection_1
-        )
-
-        variance_based_selector_2 = InstanceSelector(
-            thresholds, sorted_runtimes, acc_calculator,
-            sample_result_after_instances, variance_based_selection_2
-        )
-
-        random_selector.make_selection()
-        variance_based_selector.make_selection()
-        variance_based_selector_2.make_selection()
-
-        random_selection_results = random_selector.results
-        variance_selection_results = variance_based_selector.results
-        variance_selection_2_results = variance_based_selector_2.results
-
-        solver_results = acc_calculator.solver_results
-
-        """  if len(solver_results) > 0:
-            del solver_results[0] """
-
-        solver_results = pd.DataFrame(solver_results)
-        random_selection_results = pd.DataFrame(random_selection_results)
-        variance_selection_results = pd.DataFrame(variance_selection_results)
-        variance_selection_2_results = pd.DataFrame(variance_selection_2_results)
-
+        solver_results = pd.DataFrame(acc_calculator.solver_results)
         all_timeout_results.append(solver_results)
-        all_random_sel_results.append(random_selection_results)
-        all_var_sel_results.append(variance_selection_results)
-        all_var_sel_2_results.append(variance_selection_2_results)
 
-        plot_generator.plot_solver_results(
-            solver_results, random_selection_results, variance_selection_results, variance_selection_2_results, solver_string
-        )
+        # initialize global result dict with empty lists
+        for instance_selection in experiment_config.instance_selections:
+            if instance_selection.__name__ == "no_selection":
+                continue
+            all_instance_selection_results[instance_selection.__name__] = []
+
+        for instance_selection in experiment_config.instance_selections:
+            print(f"select instances based on method {instance_selection.__name__}")
+            if instance_selection.__name__ == "no_selection":
+                continue
+
+            selector = InstanceSelector(
+                thresholds, sorted_runtimes, acc_calculator,
+                sample_result_after_instances, instance_selection
+            )
+
+            selector.make_selection()
+            selection_results = pd.DataFrame(selector.results)
+            all_instance_selection_results[instance_selection.__name__].append(
+                selection_results
+            )
+
+        if experiment_config.individual_solver_plots:
+            plot_generator.plot_solver_results(
+                solver_results,
+                all_instance_selection_results,
+                solver_string
+            )
 
     store_and_show_mean_result()
 

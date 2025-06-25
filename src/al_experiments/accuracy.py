@@ -30,7 +30,8 @@ class Accuracy:
             mean_par_2_score: float,
             par_2_score_removed_solver: float,
             runtime_of_removed_solver,
-            select_idx
+            select_idx,
+            rt_weight: float = 1
     ):
         self.total_runtime = total_runtime
         self.break_after_runtime_fraction = break_after_runtime_fraction
@@ -41,6 +42,7 @@ class Accuracy:
         self.par_2_score_removed_solver = par_2_score_removed_solver
         self.rt_removed_solver = runtime_of_removed_solver
         self.select_idx = select_idx
+        self.rt_weight = rt_weight
         self.total_rt_removed_solver = runtime_of_removed_solver.sum()
         self.n = 1
         self.used_runtime = 0
@@ -125,7 +127,7 @@ class Accuracy:
         #print(similarity)
         #print(similarity.shape)
 
-        score = similarity #* total_added_runtime
+        score = similarity #+ self.rt_weight * total_added_runtime
         #print("fast")
         #for sc in score:
         #    print(sc, end=", ")

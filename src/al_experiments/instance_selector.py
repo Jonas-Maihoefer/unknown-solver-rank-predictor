@@ -171,3 +171,11 @@ def variance_based_selection_2(
     best_idx = possible_instances[best_idx]
 
     return best_idx
+
+
+def no_selection(
+    possible_instances,
+    thresholds,
+    sorted_runtimes
+):
+    pass

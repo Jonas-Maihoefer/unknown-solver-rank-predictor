@@ -8,8 +8,7 @@ class PlotGenerator:
         self.git_hash = git_hash
 
     def plot_avg_results(
-            self, avg_timeout_results, avg_random_sel_results,
-            avg_var_sel_results, avg_var_sel_2_results
+        self, avg_timeout_results, avg_instance_selection_results
     ):
         # create main plot and a twin y-axis
         fig, ax1 = plt.subplots()
@@ -31,21 +30,14 @@ class PlotGenerator:
                 avg_timeout_results["true_acc"],
                 label="true_acc_timeout_selection"
             )
-        ax2.plot(
-            avg_random_sel_results["runtime_frac"],
-            avg_random_sel_results["true_acc"],
-            label="true_acc_random_instance_selection"
-        )
-        ax2.plot(
-            avg_var_sel_results["runtime_frac"],
-            avg_var_sel_results["true_acc"],
-            label="true_acc_variance_based_instance_selection"
-        )
-        ax2.plot(
-            avg_var_sel_2_results["runtime_frac"],
-            avg_var_sel_2_results["true_acc"],
-            label="true_acc_variance_based_instance_selection_2"
-        )
+
+        for function_name, results in avg_instance_selection_results.items():
+            ax2.plot(
+                results["runtime_frac"],
+                results["true_acc"],
+                label=function_name
+            )
+
         ax2.set_ylabel("cross_acc", color='b')
         ax2.set_ylabel("true_acc", color='r')
         plt.title("average over all solvers")
@@ -62,7 +54,7 @@ class PlotGenerator:
         fig.savefig(f"./plots/{self.git_hash}/average_results.png", dpi=300)
 
     def plot_solver_results(
-        self, solver_results, random_sel_results, var_sel_results, var_sel_2_results, solver_string
+        self, solver_results, instance_selection_results, solver_string
     ):
         # create main plot and a twin y-axis
         fig, ax1 = plt.subplots()
@@ -84,18 +76,15 @@ class PlotGenerator:
                 solver_results["runtime_frac"], solver_results["true_acc"],
                 label="true_acc_timeout_selection"
             )
-        ax2.plot(
-            random_sel_results["runtime_frac"], random_sel_results["true_acc"],
-            label="true_acc_random_instance_selection"
-        )
-        ax2.plot(
-            var_sel_results["runtime_frac"], var_sel_results["true_acc"],
-            label="true_acc_variance_based_instance_selection"
-        )
-        ax2.plot(
-            var_sel_2_results["runtime_frac"], var_sel_2_results["true_acc"],
-            label="true_acc_variance_based_instance_selection_2"
-        )
+        for function_name, results in instance_selection_results.items():
+            if len(results) == 0:
+                continue
+            # last results dataframe is from the current solver
+            solver_result = results[-1]
+            ax2.plot(
+                solver_result["runtime_frac"], solver_result["true_acc"],
+                label=function_name
+            )
         ax2.set_ylabel("cross_acc", color='b')
         ax2.set_ylabel("true_acc", color='r')
 
@@ -135,7 +124,6 @@ class PlotGenerator:
 
         dynamic_timeout_optimized_runtime_frac = np.array([0.001427, 0.002411, 0.003394, 0.004377, 0.005361, 0.006344, 0.007327, 0.008311, 0.009294, 0.010277, 0.011261, 0.012244, 0.013227, 0.014211, 0.015194, 0.016178, 0.017161, 0.018144, 0.019128, 0.020111, 0.021094, 0.022078, 0.023061, 0.024044, 0.025028, 0.026011, 0.026994, 0.027978, 0.028961, 0.029944, 0.030928, 0.031911, 0.032894, 0.033878, 0.034861, 0.035845, 0.036828, 0.037811, 0.038795, 0.039778, 0.040761, 0.041745, 0.042728, 0.043711, 0.044695, 0.045678, 0.046661, 0.047645, 0.048628, 0.049611, 0.050595, 0.051578, 0.052561, 0.053545, 0.054528, 0.055512, 0.056495, 0.057478, 0.058462, 0.059445, 0.060428, 0.061412, 0.062395, 0.063378, 0.064362, 0.065345, 0.066328, 0.067312, 0.068295, 0.069278, 0.070262, 0.071245, 0.072228, 0.073212, 0.074195, 0.075179, 0.076162, 0.077145, 0.078129, 0.079112, 0.080095, 0.081079, 0.082062, 0.083045, 0.084029, 0.085012, 0.085995, 0.086979, 0.087962, 0.088945, 0.089929, 0.090912, 0.091895, 0.092879, 0.093862, 0.094845, 0.095829, 0.096812, 0.097796, 0.098779]) 
         dynamic_timeout_optimized_true_acc = np.array([0.915045, 0.911842, 0.903083, 0.905274, 0.909750, 0.923364, 0.930298, 0.930972, 0.930386, 0.918715, 0.921096, 0.926069, 0.924703, 0.917278, 0.918582, 0.916526, 0.913898, 0.919391, 0.919613, 0.920864, 0.918878, 0.919720, 0.919967, 0.919121, 0.921070, 0.918207, 0.912812, 0.909581, 0.907517, 0.907499, 0.908177, 0.907898, 0.906824, 0.903456, 0.905493, 0.906737, 0.904698, 0.904792, 0.905999, 0.905993, 0.904649, 0.902110, 0.899954, 0.897426, 0.893337, 0.892723, 0.895743, 0.893570, 0.893444, 0.894502, 0.894002, 0.889396, 0.890087, 0.892857, 0.894163, 0.896261, 0.897140, 0.900478, 0.901393, 0.903588, 0.899612, 0.900736, 0.897163, 0.894490, 0.898444, 0.900974, 0.902380, 0.900323, 0.901981, 0.899697, 0.897681, 0.901584, 0.899075, 0.897663, 0.897110, 0.896737, 0.897074, 0.893708, 0.894759, 0.895580, 0.895503, 0.894948, 0.896996, 0.894498, 0.892857, 0.892041, 0.891571, 0.892358, 0.892372, 0.894156, 0.889654, 0.894529, 0.897532, 0.900728, 0.902143, 0.901996, 0.902031, 0.904149, 0.906475, 0.906085]) 
-
 
         # optimize diff * rt e8e93020
         dynamic_timeout_quantized_selection_runtime_fraction = np.array([8.450451e-08, 9.655512e-04, 1.931018e-03, 2.896485e-03, 3.861951e-03, 4.827418e-03, 5.792884e-03, 6.758351e-03, 7.723818e-03, 8.689284e-03, 9.654751e-03, 1.062022e-02, 1.158568e-02, 1.255115e-02, 1.351662e-02, 1.448208e-02, 1.544755e-02, 1.641302e-02, 1.737848e-02, 1.834395e-02, 1.930942e-02, 2.027488e-02, 2.124035e-02, 2.220582e-02, 2.317128e-02, 2.413675e-02, 2.510222e-02, 2.606768e-02, 2.703315e-02, 2.799862e-02, 2.896408e-02, 2.992955e-02, 3.089502e-02, 3.186048e-02, 3.282595e-02, 3.379142e-02, 3.475688e-02, 3.572235e-02, 3.668782e-02, 3.765328e-02, 3.861875e-02, 3.958422e-02, 4.054968e-02, 4.151515e-02, 4.248062e-02, 4.344608e-02, 4.441155e-02, 4.537702e-02, 4.634248e-02, 4.730795e-02, 4.827342e-02, 4.923888e-02, 5.020435e-02, 5.116982e-02, 5.213528e-02, 5.310075e-02, 5.406622e-02, 5.503168e-02, 5.599715e-02, 5.696262e-02, 5.792808e-02, 5.889355e-02, 5.985902e-02, 6.082448e-02, 6.178995e-02, 6.275542e-02, 6.372088e-02, 6.468635e-02, 6.565182e-02, 6.661728e-02, 6.758275e-02, 6.854822e-02, 6.951368e-02, 7.047915e-02, 7.144462e-02, 7.241008e-02, 7.337555e-02, 7.434102e-02, 7.530648e-02, 7.627195e-02, 7.723742e-02, 7.820288e-02, 7.916835e-02, 8.013382e-02, 8.109928e-02, 8.206475e-02, 8.303022e-02, 8.399568e-02, 8.496115e-02, 8.592662e-02, 8.689208e-02, 8.785755e-02, 8.882302e-02, 8.978848e-02, 9.075395e-02, 9.171942e-02, 9.268488e-02, 9.365035e-02, 9.461582e-02, 9.558128e-02])
