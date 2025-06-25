@@ -4,8 +4,12 @@ import os
 
 
 class PlotGenerator:
-    def __init__(self, git_hash):
+    def __init__(self, git_hash, experiment=None):
         self.git_hash = git_hash
+        if experiment is None:
+            self.out_dir = f"./plots/{self.git_hash}"
+        else:
+            self.out_dir = f"./plots/{self.git_hash}/{experiment}"
 
     def plot_avg_results(
         self, avg_timeout_results, avg_instance_selection_results
@@ -51,7 +55,13 @@ class PlotGenerator:
         ax1.grid(True)
         ax1.set_xlabel("runtime fraction")
         fig.tight_layout()
-        fig.savefig(f"./plots/{self.git_hash}/average_results.png", dpi=300)
+
+        out_path = os.path.join(self.out_dir, "average_results.png")
+
+        # create the directory (and any parents) if it doesn't exist
+        os.makedirs(self.out_dir, exist_ok=True)
+
+        fig.savefig(out_path, dpi=300)
 
     def plot_solver_results(
         self, solver_results, instance_selection_results, solver_string
@@ -101,11 +111,10 @@ class PlotGenerator:
         ax1.set_xlabel("runtime fraction")
         fig.tight_layout()
 
-        out_dir = f"./plots/{self.git_hash}"
-        out_path = os.path.join(out_dir, f"{solver_string}_results.png")
+        out_path = os.path.join(self.out_dir, f"{solver_string}_results.png")
 
         # create the directory (and any parents) if it doesn't exist
-        os.makedirs(out_dir, exist_ok=True)
+        os.makedirs(self.out_dir, exist_ok=True)
 
         fig.savefig(out_path, dpi=300)
 

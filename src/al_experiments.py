@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-import time
+import re
 import random
 import pickle
 import subprocess
@@ -32,6 +32,7 @@ sample_result_after_instances = int(number_of_instances / total_samples)
 # global results
 all_timeout_results = []
 all_instance_selection_results = {}
+plot_generator = None
 
 # experiment config
 experiment_configs = ExperimentConfig(
@@ -196,15 +197,19 @@ def compute_average_grid(list_of_dfs, grid_size=total_samples):
     return avg_df
 
 
-def store_and_show_mean_result():
+def store_and_get_mean_result(rt_weight):
+
+    weight_string = re.sub(r'[^0-9a-zA-Z_]', '_', str(rt_weight))
+
+    rs_string = ""
 
     if not all_timeout_results[0].empty:
         avg_timeout_results = compute_average_grid(all_timeout_results, grid_size=total_samples)
         for param in ["runtime_frac", "cross_acc", "true_acc", "diff"]:
-            print(f"{plot_generator.git_hash}_timeout_precalc_{param} = np.array([", end="")
+            rs_string += f"{plot_generator.git_hash}_timeout_precalc_{param}_{weight_string} = np.array(["
             for val in avg_timeout_results[param]:
-                print(val, end=", ")
-            print("])")
+                rs_string += f"{val}, "
+            rs_string += "])\n"
     else:
         avg_timeout_results = None
 
@@ -216,14 +221,16 @@ def store_and_show_mean_result():
             compute_average_grid(results, grid_size=total_samples)
         )
         for param in ["runtime_frac", "cross_acc", "true_acc", "diff"]:
-            print(f"{plot_generator.git_hash}_{function_name}_{param} = np.array([", end="")
+            rs_string += f"{plot_generator.git_hash}_{function_name}_{param}_{weight_string} = np.array(["
             for val in avg_instance_selection_results[function_name][param]:
-                print(val, end=", ")
-            print("])")
+                rs_string += f"{val}, "
+            rs_string += "])\n"
 
     plot_generator.plot_avg_results(
         avg_timeout_results, avg_instance_selection_results
     )
+
+    return rs_string
 
 
 def get_stats(df_rated, df_runtimes, par_2_scores_series, par_2_scores, runtimes, thresholds, solver_index, acc_calculator: Accuracy, progress: str):
@@ -250,9 +257,17 @@ def get_stats(df_rated, df_runtimes, par_2_scores_series, par_2_scores, runtimes
 
 
 def run_multi_parameter_experiments(experiment_config: ExperimentConfig):
+    results_string = ""
+
     for rt_weight in experiment_config.rt_weights:
+        if len(experiment_config.rt_weights) == 1:
+            plot_generator = PlotGenerator(git_hash)
+        else:
+            plot_generator = PlotGenerator(git_hash, f"rt_weight_{rt_weight}")
         print(f"running with a runtime weight of {rt_weight}")
-        run_experiment(experiment_config, rt_weight)
+        results_string += run_experiment(experiment_config, rt_weight)
+
+    print(results_string)
 
 
 def run_experiment(experiment_config: ExperimentConfig, rt_weight=0.0):
@@ -391,7 +406,7 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight=0.0):
                 solver_string
             )
 
-    store_and_show_mean_result()
+    return store_and_get_mean_result(rt_weight)
 
 
 if __name__ == "__main__":
