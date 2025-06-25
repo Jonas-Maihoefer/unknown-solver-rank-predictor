@@ -106,7 +106,6 @@ class Accuracy:
         timeout_mask[instance_idx[:, None], index_mask] = True
         timeout_mask = timeout_mask[:, 1:]
 
-
         delta = next_penalty - current_penalty
         new_pred += timeout_mask * delta[:, None]
         #print("new pred with all instances")
@@ -115,7 +114,6 @@ class Accuracy:
         #print("mean pred")
         #print(new_pred.mean(axis=1))
         #print(new_pred.mean(axis=1).shape)
-
 
         scaling = self.mean_par_2_score / new_pred.mean(axis=1)
         #print("scaling")
@@ -138,6 +136,10 @@ class Accuracy:
         #print(score)
         #print(score.shape)
         #print(np.nanmin(score))
+
+        if not remaining_mask.any():
+            print("No more thresholds remaining")
+            return thresholds, prev_max_acc, -1
 
         best_idx = self.select_idx(score, remaining_mask)
 
@@ -691,8 +693,6 @@ class Accuracy:
 
 
 def select_best_idx(score, remaining_mask):
-    if np.all(np.isnan(score[remaining_mask])):
-        return instance_idx[remaining_mask][0]
     best_idx = np.nanargmin(score[remaining_mask])
     best_idx = instance_idx[remaining_mask][best_idx]
     return best_idx
