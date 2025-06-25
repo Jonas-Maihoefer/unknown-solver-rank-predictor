@@ -691,6 +691,8 @@ class Accuracy:
 
 
 def select_best_idx(score, remaining_mask):
+    if np.all(np.isnan(score[remaining_mask])):
+        return instance_idx[remaining_mask][0]
     best_idx = np.nanargmin(score[remaining_mask])
     best_idx = instance_idx[remaining_mask][best_idx]
     return best_idx
