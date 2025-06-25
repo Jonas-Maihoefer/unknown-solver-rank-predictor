@@ -6,7 +6,7 @@ import pickle
 import subprocess
 from al_experiments.determine_timeout import quantized_min_diff
 from al_experiments.experiment_config import ExperimentConfig
-from al_experiments.accuracy import Accuracy, select_best_idx, select_idx_softmax
+from al_experiments.accuracy import Accuracy, create_softmax_fn, select_best_idx
 from scipy.interpolate import interp1d
 
 from al_experiments.plot_generator import PlotGenerator
@@ -36,7 +36,7 @@ all_var_sel_results = []
 all_var_sel_2_results = []
 
 # experiment config
-experiment_configs = ExperimentConfig(quantized_min_diff, select_best_idx)
+experiment_configs = ExperimentConfig(quantized_min_diff, create_softmax_fn(temp=0.01))
 
 
 def get_git_commit_hash():
@@ -251,6 +251,10 @@ def run_experiment(experiment_config: ExperimentConfig):
     print(df)
 
     print(f"sample result after {sample_result_after_iterations} iterations")
+
+    # min value of df > 0.0 is 0.003021
+    # clean the 3 runtimes of 0.0s
+    df = df.replace(0.0, 0.0001)
 
     df_runtimes = df.replace([np.inf, -np.inf], 5000)
 

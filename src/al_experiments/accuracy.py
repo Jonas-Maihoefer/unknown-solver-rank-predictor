@@ -42,7 +42,7 @@ class Accuracy:
         self.rt_removed_solver = runtime_of_removed_solver
         self.select_idx = select_idx
         self.total_rt_removed_solver = runtime_of_removed_solver.sum()
-        self.n = 0
+        self.n = 1
         self.used_runtime = 0
         self.pred = np.ascontiguousarray(
             np.full((27,), 0), dtype=np.float32
@@ -688,28 +688,48 @@ class Accuracy:
         return np.mean(correct)
 
 
-def select_best_idx(score, remaining_mask, temp=1):
+def select_best_idx(score, remaining_mask):
     best_idx = np.nanargmin(score[remaining_mask])
     best_idx = instance_idx[remaining_mask][best_idx]
     return best_idx
 
 
-def select_idx_softmax(score, remaining_mask, temp=1):
-    valid_scores = score[remaining_mask]
-    valid_scores = valid_scores - np.min(valid_scores)
-    print("scores:")
-    for sc in valid_scores:
-        print(sc, end=", ")
-    print()
-    std_dev = np.std(valid_scores)
-    if std_dev == 0:
-        std_dev = 1
-    print(std_dev)
-    tau = std_dev * temp
-    weights = np.power(np.e, -np.divide(valid_scores, tau))
-    print("weights:")
-    for w in weights:
-        print(w, end=", ")
-    print()
-    print()
-    return select_best_idx(score, remaining_mask)
+def create_softmax_fn(temp):
+    def select_idx_softmax(score, remaining_mask):
+        valid_scores = score[remaining_mask]
+        valid_scores = valid_scores - np.min(valid_scores)
+        """ print("scores:")
+        for sc in valid_scores:
+            print(sc, end=", ")
+        print() """
+        std_dev = np.std(valid_scores)
+        if std_dev == 0:
+            std_dev = 1
+        tau = std_dev * temp
+        weights = np.power(np.e, -np.divide(valid_scores, tau))
+        """ for i, w in enumerate(weights):
+            #print(w, end=", ")
+            if w == 0.0:
+                print("weigth is zero !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+                print(f"delta score at this point is {valid_scores[i]}") """
+
+        probabilities = weights / np.sum(weights)
+
+        """ for p in probabilities:
+            #print(w, end=", ")
+            if p == 0.0:
+                print("propability is zero !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        """
+        # Get the indices of the valid scores
+        valid_indices = np.arange(len(valid_scores))
+
+        chosen_idx = np.random.choice(valid_indices, p=probabilities)
+
+        #print(f"choose instance having delta_score={valid_scores[chosen_idx]} and weight={weights[chosen_idx]}")
+
+        chosen_idx = instance_idx[remaining_mask][chosen_idx]
+
+        #print(f"verify instance having delta_score={(score - np.min(score))[chosen_idx]} and weight={np.e ** (-((score - np.min(score))[chosen_idx]/tau))}")
+
+        return chosen_idx
+    return select_idx_softmax
