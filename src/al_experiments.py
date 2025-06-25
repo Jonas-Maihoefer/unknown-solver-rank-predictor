@@ -37,9 +37,9 @@ all_instance_selection_results = {}
 experiment_configs = ExperimentConfig(
     determine_thresholds=quantized_min_diff,
     select_idx=select_best_idx,
-    rt_weights=[10],  # [10, 5.0, 2.5, 1.25, 0.625, 0.3125, 0.15625, 0.078125, 0.0390625, 0.01953125, 0.009765625, 0.0048828125, 0.00244140625, 0.001220703125, 0.0006103515625, 0.00030517578125, 0.000152587890625, 7.62939453125e-05, 3.814697265625e-05, 1.9073486328125e-05, 9.5367431640625e-06, 4.76837158203125e-06, 2.384185791015625e-06, 1.1920928955078125e-06],
-    instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2],
-    individual_solver_plots=True
+    rt_weights=[10, 5.0, 2.5, 1.25, 0.625, 0.3125, 0.15625, 0.078125, 0.0390625, 0.01953125, 0.009765625, 0.0048828125, 0.00244140625, 0.001220703125, 0.0006103515625, 0.00030517578125, 0.000152587890625, 7.62939453125e-05, 3.814697265625e-05, 1.9073486328125e-05, 9.5367431640625e-06, 4.76837158203125e-06, 2.384185791015625e-06, 1.1920928955078125e-06],
+    instance_selections=[],
+    individual_solver_plots=False
 )
 
 
@@ -252,10 +252,10 @@ def get_stats(df_rated, df_runtimes, par_2_scores_series, par_2_scores, runtimes
 def run_multi_parameter_experiments(experiment_config: ExperimentConfig):
     for rt_weight in experiment_config.rt_weights:
         print(f"running with a runtime weight of {rt_weight}")
-        run_experiment(experiment_config)
+        run_experiment(experiment_config, rt_weight)
 
 
-def run_experiment(experiment_config: ExperimentConfig):
+def run_experiment(experiment_config: ExperimentConfig, rt_weight=0.0):
     with open(
         "../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl",
         "rb"
@@ -320,7 +320,8 @@ def run_experiment(experiment_config: ExperimentConfig):
             sample_result_after_iterations,
             sorted_runtimes, par_2_scores, mean_par_2_score,
             par_2_score_removed_solver, runtime_of_removed_solver,
-            experiment_config.select_idx
+            experiment_config.select_idx,
+            rt_weight
         )
 
         # determine thresholds for perfect differentiation of remaining solvers

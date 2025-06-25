@@ -31,7 +31,7 @@ class Accuracy:
             par_2_score_removed_solver: float,
             runtime_of_removed_solver,
             select_idx,
-            rt_weight: float = 1
+            rt_weight: float = 0.0
     ):
         self.total_runtime = total_runtime
         self.break_after_runtime_fraction = break_after_runtime_fraction
@@ -127,7 +127,7 @@ class Accuracy:
         #print(similarity)
         #print(similarity.shape)
 
-        score = similarity #+ self.rt_weight * total_added_runtime
+        score = similarity + self.rt_weight * total_added_runtime
         #print("fast")
         #for sc in score:
         #    print(sc, end=", ")
