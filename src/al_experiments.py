@@ -23,8 +23,8 @@ else:
     import numpy as np
 
 # global config
-break_after_solvers = 2
-break_after_runtime_fraction = 0.002#0.15 #0.655504  # determined by 0e993e00
+break_after_solvers = 200
+break_after_runtime_fraction = 2  # 0.655504  # determined by 0e993e00
 total_samples = 500  # max is 5354 because of sample_result_after_instances
 sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
 sample_result_after_instances = int(number_of_instances / total_samples)
@@ -38,9 +38,9 @@ plot_generator = None
 experiment_configs = ExperimentConfig(
     determine_thresholds=quantized_min_diff,
     select_idx=select_best_idx,
-    rt_weights=[0],#[10, 5.0, 2.5, 1.25, 0.625, 0.3125, 0.15625, 0.078125, 0.0390625, 0.01953125, 0.009765625, 0.0048828125, 0.00244140625, 0.001220703125, 0.0006103515625, 0.00030517578125, 0.000152587890625, 7.62939453125e-05, 3.814697265625e-05, 1.9073486328125e-05, 9.5367431640625e-06, 4.76837158203125e-06, 2.384185791015625e-06, 1.1920928955078125e-06],
-    instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2],
-    individual_solver_plots=True
+    rt_weights=[10, 5.0, 2.5, 1.25, 0.625, 0.3125, 0.15625, 0.078125, 0.0390625, 0.01953125, 0.009765625, 0.0048828125, 0.00244140625, 0.001220703125, 0.0006103515625, 0.00030517578125, 0.000152587890625, 7.62939453125e-05, 3.814697265625e-05, 1.9073486328125e-05, 9.5367431640625e-06, 4.76837158203125e-06, 2.384185791015625e-06, 1.1920928955078125e-06],
+    instance_selections=[],
+    individual_solver_plots=False
 )
 
 
