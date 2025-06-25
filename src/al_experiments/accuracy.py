@@ -723,7 +723,7 @@ def create_softmax_fn(temp):
         # Get the indices of the valid scores
         valid_indices = np.arange(len(valid_scores))
 
-        chosen_idx = np.random.choice(valid_indices, size=(), p=probabilities)
+        chosen_idx = int(np.random.choice(valid_indices, size=1, p=probabilities)[0])
 
         #print(f"choose instance having delta_score={valid_scores[chosen_idx]} and weight={weights[chosen_idx]}")
 
