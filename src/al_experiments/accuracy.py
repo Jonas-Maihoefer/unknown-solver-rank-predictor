@@ -721,9 +721,10 @@ def create_softmax_fn(temp):
                 print("propability is zero !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
         """
         # Get the indices of the valid scores
-        valid_indices = np.arange(len(valid_scores))
+        size = len(valid_scores)
+        valid_indices = np.arange(size)
 
-        chosen_idx = np.random.choice(valid_indices, p=probabilities)
+        chosen_idx = np.random.choice(valid_indices, size=size, p=probabilities)
 
         #print(f"choose instance having delta_score={valid_scores[chosen_idx]} and weight={weights[chosen_idx]}")
 
