@@ -38,7 +38,7 @@ plot_generator = None
 experiment_configs = ExperimentConfig(
     determine_thresholds=quantized_min_diff,
     select_idx=select_best_idx,
-    rt_weights=[10, 5.0, 2.5, 1.25, 0.625, 0.3125, 0.15625, 0.078125, 0.0390625, 0.01953125, 0.009765625, 0.0048828125, 0.00244140625, 0.001220703125, 0.0006103515625, 0.00030517578125, 0.000152587890625, 7.62939453125e-05, 3.814697265625e-05, 1.9073486328125e-05, 9.5367431640625e-06, 4.76837158203125e-06, 2.384185791015625e-06, 1.1920928955078125e-06],
+    rt_weights=[100, 10, 1, 0.1, 0.01, 0.001, 0.0001, 1e-05, 1e-06, 1e-07, 1e-08, 1e-09, 1e-10, 1e-11, 1e-11, 1e-12, 1e-13, 1e-14, 1e-15, 1e-16, 1e-17, 1e-18, 1e-19, 1e-20],
     instance_selections=[],
     individual_solver_plots=False
 )
@@ -266,9 +266,12 @@ def run_multi_parameter_experiments(experiment_config: ExperimentConfig):
         else:
             plot_generator = PlotGenerator(git_hash, f"rt_weight_{rt_weight}")
         print(f"running with a runtime weight of {rt_weight}")
+        # reset results
+        global all_timeout_results
+        all_timeout_results = []
         results_string += run_experiment(experiment_config, rt_weight)
-
-    print(results_string)
+        print("results so far:")
+        print(results_string)
 
 
 def run_experiment(experiment_config: ExperimentConfig, rt_weight=0.0):
@@ -406,6 +409,7 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight=0.0):
                 all_instance_selection_results,
                 solver_string
             )
+    print(f"length of all_timeout_results is {len(all_timeout_results)}")
 
     return store_and_get_mean_result(rt_weight)
 
