@@ -125,7 +125,7 @@ class Accuracy:
         #print(similarity)
         #print(similarity.shape)
 
-        score = total_added_runtime #similarity + self.rt_weight * total_added_runtime
+        score = similarity + self.rt_weight * total_added_runtime
         #print("fast")
         #for sc in score:
         #    print(sc, end=", ")
