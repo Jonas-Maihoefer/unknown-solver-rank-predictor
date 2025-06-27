@@ -24,7 +24,7 @@ else:
 
 # global config
 break_after_solvers = 200
-break_after_runtime_fraction = 2  # 0.655504  # determined by 0e993e00
+break_after_runtime_fraction = 2 # 0.655504  # determined by 0e993e00
 total_samples = 500  # max is 5354 because of sample_result_after_instances
 sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
 sample_result_after_instances = int(number_of_instances / total_samples)
@@ -37,10 +37,11 @@ plot_generator = None
 # experiment config
 experiment_configs = ExperimentConfig(
     determine_thresholds=quantized_min_diff,
-    select_idx=select_best_idx,
-    rt_weights=[0.01],
-    instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2],
-    individual_solver_plots=True
+    select_idx=create_softmax_fn,
+    temperatures=[10, 1, 0.1, 0.001, 0.0001, 1e-05, 1e-06, 1e-07, 1e-08, 1e-09, 1e-10, 1e-11, 1e-12, 1e-13, 1e-14, 1e-15, 1e-16, 1e-17, 1e-18, 1e-19],
+    rt_weights=[1],
+    instance_selections=[],
+    individual_solver_plots=False
 )
 
 
@@ -197,16 +198,17 @@ def compute_average_grid(list_of_dfs, grid_size=total_samples):
     return avg_df
 
 
-def store_and_get_mean_result(rt_weight):
+def store_and_get_mean_result(rt_weight, temp):
 
     weight_string = re.sub(r'[^0-9a-zA-Z_]', '_', str(rt_weight))
+    temp_string = re.sub(r'[^0-9a-zA-Z_]', '_', str(temp))
 
     rs_string = ""
 
     if not all_timeout_results[0].empty:
         avg_timeout_results = compute_average_grid(all_timeout_results, grid_size=total_samples)
         for param in ["runtime_frac", "cross_acc", "true_acc", "diff"]:
-            rs_string += f"{plot_generator.git_hash}_timeout_precalc_{param}_{weight_string} = np.array(["
+            rs_string += f"h_{plot_generator.git_hash}_timeout_precalc_{param}_rt_weight_{weight_string}_temp_{temp_string} = np.array(["
             for val in avg_timeout_results[param]:
                 rs_string += f"{val}, "
             rs_string += "])\n"
@@ -221,7 +223,7 @@ def store_and_get_mean_result(rt_weight):
             compute_average_grid(results, grid_size=total_samples)
         )
         for param in ["runtime_frac", "cross_acc", "true_acc", "diff"]:
-            rs_string += f"{plot_generator.git_hash}_{function_name}_{param}_{weight_string} = np.array(["
+            rs_string += f"{plot_generator.git_hash}_{function_name}_{param}_rt_weight_{weight_string}_temp_{temp_string} = np.array(["
             for val in avg_instance_selection_results[function_name][param]:
                 rs_string += f"{val}, "
             rs_string += "])\n"
@@ -256,25 +258,39 @@ def get_stats(df_rated, df_runtimes, par_2_scores_series, par_2_scores, runtimes
     return {"runtime_frac": runtime_frac, "cross_acc": cross_acc, "true_acc": true_acc, "diff": diff}
 
 
-def run_multi_parameter_experiments(experiment_config: ExperimentConfig):
+def run_multi_temp_experiments(experiment_config: ExperimentConfig):
+    if experiment_config.select_idx.__name__ != 'create_softmax_fn':
+        run_multi_rt_weights_experiments(experiment_config)
+        return
+
+    for temp in experiment_config.temperatures:
+        experiment_config.select_idx = create_softmax_fn(temp)
+        run_multi_rt_weights_experiments(experiment_config, temp)
+
+
+def run_multi_rt_weights_experiments(experiment_config: ExperimentConfig, temp=None):
     global plot_generator
     results_string = ""
 
     for rt_weight in experiment_config.rt_weights:
-        if len(experiment_config.rt_weights) == 1:
+        if len(experiment_config.rt_weights) == 1 and len(experiment_config.temperatures) == 1:
             plot_generator = PlotGenerator(git_hash)
         else:
-            plot_generator = PlotGenerator(git_hash, f"rt_weight_{rt_weight}")
+            if temp is None:
+                plot_generator = PlotGenerator(git_hash, f"rt_weight_{rt_weight}")
+            else:
+                plot_generator = PlotGenerator(git_hash, f"rt_weight_{rt_weight}_temp_{temp}")
+                print(f"running with a temperature of {temp}")
         print(f"running with a runtime weight of {rt_weight}")
         # reset results
         global all_timeout_results
         all_timeout_results = []
-        results_string += run_experiment(experiment_config, rt_weight)
+        results_string += run_experiment(experiment_config, rt_weight, temp)
         print("results so far:")
         print(results_string)
 
 
-def run_experiment(experiment_config: ExperimentConfig, rt_weight=0.0):
+def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
     with open(
         "../al-for-sat-solver-benchmarking-data/pickled-data/anni_full_df.pkl",
         "rb"
@@ -309,7 +325,7 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight=0.0):
             continue
         all_instance_selection_results[instance_selection.__name__] = []
 
-    random_solver_order = [4]  # list(range(28))
+    random_solver_order = list(range(28))
 
     random.shuffle(random_solver_order)
 
@@ -411,7 +427,7 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight=0.0):
             )
     print(f"length of all_timeout_results is {len(all_timeout_results)}")
 
-    return store_and_get_mean_result(rt_weight)
+    return store_and_get_mean_result(rt_weight, temp)
 
 
 if __name__ == "__main__":
@@ -422,7 +438,6 @@ if __name__ == "__main__":
     #plot_generator.create_progress_plot()
 
     print(f"start experiment on {git_hash}")
-
-    run_multi_parameter_experiments(experiment_configs)
+    run_multi_temp_experiments(experiment_configs)
 
     print("ended experiment")

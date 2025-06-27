@@ -21,17 +21,20 @@ class PlotGenerator:
             ax1.plot(
                 avg_timeout_results["runtime_frac"],
                 avg_timeout_results["diff"],
+                color='g',
                 label="diff"
             )
             ax1.set_ylabel("diff", color='g')
             ax2.plot(
                 avg_timeout_results["runtime_frac"],
                 avg_timeout_results["cross_acc"],
+                color='b',
                 label="cross_acc_timeout_selection"
             )
             ax2.plot(
                 avg_timeout_results["runtime_frac"],
                 avg_timeout_results["true_acc"],
+                color='r',
                 label="true_acc_timeout_selection"
             )
 
@@ -70,6 +73,12 @@ class PlotGenerator:
         fig, ax1 = plt.subplots()
 
         ax2 = ax1.twinx()
+
+        # grab the default Tab10 palette (10 colors)
+        tab10 = plt.cm.get_cmap("tab10").colors
+
+        # remove first 2 colors form ax2 (blue and green)
+        ax2.set_prop_cycle("color", tab10[2:])
 
         if len(solver_results) > 0:
             ax1.plot(
@@ -251,16 +260,16 @@ class PlotGenerator:
 
 
         plt.plot(h_2573bdc1_timeout_precalc_runtime_frac_inf, h_2573bdc1_timeout_precalc_true_acc_inf, label="rt_weight='inf'")
-        #plt.plot(h_4965603a_timeout_precalc_runtime_frac_100, h_4965603a_timeout_precalc_true_acc_100, label="rt_weight=100")
-        #plt.plot(h_4965603a_timeout_precalc_runtime_frac_10, h_4965603a_timeout_precalc_true_acc_10, label="rt_weight=10")
-        #plt.plot(h_4965603a_timeout_precalc_runtime_frac_1, h_4965603a_timeout_precalc_true_acc_1, label="rt_weight=1")
-        #plt.plot(h_4965603a_timeout_precalc_runtime_frac_0_1, h_4965603a_timeout_precalc_true_acc_0_1, label="rt_weight=0.1")
-        #plt.plot(h_4965603a_timeout_precalc_runtime_frac_0_01, h_4965603a_timeout_precalc_true_acc_0_01, label="rt_weight=0.01")
-        plt.plot(h_4965603a_timeout_precalc_runtime_frac_0_001, h_4965603a_timeout_precalc_true_acc_0_001, label="rt_weight=0.001")
-        plt.plot(h_4965603a_timeout_precalc_runtime_frac_0_0001, h_4965603a_timeout_precalc_true_acc_0_0001, label="rt_weight=0.0001")
+        plt.plot(h_4965603a_timeout_precalc_runtime_frac_100, h_4965603a_timeout_precalc_true_acc_100, label="rt_weight=100")
+        plt.plot(h_4965603a_timeout_precalc_runtime_frac_10, h_4965603a_timeout_precalc_true_acc_10, label="rt_weight=10")
+        plt.plot(h_4965603a_timeout_precalc_runtime_frac_1, h_4965603a_timeout_precalc_true_acc_1, label="rt_weight=1")
+        plt.plot(h_4965603a_timeout_precalc_runtime_frac_0_1, h_4965603a_timeout_precalc_true_acc_0_1, label="rt_weight=0.1")
+        plt.plot(h_4965603a_timeout_precalc_runtime_frac_0_01, h_4965603a_timeout_precalc_true_acc_0_01, label="rt_weight=0.01")
+        #plt.plot(h_4965603a_timeout_precalc_runtime_frac_0_001, h_4965603a_timeout_precalc_true_acc_0_001, label="rt_weight=0.001")
+        #plt.plot(h_4965603a_timeout_precalc_runtime_frac_0_0001, h_4965603a_timeout_precalc_true_acc_0_0001, label="rt_weight=0.0001")
         #plt.plot(h_4965603a_timeout_precalc_runtime_frac_1e_05, h_4965603a_timeout_precalc_true_acc_1e_05, label="rt_weight=1e05")
         #plt.plot(h_4965603a_timeout_precalc_runtime_frac_1e_06, h_4965603a_timeout_precalc_true_acc_1e_06, label="rt_weight=1e06")
-        plt.plot(dynamic_timeout_quantized_min_diff_runtime_fraction_2, dynamic_timeout_quantized_min_diff_true_acc_2, label="rt_weight=0")
+        #plt.plot(dynamic_timeout_quantized_min_diff_runtime_fraction_2, dynamic_timeout_quantized_min_diff_true_acc_2, label="rt_weight=0")
 
 
         #plt.plot(h_4965603a_timeout_precalc_runtime_frac_100, h_4965603a_timeout_precalc_true_acc_100, label="true_acc; rt_weight=100")
