@@ -24,7 +24,7 @@ else:
 
 # global config
 break_after_solvers = 200
-break_after_runtime_fraction = 2  # 0.655504  # determined by 0e993e00
+break_after_runtime_fraction = 0.4  # 0.655504  # determined by 0e993e00
 total_samples = 500  # max is 5354 because of sample_result_after_instances
 sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
 sample_result_after_instances = int(number_of_instances / total_samples)
@@ -38,9 +38,9 @@ plot_generator = None
 experiment_configs = ExperimentConfig(
     determine_thresholds=quantized_min_diff,
     select_idx=select_best_idx,
-    rt_weights=[100, 10, 1, 0.1, 0.01, 0.001, 0.0001, 1e-05, 1e-06, 1e-07, 1e-08, 1e-09, 1e-10, 1e-11, 1e-11, 1e-12, 1e-13, 1e-14, 1e-15, 1e-16, 1e-17, 1e-18, 1e-19, 1e-20],
-    instance_selections=[],
-    individual_solver_plots=False
+    rt_weights=[0.01],
+    instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2],
+    individual_solver_plots=True
 )
 
 
