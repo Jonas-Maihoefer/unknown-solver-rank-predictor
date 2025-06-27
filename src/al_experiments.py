@@ -24,7 +24,7 @@ else:
 
 # global config
 break_after_solvers = 200
-break_after_runtime_fraction = 2  # 0.655504  # determined by 0e993e00
+break_after_runtime_fraction = 0.4  # 0.655504  # determined by 0e993e00
 total_samples = 500  # max is 5354 because of sample_result_after_instances
 sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
 sample_result_after_instances = int(number_of_instances / total_samples)
@@ -38,9 +38,9 @@ plot_generator = None
 experiment_configs = ExperimentConfig(
     determine_thresholds=quantized_min_diff,
     select_idx=select_best_idx,
-    rt_weights=[1],
-    instance_selections=[],
-    individual_solver_plots=False
+    rt_weights=[0.01],
+    instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2],
+    individual_solver_plots=True
 )
 
 
@@ -309,7 +309,7 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight=0.0):
             continue
         all_instance_selection_results[instance_selection.__name__] = []
 
-    random_solver_order = list(range(28))
+    random_solver_order = [4]  # list(range(28))
 
     random.shuffle(random_solver_order)
 
