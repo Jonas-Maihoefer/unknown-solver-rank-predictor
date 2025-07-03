@@ -40,7 +40,7 @@ experiment_configs = ExperimentConfig(
     select_idx=select_best_idx,
     temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
     rt_weights=[1],
-    instance_selections=[choose_instances_random, ],
+    instance_selections=[choose_instances_random, variance_based_selection_1],
     individual_solver_plots=False
 )
 
