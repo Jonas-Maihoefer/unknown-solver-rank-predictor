@@ -11,7 +11,7 @@ else:
     import numpy as np
 
 
-def static_timeout(
+def static_timeout_5000(
         acc_calculator: Accuracy,
         solver_string: str,
 ):

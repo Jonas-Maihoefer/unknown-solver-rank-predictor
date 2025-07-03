@@ -4,13 +4,13 @@ import re
 import random
 import pickle
 import subprocess
-from al_experiments.determine_timeout import quantized_min_diff
+from al_experiments.determine_timeout import quantized_min_diff, static_timeout_5000
 from al_experiments.experiment_config import ExperimentConfig
 from al_experiments.accuracy import Accuracy, create_softmax_fn, select_best_idx
 from scipy.interpolate import interp1d
 
 from al_experiments.plot_generator import PlotGenerator
-from al_experiments.instance_selector import InstanceSelector, choose_instances_random, variance_based_selection_1, variance_based_selection_2
+from al_experiments.instance_selector import InstanceSelector, choose_instances_random, variance_based_selection_1, variance_based_selection_2, lowest_rt_selection
 from al_experiments.constants import number_of_solvers, number_of_instances
 
 useCupy = os.getenv("USECUDA", "0") == "1"
@@ -24,7 +24,7 @@ else:
 
 # global config
 break_after_solvers = 200
-break_after_runtime_fraction = 2 # 0.655504  # determined by 0e993e00
+break_after_runtime_fraction = 0.4  # 0.655504  # determined by 0e993e00
 total_samples = 500  # max is 5354 because of sample_result_after_instances
 sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
 sample_result_after_instances = int(number_of_instances / total_samples)
@@ -37,10 +37,10 @@ plot_generator = None
 # experiment config
 experiment_configs = ExperimentConfig(
     determine_thresholds=quantized_min_diff,
-    select_idx=create_softmax_fn,
-    temperatures=[0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+    select_idx=select_best_idx,
+    temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
     rt_weights=[1],
-    instance_selections=[],
+    instance_selections=[choose_instances_random, ],
     individual_solver_plots=False
 )
 
@@ -223,7 +223,7 @@ def store_and_get_mean_result(rt_weight, temp):
             compute_average_grid(results, grid_size=total_samples)
         )
         for param in ["runtime_frac", "cross_acc", "true_acc", "diff"]:
-            rs_string += f"{plot_generator.git_hash}_{function_name}_{param}_rt_weight_{weight_string}_temp_{temp_string} = np.array(["
+            rs_string += f"h_{plot_generator.git_hash}_{function_name}_{param}_rt_weight_{weight_string}_temp_{temp_string} = np.array(["
             for val in avg_instance_selection_results[function_name][param]:
                 rs_string += f"{val}, "
             rs_string += "])\n"
@@ -263,9 +263,13 @@ def run_multi_temp_experiments(experiment_config: ExperimentConfig):
         run_multi_rt_weights_experiments(experiment_config)
         return
 
+    tot_res_str = ''
     for temp in experiment_config.temperatures:
         experiment_config.select_idx = create_softmax_fn(temp)
-        run_multi_rt_weights_experiments(experiment_config, temp)
+        tot_res_str += run_multi_rt_weights_experiments(experiment_config, temp)
+
+    print("total result string:")
+    print(tot_res_str)
 
 
 def run_multi_rt_weights_experiments(experiment_config: ExperimentConfig, temp=None):
@@ -288,6 +292,8 @@ def run_multi_rt_weights_experiments(experiment_config: ExperimentConfig, temp=N
         results_string += run_experiment(experiment_config, rt_weight, temp)
         print("results so far:")
         print(results_string)
+
+    return results_string
 
 
 def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
@@ -435,7 +441,7 @@ if __name__ == "__main__":
     git_hash = get_git_commit_hash()
 
     plot_generator = PlotGenerator(git_hash)
-    #plot_generator.create_progress_plot()
+    plot_generator.create_progress_plot()
 
     print(f"start experiment on {git_hash}")
     run_multi_temp_experiments(experiment_configs)

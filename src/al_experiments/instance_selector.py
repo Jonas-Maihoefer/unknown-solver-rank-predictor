@@ -118,7 +118,7 @@ def variance_based_selection_1(
     variances = np.nanvar(runtimes, axis=1)
     means = np.nanmean(runtimes, axis=1)
 
-    score = variances/means
+    score = variances #/means
 
     score = score[possible_instances]
 
@@ -169,6 +169,29 @@ def variance_based_selection_2(
         best_idx = np.nanargmax(score)
 
     best_idx = possible_instances[best_idx]
+
+    return best_idx
+
+
+def lowest_rt_selection(
+        possible_instances,
+        thresholds,
+        sorted_runtimes
+):
+    timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
+    runtimes = sorted_runtimes[rt].copy()
+
+    runtimes[runtimes > timeouts[:, None]] = np.nan
+    runtimes[:, 0] = np.nan
+    runtimes[runtimes == 0.0] = 0.001
+
+    total_rt = np.nansum(runtimes, axis=1)
+
+    score = total_rt
+
+    score = score[possible_instances]
+
+    best_idx = possible_instances[np.nanargmin(score)]
 
     return best_idx
 
