@@ -269,6 +269,14 @@ def highest_rt_selection(
     return best_idx
 
 
+def best_cross_acc(
+        possible_instances,
+        thresholds,
+        sorted_runtimes
+):
+    raise Exception("implememnt!")
+
+
 def no_selection(
     possible_instances,
     thresholds,
