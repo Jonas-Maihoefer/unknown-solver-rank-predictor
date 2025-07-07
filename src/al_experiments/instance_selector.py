@@ -118,7 +118,7 @@ def variance_based_selection_1(
     variances = np.nanvar(runtimes, axis=1)
     means = np.nanmean(runtimes, axis=1)
 
-    score = variances #/means
+    score = variances / means
 
     score = score[possible_instances]
 
@@ -173,6 +173,56 @@ def variance_based_selection_2(
     return best_idx
 
 
+def lowest_variances_per_rt(
+        possible_instances,
+        thresholds,
+        sorted_runtimes
+):
+    """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
+    timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
+    runtimes = sorted_runtimes[rt].copy()
+
+    runtimes[runtimes > timeouts[:, None]] = np.nan
+    runtimes[:, 0] = np.nan
+    runtimes[runtimes == 0.0] = 0.001
+
+    variances = np.nanvar(runtimes, axis=1)
+    means = np.nanmean(runtimes, axis=1)
+
+    score = variances / means
+
+    score = score[possible_instances]
+
+    best_idx = possible_instances[np.nanargmin(score)]
+
+    return best_idx
+
+
+def lowest_variance(
+        possible_instances,
+        thresholds,
+        sorted_runtimes
+):
+    """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
+    timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
+    runtimes = sorted_runtimes[rt].copy()
+
+    runtimes[runtimes > timeouts[:, None]] = np.nan
+    runtimes[:, 0] = np.nan
+    runtimes[runtimes == 0.0] = 0.001
+
+    variances = np.nanvar(runtimes, axis=1)
+    means = np.nanmean(runtimes, axis=1)
+
+    score = variances
+
+    score = score[possible_instances]
+
+    best_idx = possible_instances[np.nanargmin(score)]
+
+    return best_idx
+
+
 def lowest_rt_selection(
         possible_instances,
         thresholds,
@@ -192,6 +242,29 @@ def lowest_rt_selection(
     score = score[possible_instances]
 
     best_idx = possible_instances[np.nanargmin(score)]
+
+    return best_idx
+
+
+def highest_rt_selection(
+        possible_instances,
+        thresholds,
+        sorted_runtimes
+):
+    timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
+    runtimes = sorted_runtimes[rt].copy()
+
+    runtimes[runtimes > timeouts[:, None]] = np.nan
+    runtimes[:, 0] = np.nan
+    runtimes[runtimes == 0.0] = 0.001
+
+    total_rt = np.nansum(runtimes, axis=1)
+
+    score = total_rt
+
+    score = score[possible_instances]
+
+    best_idx = possible_instances[np.nanargmax(score)]
 
     return best_idx
 

@@ -10,7 +10,7 @@ from al_experiments.accuracy import Accuracy, create_softmax_fn, select_best_idx
 from scipy.interpolate import interp1d
 
 from al_experiments.plot_generator import PlotGenerator
-from al_experiments.instance_selector import InstanceSelector, choose_instances_random, variance_based_selection_1, variance_based_selection_2, lowest_rt_selection
+from al_experiments.instance_selector import InstanceSelector, choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, lowest_variances_per_rt, lowest_rt_selection
 from al_experiments.constants import number_of_solvers, number_of_instances
 
 useCupy = os.getenv("USECUDA", "0") == "1"
@@ -40,7 +40,7 @@ experiment_configs = ExperimentConfig(
     select_idx=select_best_idx,
     temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
     rt_weights=[1],
-    instance_selections=[choose_instances_random, variance_based_selection_1],
+    instance_selections=[choose_instances_random, variance_based_selection_1, highest_rt_selection, lowest_variance, lowest_variances_per_rt, lowest_rt_selection],
     individual_solver_plots=True
 )
 
@@ -441,7 +441,7 @@ if __name__ == "__main__":
     git_hash = get_git_commit_hash()
 
     plot_generator = PlotGenerator(git_hash)
-    #plot_generator.create_progress_plot()
+    #plot_generator.plot_histogramm()
 
     print(f"start experiment on {git_hash}")
     run_multi_temp_experiments(experiment_configs)
