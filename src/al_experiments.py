@@ -24,7 +24,7 @@ else:
 
 # global config
 break_after_solvers = 200
-break_after_runtime_fraction = 0.4  # 0.655504  # determined by 0e993e00
+break_after_runtime_fraction = 2  # 0.655504  # determined by 0e993e00
 total_samples = 500  # max is 5354 because of sample_result_after_instances
 sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
 sample_result_after_instances = int(number_of_instances / total_samples)
@@ -40,7 +40,7 @@ experiment_configs = ExperimentConfig(
     select_idx=select_best_idx,
     temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
     rt_weights=[1],
-    instance_selections=[choose_instances_random, variance_based_selection_1, highest_rt_selection, lowest_variance, lowest_variances_per_rt, lowest_rt_selection],
+    instance_selections=[choose_instances_random, variance_based_selection_1],
     individual_solver_plots=True
 )
 

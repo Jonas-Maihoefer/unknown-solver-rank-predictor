@@ -125,10 +125,10 @@ class Accuracy:
         #print(similarity)
         #print(similarity.shape)
 
-        score = total_added_runtime #similarity + self.rt_weight * total_added_runtime
+        score = 1 / (similarity * total_added_runtime)  # similarity + self.rt_weight * total_added_runtime
         #print("fast")
-        #for sc in score:
-        #    print(sc, end=", ")
+        #for th in thresholds:
+        #    print(th, end=", ")
 
         #print()
         #print()
@@ -693,7 +693,7 @@ class Accuracy:
 
 
 def select_best_idx(score, remaining_mask):
-    best_idx = np.nanargmin(score[remaining_mask])
+    best_idx = np.nanargmax(score[remaining_mask])
     best_idx = instance_idx[remaining_mask][best_idx]
     return best_idx
 
