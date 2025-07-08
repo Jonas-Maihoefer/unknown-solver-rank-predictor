@@ -6,75 +6,86 @@ import seaborn as sns
 
 
 class PlotGenerator:
-    def __init__(self, git_hash, experiment=None):
+    def __init__(self, git_hash, exp_config, experiment=None):
         self.git_hash = git_hash
+        self.exp_config = exp_config
         if experiment is None:
             self.out_dir = f"./plots/{self.git_hash}"
         else:
             self.out_dir = f"./plots/{self.git_hash}/{experiment}"
 
-    def plot_avg_results(
-        self, avg_timeout_results, avg_instance_selection_results
-    ):
-        # create main plot and a twin y-axis
-        fig, ax1 = plt.subplots()
-        ax2 = ax1.twinx()
-        if avg_timeout_results is not None:
-            ax1.plot(
-                avg_timeout_results["runtime_frac"],
-                avg_timeout_results["diff"],
-                color='g',
-                label="diff"
-            )
-            ax1.set_ylabel("diff", color='g')
-            ax2.plot(
-                avg_timeout_results["runtime_frac"],
-                avg_timeout_results["cross_acc"],
-                color='b',
-                label="cross_acc_timeout_selection"
-            )
-            ax2.plot(
-                avg_timeout_results["runtime_frac"],
-                avg_timeout_results["true_acc"],
-                color='r',
-                label="true_acc_timeout_selection"
-            )
+    def plot_avg_results(self, df: pd.DataFrame, num_samples):
+        # filter
+        wanted_measurements = ["determine_timeouts_true_acc", "determine_timeouts_cross_acc"]
+        for sel_fn in self.exp_config.instance_selections:
+            wanted_measurements.append(f"{sel_fn.__name__}_true_acc")
+        # Now plot:
 
-        for function_name, results in avg_instance_selection_results.items():
-            ax2.plot(
-                results["runtime_frac"],
-                results["true_acc"],
-                label=function_name
+        # 1) define grid
+        x_min, x_max = df['runtime_fraction'].min(), df['runtime_fraction'].max()
+        x_grid = np.linspace(x_min, x_max, num_samples)
+
+        # 2–3) interpolate each (solver, measurement)
+        recs = []
+        for (solver, meas), grp in df.groupby(['solver', 'measurement']):
+            # sort just in case
+            xs = grp['runtime_fraction'].values
+            ys = grp['value'].values
+            sort_idx = np.argsort(xs)
+            xs, ys = xs[sort_idx], ys[sort_idx]
+            # linear interp, out-of-bounds → NaN
+            y_grid = np.interp(
+                x_grid,
+                xs,
+                ys,
+                left=np.nan,
+                right=np.nan
             )
+            for x_val, y_val in zip(x_grid, y_grid):
+                recs.append({
+                    'solver': solver,
+                    'measurement': meas,
+                    'runtime_fraction': x_val,
+                    'value': y_val
+                })
 
-        ax2.set_ylabel("cross_acc", color='b')
-        ax2.set_ylabel("true_acc", color='r')
-        plt.title("average over all solvers")
-        # optional: add grids and legends
-        h1, l1 = ax1.get_legend_handles_labels()
-        h2, l2 = ax2.get_legend_handles_labels()
+        interp_df = pd.DataFrame.from_records(recs)
 
-        # one legend on ax1 (or fig.legend())
-        ax1.legend(h1 + h2, l1 + l2, loc='best')
-
-        ax1.grid(True)
-        ax1.set_xlabel("runtime fraction")
-        fig.tight_layout()
+        # 4) plot
+        plt.figure(figsize=(8, 6))
+        sns.lineplot(
+            data=interp_df,
+            x='runtime_fraction',
+            y='value',
+            hue='measurement',
+            hue_order=wanted_measurements,
+            estimator='mean',
+            errorbar=('pi', 90),     # 90 % prediction interval (5th–95th pct)
+            legend='full'
+        )
 
         out_path = os.path.join(self.out_dir, "average_results.png")
 
         # create the directory (and any parents) if it doesn't exist
         os.makedirs(self.out_dir, exist_ok=True)
 
-        fig.savefig(out_path, dpi=300)
+        plt.savefig(out_path, dpi=300, bbox_inches="tight")
+
+        # Clean up
+        plt.close()
 
     def plot_solver_results(
         self, all_results, solver_string
     ):
+        # construct df
         df = pd.DataFrame.from_records(all_results)
 
+        # filtering
         wanted_solver = [solver_string]
         df_sub = df[df["solver"].isin(wanted_solver)]
+        wanted_measurements = ["determine_timeouts_true_acc", "determine_timeouts_cross_acc"]
+        for sel_fn in self.exp_config.instance_selections:
+            wanted_measurements.append(f"{sel_fn.__name__}_true_acc")
         # Now plot:
         plt.figure(figsize=(8, 6))
         sns.lineplot(
@@ -82,6 +93,7 @@ class PlotGenerator:
             x="runtime_fraction",
             y="value",
             hue="measurement",
+            hue_order=wanted_measurements,
         )
         plt.title(f"dynamic timeouts for solver {solver_string}")
         plt.legend(title="Measurement")

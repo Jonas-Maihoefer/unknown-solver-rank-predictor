@@ -154,7 +154,7 @@ class Accuracy:
         if self.n % self.sample_result_after_iterations == 0:
             runtime_frac = self.sample_result(
                 thresholds, self.pred,
-                "add_runtime_random_quantized", score[best_idx]
+                "determine_timeouts", score[best_idx]
             )
             if runtime_frac > self.break_after_runtime_fraction:
                 return thresholds, prev_max_acc, -1
@@ -204,7 +204,7 @@ class Accuracy:
 
         if self.n % self.sample_result_after_iterations == 0:
             runtime_frac = self.sample_result(
-                thresholds, self.pred, "add_runtime_random_quantized"
+                thresholds, self.pred, "determine_timeouts"
             )
             if runtime_frac > self.break_after_runtime_fraction:
                 return thresholds, prev_max_acc, -1
