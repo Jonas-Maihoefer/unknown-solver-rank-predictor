@@ -441,7 +441,7 @@ if __name__ == "__main__":
     git_hash = get_git_commit_hash()
 
     plot_generator = PlotGenerator(git_hash)
-    #plot_generator.plot_histogramm()
+    #plot_generator.create_progress_plot()
 
     print(f"start experiment on {git_hash}")
     run_multi_temp_experiments(experiment_configs)
