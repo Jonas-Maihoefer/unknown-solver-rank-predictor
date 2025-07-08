@@ -24,12 +24,13 @@ else:
 
 # global config
 break_after_solvers = 200
-break_after_runtime_fraction = 2  # 0.655504  # determined by 0e993e00
+break_after_runtime_fraction = 0.00002  # 0.655504  # determined by 0e993e00
 total_samples = 500  # max is 5354 because of sample_result_after_instances
 sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
 sample_result_after_instances = int(number_of_instances / total_samples)
 # total_runtime = 25860323 s
 # global results
+all_results = []
 all_timeout_results = []
 all_instance_selection_results = {}
 plot_generator = None
@@ -287,8 +288,8 @@ def run_multi_rt_weights_experiments(experiment_config: ExperimentConfig, temp=N
                 print(f"running with a temperature of {temp}")
         print(f"running with a runtime weight of {rt_weight}")
         # reset results
-        global all_timeout_results
-        all_timeout_results = []
+        global all_results
+        all_results = []
         results_string += run_experiment(experiment_config, rt_weight, temp)
         print("results so far:")
         print(results_string)
@@ -325,12 +326,6 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
     results['TrueAcc'] = None
     results['RuntimeFrac'] = None
 
-    # initialize global result dict with empty lists
-    for instance_selection in experiment_config.instance_selections:
-        if instance_selection.__name__ == "no_selection":
-            continue
-        all_instance_selection_results[instance_selection.__name__] = []
-
     random_solver_order = list(range(28))
 
     random.shuffle(random_solver_order)
@@ -350,7 +345,8 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
         )
         par_2_score_removed_solver = par_2_scores_series[solver_index]
         runtime_of_removed_solver = np.ascontiguousarray(
-            np.asarray(df_runtimes.iloc[:, solver_index].values), dtype=np.float32
+            np.asarray(df_runtimes.iloc[:, solver_index].values),
+            dtype=np.float32
         )
         par_2_scores = np.ascontiguousarray(
             np.asarray(reduced_par_2_scores_series.values), dtype=np.float32
@@ -368,7 +364,9 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
             sorted_runtimes, par_2_scores, mean_par_2_score,
             par_2_score_removed_solver, runtime_of_removed_solver,
             experiment_config.select_idx,
-            rt_weight
+            all_results,
+            solver_string,
+            rt_weight,
         )
 
         # determine thresholds for perfect differentiation of remaining solvers
@@ -386,29 +384,29 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
 
         print("here are the results")
 
-        last_results = acc_calculator.sample_result(thresholds, acc_calculator.pred)
+        # sample last result
+        acc_calculator.sample_result(
+            thresholds, acc_calculator.pred, "last_sample"
+        )
 
         results.iloc[
             solver_index, results.columns.get_loc('Par2Diff')
-        ] = last_results["diff"]
+        ] = all_results[len(all_results) - 1]["value"]
         results.iloc[
             solver_index, results.columns.get_loc('CrossAcc')
-        ] = last_results["cross_acc"]
+        ] = all_results[len(all_results) - 2]["value"]
         results.iloc[
             solver_index, results.columns.get_loc('TrueAcc')
-        ] = last_results["true_acc"]
+        ] = all_results[len(all_results) - 3]["value"]
         results.iloc[
             solver_index, results.columns.get_loc('RuntimeFrac')
-        ] = last_results["runtime_frac"]
+        ] = all_results[len(all_results) - 3]["runtime_fraction"]
 
         print(results)
 
         print("this gives a mean of")
 
         print(results.mean())
-
-        solver_results = pd.DataFrame(acc_calculator.solver_results)
-        all_timeout_results.append(solver_results)
 
         for instance_selection in experiment_config.instance_selections:
             print(f"select instances based on method {instance_selection.__name__}")
@@ -421,14 +419,10 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
             )
 
             selector.make_selection()
-            selection_results = pd.DataFrame(selector.results)
-            all_instance_selection_results[instance_selection.__name__].append(
-                selection_results
-            )
+
         if experiment_config.individual_solver_plots:
             plot_generator.plot_solver_results(
-                solver_results,
-                all_instance_selection_results,
+                all_results,
                 solver_string
             )
     print(f"length of all_timeout_results is {len(all_timeout_results)}")

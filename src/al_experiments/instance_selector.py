@@ -31,7 +31,6 @@ class InstanceSelector:
         self.n = 0
         self.total_runtime = 0
         self.choosen_instances = []
-        self.results = []
         self.choosen_thresholds = np.ascontiguousarray(
             np.full((number_of_instances,), 0), dtype=np.int32
         )
@@ -72,10 +71,9 @@ class InstanceSelector:
             self.pred[excluded_idxs] += timeout * 2
 
             if self.n % self.sample_intervall == 0:
-                self.results.append(
-                    self.acc_calculator.sample_result(
-                        self.choosen_thresholds, self.pred
-                    )
+                self.acc_calculator.sample_result(
+                    self.choosen_thresholds, self.pred,
+                    self.choosing_fn.__name__
                 )
             self.n += 1
 
@@ -87,10 +85,8 @@ class InstanceSelector:
             possible_instances = instance_idx[combined_mask]
 
         # sample last result
-        self.results.append(
-            self.acc_calculator.sample_result(
-                self.choosen_thresholds, self.pred
-            )
+        self.acc_calculator.sample_result(
+            self.choosen_thresholds, self.pred, self.choosing_fn.__name__
         )
 
 
