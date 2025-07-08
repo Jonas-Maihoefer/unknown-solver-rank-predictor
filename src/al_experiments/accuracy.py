@@ -31,6 +31,8 @@ class Accuracy:
             par_2_score_removed_solver: float,
             runtime_of_removed_solver,
             select_idx,
+            solver_string,
+            all_results,
             rt_weight: float = 0.0
     ):
         self.total_runtime = total_runtime
@@ -42,6 +44,8 @@ class Accuracy:
         self.par_2_score_removed_solver = par_2_score_removed_solver
         self.rt_removed_solver = runtime_of_removed_solver
         self.select_idx = select_idx
+        self.solver_string = solver_string
+        self.all_results = all_results
         self.rt_weight = rt_weight
         self.total_rt_removed_solver = runtime_of_removed_solver.sum()
         self.n = 1
@@ -49,7 +53,6 @@ class Accuracy:
         self.pred = np.ascontiguousarray(
             np.full((27,), 0), dtype=np.float32
         )
-        self.solver_results = []
 
     def add_runtime_quantized(
             self,
@@ -149,9 +152,11 @@ class Accuracy:
         self.used_runtime += total_added_runtime[best_idx]
 
         if self.n % self.sample_result_after_iterations == 0:
-            new_result = self.sample_result(thresholds, self.pred, score[best_idx])
-            self.solver_results.append(new_result)
-            if new_result['runtime_frac'] > self.break_after_runtime_fraction:
+            runtime_frac = self.sample_result(
+                thresholds, self.pred,
+                "determine_timeouts", score[best_idx]
+            )
+            if runtime_frac > self.break_after_runtime_fraction:
                 return thresholds, prev_max_acc, -1
         self.n += 1
         return thresholds, prev_max_acc, prev_min_diff
@@ -198,14 +203,15 @@ class Accuracy:
         thresholds[best_idx] += 1
 
         if self.n % self.sample_result_after_iterations == 0:
-            new_result = self.sample_result(thresholds, self.pred)
-            self.solver_results.append(new_result)
-            if new_result['runtime_frac'] > self.break_after_runtime_fraction:
+            runtime_frac = self.sample_result(
+                thresholds, self.pred, "determine_timeouts"
+            )
+            if runtime_frac > self.break_after_runtime_fraction:
                 return thresholds, prev_max_acc, -1
         self.n += 1
         return thresholds, prev_max_acc, prev_min_diff
 
-    def sample_result(self, thresholds, pred, best_score=0):
+    def sample_result(self, thresholds, pred, measurement, best_score=0):
 
         cross_acc = self.calc_cross_acc_2(self.par_2_scores, pred)
 
@@ -243,12 +249,25 @@ class Accuracy:
         print(f"cross acc is {cross_acc}")
         print(f"with this, the new total is {self.used_runtime} giving a fraction of {runtime_frac}")
         print(f"true acc is {true_acc}")
-        return {
-            "runtime_frac": runtime_frac,
-            "cross_acc": cross_acc,
-            "true_acc": true_acc,
-            "diff": best_score
-        }
+        self.all_results.append({
+                "solver": self.solver_string,
+                "runtime_fraction": runtime_frac,
+                "measurement": f"{measurement}_true_acc",
+                "value": true_acc
+        })
+        self.all_results.append({
+                "solver": self.solver_string,
+                "runtime_fraction": runtime_frac,
+                "measurement": f"{measurement}_cross_acc",
+                "value": cross_acc
+        })
+        self.all_results.append({
+                "solver": self.solver_string,
+                "runtime_fraction": runtime_frac,
+                "measurement": f"{measurement}_diff",
+                "value": best_score
+        })
+        return runtime_frac
 
     def sub_optimal_acc_maxing(self, new_acc: float, prev_acc: float):
         return new_acc <= prev_acc

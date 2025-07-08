@@ -30,6 +30,7 @@ sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 
 sample_result_after_instances = int(number_of_instances / total_samples)
 # total_runtime = 25860323 s
 # global results
+all_results = []
 all_timeout_results = []
 all_instance_selection_results = {}
 plot_generator = None
@@ -205,32 +206,11 @@ def store_and_get_mean_result(rt_weight, temp):
 
     rs_string = ""
 
-    if not all_timeout_results[0].empty:
-        avg_timeout_results = compute_average_grid(all_timeout_results, grid_size=total_samples)
-        for param in ["runtime_frac", "cross_acc", "true_acc", "diff"]:
-            rs_string += f"h_{plot_generator.git_hash}_timeout_precalc_{param}_rt_weight_{weight_string}_temp_{temp_string} = np.array(["
-            for val in avg_timeout_results[param]:
-                rs_string += f"{val}, "
-            rs_string += "])\n"
-    else:
-        avg_timeout_results = None
+    # construct df
+    df = pd.DataFrame.from_records(all_results)
+    df.to_pickle(f"./pickle/{git_hash}_df.pkl.gz", compression="gzip")
 
-    avg_instance_selection_results = {}
-    for function_name, results in all_instance_selection_results.items():
-        if len(results) == 0:
-            continue
-        avg_instance_selection_results[function_name] = (
-            compute_average_grid(results, grid_size=total_samples)
-        )
-        for param in ["runtime_frac", "cross_acc", "true_acc", "diff"]:
-            rs_string += f"h_{plot_generator.git_hash}_{function_name}_{param}_rt_weight_{weight_string}_temp_{temp_string} = np.array(["
-            for val in avg_instance_selection_results[function_name][param]:
-                rs_string += f"{val}, "
-            rs_string += "])\n"
-
-    plot_generator.plot_avg_results(
-        avg_timeout_results, avg_instance_selection_results
-    )
+    plot_generator.plot_avg_results(df, total_samples)
 
     return rs_string
 
@@ -278,17 +258,17 @@ def run_multi_rt_weights_experiments(experiment_config: ExperimentConfig, temp=N
 
     for rt_weight in experiment_config.rt_weights:
         if len(experiment_config.rt_weights) == 1 and len(experiment_config.temperatures) == 1:
-            plot_generator = PlotGenerator(git_hash)
+            plot_generator = PlotGenerator(git_hash, experiment_config)
         else:
             if temp is None:
-                plot_generator = PlotGenerator(git_hash, f"rt_weight_{rt_weight}")
+                plot_generator = PlotGenerator(git_hash, experiment_config, f"rt_weight_{rt_weight}")
             else:
-                plot_generator = PlotGenerator(git_hash, f"rt_weight_{rt_weight}_temp_{temp}")
+                plot_generator = PlotGenerator(git_hash, experiment_config, f"rt_weight_{rt_weight}_temp_{temp}")
                 print(f"running with a temperature of {temp}")
         print(f"running with a runtime weight of {rt_weight}")
         # reset results
-        global all_timeout_results
-        all_timeout_results = []
+        global all_results
+        all_results = []
         results_string += run_experiment(experiment_config, rt_weight, temp)
         print("results so far:")
         print(results_string)
@@ -325,12 +305,6 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
     results['TrueAcc'] = None
     results['RuntimeFrac'] = None
 
-    # initialize global result dict with empty lists
-    for instance_selection in experiment_config.instance_selections:
-        if instance_selection.__name__ == "no_selection":
-            continue
-        all_instance_selection_results[instance_selection.__name__] = []
-
     random_solver_order = list(range(28))
 
     random.shuffle(random_solver_order)
@@ -350,7 +324,8 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
         )
         par_2_score_removed_solver = par_2_scores_series[solver_index]
         runtime_of_removed_solver = np.ascontiguousarray(
-            np.asarray(df_runtimes.iloc[:, solver_index].values), dtype=np.float32
+            np.asarray(df_runtimes.iloc[:, solver_index].values),
+            dtype=np.float32
         )
         par_2_scores = np.ascontiguousarray(
             np.asarray(reduced_par_2_scores_series.values), dtype=np.float32
@@ -368,7 +343,9 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
             sorted_runtimes, par_2_scores, mean_par_2_score,
             par_2_score_removed_solver, runtime_of_removed_solver,
             experiment_config.select_idx,
-            rt_weight
+            solver_string,
+            all_results,
+            rt_weight,
         )
 
         # determine thresholds for perfect differentiation of remaining solvers
@@ -386,29 +363,29 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
 
         print("here are the results")
 
-        last_results = acc_calculator.sample_result(thresholds, acc_calculator.pred)
+        # sample last result
+        acc_calculator.sample_result(
+            thresholds, acc_calculator.pred, "last_sample"
+        )
 
         results.iloc[
             solver_index, results.columns.get_loc('Par2Diff')
-        ] = last_results["diff"]
+        ] = all_results[len(all_results) - 1]["value"]
         results.iloc[
             solver_index, results.columns.get_loc('CrossAcc')
-        ] = last_results["cross_acc"]
+        ] = all_results[len(all_results) - 2]["value"]
         results.iloc[
             solver_index, results.columns.get_loc('TrueAcc')
-        ] = last_results["true_acc"]
+        ] = all_results[len(all_results) - 3]["value"]
         results.iloc[
             solver_index, results.columns.get_loc('RuntimeFrac')
-        ] = last_results["runtime_frac"]
+        ] = all_results[len(all_results) - 3]["runtime_fraction"]
 
         print(results)
 
         print("this gives a mean of")
 
         print(results.mean())
-
-        solver_results = pd.DataFrame(acc_calculator.solver_results)
-        all_timeout_results.append(solver_results)
 
         for instance_selection in experiment_config.instance_selections:
             print(f"select instances based on method {instance_selection.__name__}")
@@ -421,17 +398,12 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
             )
 
             selector.make_selection()
-            selection_results = pd.DataFrame(selector.results)
-            all_instance_selection_results[instance_selection.__name__].append(
-                selection_results
-            )
+
         if experiment_config.individual_solver_plots:
             plot_generator.plot_solver_results(
-                solver_results,
-                all_instance_selection_results,
+                all_results,
                 solver_string
             )
-    print(f"length of all_timeout_results is {len(all_timeout_results)}")
 
     return store_and_get_mean_result(rt_weight, temp)
 
@@ -440,7 +412,7 @@ if __name__ == "__main__":
 
     git_hash = get_git_commit_hash()
 
-    plot_generator = PlotGenerator(git_hash)
+    plot_generator = PlotGenerator(git_hash, experiment_configs)
     #plot_generator.create_progress_plot()
 
     print(f"start experiment on {git_hash}")

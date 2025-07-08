@@ -1,75 +1,113 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import pandas as pd
+import seaborn as sns
 
 
 class PlotGenerator:
-    def __init__(self, git_hash, experiment=None):
+    def __init__(self, git_hash, exp_config, experiment=None):
         self.git_hash = git_hash
+        self.exp_config = exp_config
         if experiment is None:
             self.out_dir = f"./plots/{self.git_hash}"
         else:
             self.out_dir = f"./plots/{self.git_hash}/{experiment}"
 
-    def plot_avg_results(
-        self, avg_timeout_results, avg_instance_selection_results
-    ):
-        # create main plot and a twin y-axis
-        fig, ax1 = plt.subplots()
-        ax2 = ax1.twinx()
-        if avg_timeout_results is not None:
-            ax1.plot(
-                avg_timeout_results["runtime_frac"],
-                avg_timeout_results["diff"],
-                color='g',
-                label="diff"
-            )
-            ax1.set_ylabel("diff", color='g')
-            ax2.plot(
-                avg_timeout_results["runtime_frac"],
-                avg_timeout_results["cross_acc"],
-                color='b',
-                label="cross_acc_timeout_selection"
-            )
-            ax2.plot(
-                avg_timeout_results["runtime_frac"],
-                avg_timeout_results["true_acc"],
-                color='r',
-                label="true_acc_timeout_selection"
-            )
+    def plot_avg_results(self, df: pd.DataFrame, num_samples):
+        # filter
+        wanted_measurements = ["determine_timeouts_true_acc", "determine_timeouts_cross_acc"]
+        for sel_fn in self.exp_config.instance_selections:
+            wanted_measurements.append(f"{sel_fn.__name__}_true_acc")
+        # Now plot:
 
-        for function_name, results in avg_instance_selection_results.items():
-            ax2.plot(
-                results["runtime_frac"],
-                results["true_acc"],
-                label=function_name
+        # 1) define grid
+        x_min, x_max = df['runtime_fraction'].min(), df['runtime_fraction'].max()
+        x_grid = np.linspace(x_min, x_max, num_samples)
+
+        # 2–3) interpolate each (solver, measurement)
+        recs = []
+        for (solver, meas), grp in df.groupby(['solver', 'measurement']):
+            # sort just in case
+            xs = grp['runtime_fraction'].values
+            ys = grp['value'].values
+            sort_idx = np.argsort(xs)
+            xs, ys = xs[sort_idx], ys[sort_idx]
+            # linear interp, out-of-bounds → NaN
+            y_grid = np.interp(
+                x_grid,
+                xs,
+                ys,
+                left=np.nan,
+                right=np.nan
             )
+            for x_val, y_val in zip(x_grid, y_grid):
+                recs.append({
+                    'solver': solver,
+                    'measurement': meas,
+                    'runtime_fraction': x_val,
+                    'value': y_val
+                })
 
-        ax2.set_ylabel("cross_acc", color='b')
-        ax2.set_ylabel("true_acc", color='r')
-        plt.title("average over all solvers")
-        # optional: add grids and legends
-        h1, l1 = ax1.get_legend_handles_labels()
-        h2, l2 = ax2.get_legend_handles_labels()
+        interp_df = pd.DataFrame.from_records(recs)
 
-        # one legend on ax1 (or fig.legend())
-        ax1.legend(h1 + h2, l1 + l2, loc='best')
-
-        ax1.grid(True)
-        ax1.set_xlabel("runtime fraction")
-        fig.tight_layout()
+        # 4) plot
+        plt.figure(figsize=(8, 6))
+        sns.lineplot(
+            data=interp_df,
+            x='runtime_fraction',
+            y='value',
+            hue='measurement',
+            hue_order=wanted_measurements,
+            estimator='mean',
+            errorbar=('pi', 90),     # 90 % prediction interval (5th–95th pct)
+            legend='full'
+        )
 
         out_path = os.path.join(self.out_dir, "average_results.png")
 
         # create the directory (and any parents) if it doesn't exist
         os.makedirs(self.out_dir, exist_ok=True)
 
-        fig.savefig(out_path, dpi=300)
+        plt.savefig(out_path, dpi=300, bbox_inches="tight")
+
+        # Clean up
+        plt.close()
 
     def plot_solver_results(
-        self, solver_results, instance_selection_results, solver_string
+        self, all_results, solver_string
     ):
-        # create main plot and a twin y-axis
+        # construct df
+        df = pd.DataFrame.from_records(all_results)
+
+        # filtering
+        wanted_solver = [solver_string]
+        df_sub = df[df["solver"].isin(wanted_solver)]
+        wanted_measurements = ["determine_timeouts_true_acc", "determine_timeouts_cross_acc"]
+        for sel_fn in self.exp_config.instance_selections:
+            wanted_measurements.append(f"{sel_fn.__name__}_true_acc")
+        # Now plot:
+        plt.figure(figsize=(8, 6))
+        sns.lineplot(
+            data=df_sub,
+            x="runtime_fraction",
+            y="value",
+            hue="measurement",
+            hue_order=wanted_measurements,
+        )
+        plt.title(f"dynamic timeouts for solver {solver_string}")
+        plt.legend(title="Measurement")
+
+        out_path = os.path.join(self.out_dir, f"{solver_string}_results.png")
+
+        # create the directory (and any parents) if it doesn't exist
+        os.makedirs(self.out_dir, exist_ok=True)
+
+        plt.savefig(out_path, dpi=300, bbox_inches="tight")
+
+        # Clean up
+        plt.close()
+        """ # create main plot and a twin y-axis
         fig, ax1 = plt.subplots()
 
         ax2 = ax1.twinx()
@@ -121,14 +159,8 @@ class PlotGenerator:
         # optional: add grids and legends
         ax1.grid(True)
         ax1.set_xlabel("runtime fraction")
-        fig.tight_layout()
+        fig.tight_layout() """
 
-        out_path = os.path.join(self.out_dir, f"{solver_string}_results.png")
-
-        # create the directory (and any parents) if it doesn't exist
-        os.makedirs(self.out_dir, exist_ok=True)
-
-        fig.savefig(out_path, dpi=300)
 
     def create_progress_plot(self):
         random_baseline_whole_instances_runtime_frac_2 = np.array([0.000592, 0.002594, 0.004597, 0.006600, 0.008603, 0.010606, 0.012608, 0.014611, 0.016614, 0.018617, 0.020620, 0.022623, 0.024625, 0.026628, 0.028631, 0.030634, 0.032637, 0.034639, 0.036642, 0.038645, 0.040648, 0.042651, 0.044654, 0.046656, 0.048659, 0.050662, 0.052665, 0.054668, 0.056671, 0.058673, 0.060676, 0.062679, 0.064682, 0.066685, 0.068687, 0.070690, 0.072693, 0.074696, 0.076699, 0.078702, 0.080704, 0.082707, 0.084710, 0.086713, 0.088716, 0.090719, 0.092721, 0.094724, 0.096727, 0.098730, 0.100733, 0.102735, 0.104738, 0.106741, 0.108744, 0.110747, 0.112750, 0.114752, 0.116755, 0.118758, 0.120761, 0.122764, 0.124767, 0.126769, 0.128772, 0.130775, 0.132778, 0.134781, 0.136783, 0.138786, 0.140789, 0.142792, 0.144795, 0.146798, 0.148800, 0.150803, 0.152806, 0.154809, 0.156812, 0.158814, 0.160817, 0.162820, 0.164823, 0.166826, 0.168829, 0.170831, 0.172834, 0.174837, 0.176840, 0.178843, 0.180846, 0.182848, 0.184851, 0.186854, 0.188857, 0.190860, 0.192862, 0.194865, 0.196868, 0.198871, 0.200874, 0.202877, 0.204879, 0.206882, 0.208885, 0.210888, 0.212891, 0.214894, 0.216896, 0.218899, 0.220902, 0.222905, 0.224908, 0.226910, 0.228913, 0.230916, 0.232919, 0.234922, 0.236925, 0.238927, 0.240930, 0.242933, 0.244936, 0.246939, 0.248941, 0.250944, 0.252947, 0.254950, 0.256953, 0.258956, 0.260958, 0.262961, 0.264964, 0.266967, 0.268970, 0.270973, 0.272975, 0.274978, 0.276981, 0.278984, 0.280987, 0.282989, 0.284992, 0.286995, 0.288998, 0.291001, 0.293004, 0.295006, 0.297009, 0.299012, 0.301015, 0.303018, 0.305021, 0.307023, 0.309026, 0.311029, 0.313032, 0.315035, 0.317037, 0.319040, 0.321043, 0.323046, 0.325049, 0.327052, 0.329054, 0.331057, 0.333060, 0.335063, 0.337066, 0.339069, 0.341071, 0.343074, 0.345077, 0.347080, 0.349083, 0.351085, 0.353088, 0.355091, 0.357094, 0.359097, 0.361100, 0.363102, 0.365105, 0.367108, 0.369111, 0.371114, 0.373116, 0.375119, 0.377122, 0.379125, 0.381128, 0.383131, 0.385133, 0.387136, 0.389139, 0.391142, 0.393145, 0.395148, 0.397150, 0.399153, 0.401156, 0.403159, 0.405162, 0.407164, 0.409167, 0.411170, 0.413173, 0.415176, 0.417179, 0.419181, 0.421184, 0.423187, 0.425190, 0.427193, 0.429196, 0.431198, 0.433201, 0.435204, 0.437207, 0.439210, 0.441212, 0.443215, 0.445218, 0.447221, 0.449224, 0.451227, 0.453229, 0.455232, 0.457235, 0.459238, 0.461241, 0.463243, 0.465246, 0.467249, 0.469252, 0.471255, 0.473258, 0.475260, 0.477263, 0.479266, 0.481269, 0.483272, 0.485275, 0.487277, 0.489280, 0.491283, 0.493286, 0.495289, 0.497291, 0.499294, 0.501297, 0.503300, 0.505303, 0.507306, 0.509308, 0.511311, 0.513314, 0.515317, 0.517320, 0.519323, 0.521325, 0.523328, 0.525331, 0.527334, 0.529337, 0.531339, 0.533342, 0.535345, 0.537348, 0.539351, 0.541354, 0.543356, 0.545359, 0.547362, 0.549365, 0.551368, 0.553371, 0.555373, 0.557376, 0.559379, 0.561382, 0.563385, 0.565387, 0.567390, 0.569393, 0.571396, 0.573399, 0.575402, 0.577404, 0.579407, 0.581410, 0.583413, 0.585416, 0.587418, 0.589421, 0.591424, 0.593427, 0.595430, 0.597433, 0.599435, 0.601438, 0.603441, 0.605444, 0.607447, 0.609450, 0.611452, 0.613455, 0.615458, 0.617461, 0.619464, 0.621466, 0.623469, 0.625472, 0.627475, 0.629478, 0.631481, 0.633483, 0.635486, 0.637489, 0.639492, 0.641495, 0.643498, 0.645500, 0.647503, 0.649506, 0.651509, 0.653512, 0.655514, 0.657517, 0.659520, 0.661523, 0.663526, 0.665529, 0.667531, 0.669534, 0.671537, 0.673540, 0.675543, 0.677545, 0.679548, 0.681551, 0.683554, 0.685557, 0.687560, 0.689562, 0.691565, 0.693568, 0.695571, 0.697574, 0.699577, 0.701579, 0.703582, 0.705585, 0.707588, 0.709591, 0.711593, 0.713596, 0.715599, 0.717602, 0.719605, 0.721608, 0.723610, 0.725613, 0.727616, 0.729619, 0.731622, 0.733625, 0.735627, 0.737630, 0.739633, 0.741636, 0.743639, 0.745641, 0.747644, 0.749647, 0.751650, 0.753653, 0.755656, 0.757658, 0.759661, 0.761664, 0.763667, 0.765670, 0.767673, 0.769675, 0.771678, 0.773681, 0.775684, 0.777687, 0.779689, 0.781692, 0.783695, 0.785698, 0.787701, 0.789704, 0.791706, 0.793709, 0.795712, 0.797715, 0.799718, 0.801720, 0.803723, 0.805726, 0.807729, 0.809732, 0.811735, 0.813737, 0.815740, 0.817743, 0.819746, 0.821749, 0.823752, 0.825754, 0.827757, 0.829760, 0.831763, 0.833766, 0.835768, 0.837771, 0.839774, 0.841777, 0.843780, 0.845783, 0.847785, 0.849788, 0.851791, 0.853794, 0.855797, 0.857800, 0.859802, 0.861805, 0.863808, 0.865811, 0.867814, 0.869816, 0.871819, 0.873822, 0.875825, 0.877828, 0.879831, 0.881833, 0.883836, 0.885839, 0.887842, 0.889845, 0.891847, 0.893850, 0.895853, 0.897856, 0.899859, 0.901862, 0.903864, 0.905867, 0.907870, 0.909873, 0.911876, 0.913879, 0.915881, 0.917884, 0.919887, 0.921890, 0.923893, 0.925895, 0.927898, 0.929901, 0.931904, 0.933907, 0.935910, 0.937912, 0.939915, 0.941918, 0.943921, 0.945924, 0.947927, 0.949929, 0.951932, 0.953935, 0.955938, 0.957941, 0.959943, 0.961946, 0.963949, 0.965952, 0.967955, 0.969958, 0.971960, 0.973963, 0.975966, 0.977969, 0.979972, 0.981974, 0.983977, 0.985980, 0.987983, 0.989986, 0.991989, 0.993991, 0.995994, 0.997997, 1.000000]) 
