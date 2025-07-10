@@ -34,7 +34,8 @@ class Accuracy:
             select_idx,
             solver_string,
             all_results,
-            rt_weight: float = 0.0
+            rt_weight: float = 0.0,
+            with_remaining_mean: bool = False
     ):
         self.total_runtime = total_runtime
         self.break_after_runtime_fraction = break_after_runtime_fraction
@@ -49,6 +50,7 @@ class Accuracy:
         self.solver_string = solver_string
         self.all_results = all_results
         self.rt_weight = rt_weight
+        self.with_remaining_mean = with_remaining_mean
         self.total_rt_removed_solver = runtime_of_removed_solver.sum()
         self.n = 1
         self.used_runtime = 0
@@ -209,7 +211,7 @@ class Accuracy:
         # change pred for the next added solver
         next_solver[rt][next_solver[rt] == 5000] = 10000
 
-        new_pred[instance_idx, next_solver[idx]] += (next_solver[rt] - current_penalty)
+        new_pred[instance_idx, next_solver[idx]] += (next_solver[rt] - current_penalty) / number_of_instances
 
         # build a mask of which solvers still timeout with the new thresh
         index_mask = np.arange(number_of_solvers)[None, :] > thresholds[:, None] + 1
@@ -219,7 +221,7 @@ class Accuracy:
         timeout_mask = timeout_mask[:, 1:]
 
         delta = next_penalty - current_penalty
-        new_pred += timeout_mask * delta[:, None]
+        new_pred += (timeout_mask * delta[:, None]) / number_of_instances
         #print("new pred with all instances")
         #print(new_pred)
 
@@ -252,6 +254,8 @@ class Accuracy:
 
         # update
         self.pred = new_pred[best_idx]
+        #print("choosen pred")
+        #print(self.pred)
         thresholds[best_idx] += 1
         self.used_runtime += total_added_runtime[best_idx]
 
@@ -333,22 +337,34 @@ class Accuracy:
 
         new_pred = 0
         used_rt_removed_solver = 0
-        for index, runtime_list in enumerate(self.sorted_rt[rt]):
-            timeout = runtime_list[thresholds[index]]
-            # is instance maxed out?
-            if thresholds[index] == number_of_reduced_solvers:
-                # is solver runtime 5000?
-                used_rt_removed_solver += self.rt_removed_solver[index]
-                if self.rt_removed_solver[index] == 5000:
-                    new_pred += 10000
-                else:
+        if self.with_remaining_mean:
+            penalties = self.get_remaining_mean(thresholds)
+            for index, runtime_list in enumerate(self.sorted_rt[rt]):
+                timeout = runtime_list[thresholds[index]]
+                if timeout > self.rt_removed_solver[index]:
+                    used_rt_removed_solver += self.rt_removed_solver[index]
                     new_pred += self.rt_removed_solver[index]
-            elif timeout > self.rt_removed_solver[index]:
-                used_rt_removed_solver += self.rt_removed_solver[index]
-                new_pred += self.rt_removed_solver[index]
-            else:
-                used_rt_removed_solver += timeout
-                new_pred += 2 * timeout
+                else:
+                    used_rt_removed_solver += timeout
+                    new_pred += penalties[index]
+            new_pred = new_pred / number_of_instances
+        else:
+            for index, runtime_list in enumerate(self.sorted_rt[rt]):
+                timeout = runtime_list[thresholds[index]]
+                # is instance maxed out?
+                if thresholds[index] == number_of_reduced_solvers:
+                    # is solver runtime 5000?
+                    used_rt_removed_solver += self.rt_removed_solver[index]
+                    if self.rt_removed_solver[index] == 5000:
+                        new_pred += 10000
+                    else:
+                        new_pred += self.rt_removed_solver[index]
+                elif timeout > self.rt_removed_solver[index]:
+                    used_rt_removed_solver += self.rt_removed_solver[index]
+                    new_pred += self.rt_removed_solver[index]
+                else:
+                    used_rt_removed_solver += timeout
+                    new_pred += 2 * timeout
         all_par_2_scores = np.append(
             self.par_2_scores, self.par_2_score_removed_solver
         )

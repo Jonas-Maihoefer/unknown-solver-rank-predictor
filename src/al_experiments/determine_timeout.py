@@ -55,6 +55,7 @@ def quantized_mean_punish(
     )
     # precalculate pred
     mean_par_2 = acc_calculator.get_remaining_mean(thresholds).mean()
+    print(f"mean par_2_score is {mean_par_2}")
     acc_calculator.pred = np.full((27,), mean_par_2)
     start = time.time_ns()
     max_acc = 0

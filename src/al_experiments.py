@@ -350,6 +350,7 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
             solver_string,
             all_results,
             rt_weight,
+            with_remaining_mean=experiment_config.determine_thresholds.__name__ == "quantized_mean_punish"
         )
 
         # determine thresholds for perfect differentiation of remaining solvers
