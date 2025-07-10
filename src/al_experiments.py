@@ -4,7 +4,7 @@ import re
 import random
 import pickle
 import subprocess
-from al_experiments.determine_timeout import quantized_min_diff, static_timeout_5000
+from al_experiments.determine_timeout import quantized_mean_punish, quantized_min_diff, static_timeout_5000
 from al_experiments.experiment_config import ExperimentConfig
 from al_experiments.accuracy import Accuracy, create_softmax_fn, select_best_idx
 from scipy.interpolate import interp1d
@@ -24,7 +24,7 @@ else:
 
 # global config
 break_after_solvers = 200
-break_after_runtime_fraction = 0.4  # 0.655504  # determined by 0e993e00
+break_after_runtime_fraction = 2  # 0.655504  # determined by 0e993e00
 total_samples = 500  # max is 5354 because of sample_result_after_instances
 sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
 sample_result_after_instances = int(number_of_instances / total_samples)
@@ -37,11 +37,11 @@ plot_generator = None
 
 # experiment config
 experiment_configs = ExperimentConfig(
-    determine_thresholds=quantized_min_diff,
+    determine_thresholds=quantized_mean_punish,
     select_idx=select_best_idx,
     temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
     rt_weights=[1],
-    instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, lowest_variances_per_rt, lowest_rt_selection],
+    instance_selections=[choose_instances_random, variance_based_selection_1],
     individual_solver_plots=True
 )
 
@@ -334,13 +334,17 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
         reduced_df_runtimes = df_runtimes.drop(
             df_runtimes.columns[solver_index], axis=1
         )
+        reduced_df_rated = df_rated.drop(
+            df_rated.columns[solver_index], axis=1
+        )
         total_runtime = reduced_df_runtimes.stack().sum()
         sorted_runtimes = convert_to_sorted_runtimes(reduced_df_runtimes)
+        sorted_runtimes_rated = convert_to_sorted_runtimes(reduced_df_rated)
 
         acc_calculator = Accuracy(
             total_runtime, break_after_runtime_fraction,
-            sample_result_after_iterations,
-            sorted_runtimes, par_2_scores, mean_par_2_score,
+            sample_result_after_iterations, sorted_runtimes,
+            sorted_runtimes_rated, par_2_scores, mean_par_2_score,
             par_2_score_removed_solver, runtime_of_removed_solver,
             experiment_config.select_idx,
             solver_string,

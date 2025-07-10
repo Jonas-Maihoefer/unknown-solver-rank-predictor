@@ -26,6 +26,7 @@ class Accuracy:
             break_after_runtime_fraction,
             sample_result_after_iterations,
             sorted_rt,
+            sorted_rt_rated,
             par_2_scores,
             mean_par_2_score: float,
             par_2_score_removed_solver: float,
@@ -39,6 +40,7 @@ class Accuracy:
         self.break_after_runtime_fraction = break_after_runtime_fraction
         self.sample_result_after_iterations = sample_result_after_iterations
         self.sorted_rt = sorted_rt
+        self.sorted_rt_rated = sorted_rt_rated
         self.par_2_scores = par_2_scores
         self.mean_par_2_score = mean_par_2_score
         self.par_2_score_removed_solver = par_2_score_removed_solver
@@ -160,6 +162,120 @@ class Accuracy:
                 return thresholds, prev_max_acc, -1
         self.n += 1
         return thresholds, prev_max_acc, prev_min_diff
+
+    def add_runtime_quantized_mean_punish(
+            self,
+            thresholds,
+            prev_max_acc: float,
+            prev_min_diff: float
+    ):
+        # instances not maxed out yet
+        remaining_mask = thresholds < number_of_reduced_solvers
+        valid_instances = instance_idx[remaining_mask]
+
+        # current solver + its rt bearly solving the instance
+        current_solver = self.sorted_rt[idx][instance_idx, thresholds], self.sorted_rt[rt][instance_idx, thresholds]
+
+        # next solver + its rt that would solve the instance if threshold is raised
+        next_solver = (
+            np.empty(number_of_instances, dtype=int),
+            np.empty(number_of_instances, dtype=float)
+        )
+        next_solver[idx][:] = -1
+        next_solver[rt][:] = -1
+        next_solver[idx][valid_instances] = self.sorted_rt[idx][valid_instances, thresholds[valid_instances] + 1]
+        next_solver[rt][valid_instances] = self.sorted_rt[rt][valid_instances, thresholds[valid_instances] + 1]
+
+        #print("extracted best next")
+        #print(next_solver)
+
+        # raising the thresh adds total_added_runtime seconds to instance i
+        total_added_runtime = (
+                number_of_reduced_solvers - thresholds
+            ) * (next_solver[rt] - current_solver[rt])
+
+        #print("total added runtime")
+        #print(total_added_runtime)
+
+        current_penalty = self.get_remaining_mean(thresholds)
+        #print("current_penalty")
+        #print(current_penalty)
+        next_penalty = self.get_remaining_mean(thresholds, offset=1)
+        #print("next_penalty")
+        #print(next_penalty)
+
+        # copy previos pred to all instances
+        new_pred = np.tile(self.pred, (number_of_instances, 1))
+        # change pred for the next added solver
+        next_solver[rt][next_solver[rt] == 5000] = 10000
+
+        new_pred[instance_idx, next_solver[idx]] += (next_solver[rt] - current_penalty)
+
+        # build a mask of which solvers still timeout with the new thresh
+        index_mask = np.arange(number_of_solvers)[None, :] > thresholds[:, None] + 1
+        index_mask = np.where(index_mask, self.sorted_rt[idx] + 1, 0)
+        timeout_mask = np.zeros_like(self.sorted_rt[idx], dtype=bool)
+        timeout_mask[instance_idx[:, None], index_mask] = True
+        timeout_mask = timeout_mask[:, 1:]
+
+        delta = next_penalty - current_penalty
+        new_pred += timeout_mask * delta[:, None]
+        #print("new pred with all instances")
+        #print(new_pred)
+
+        #print("mean pred")
+        #print(new_pred.mean(axis=1))
+        #print(new_pred.mean(axis=1).shape)
+
+        similarity = np.abs(new_pred - self.par_2_scores).sum(axis=1)
+        #print("similarity")
+        #print(similarity)
+        #print(similarity.shape)
+
+        score = 1 / (similarity * total_added_runtime)  # similarity + self.rt_weight * total_added_runtime
+        #print("fast")
+        #for th in thresholds:
+        #    print(th, end=", ")
+
+        #print()
+        #print()
+        #print("score")
+        #print(score)
+        #print(score.shape)
+        #print(np.nanmin(score))
+
+        if not remaining_mask.any():
+            print("No more thresholds remaining")
+            return thresholds, prev_max_acc, -1
+
+        best_idx = self.select_idx(score, remaining_mask)
+
+        # update
+        self.pred = new_pred[best_idx]
+        thresholds[best_idx] += 1
+        self.used_runtime += total_added_runtime[best_idx]
+
+        if self.n % self.sample_result_after_iterations == 0:
+            runtime_frac = self.sample_result(
+                thresholds, self.pred,
+                "determine_timeouts", score[best_idx]
+            )
+            if runtime_frac > self.break_after_runtime_fraction:
+                return thresholds, prev_max_acc, -1
+        self.n += 1
+        return thresholds, prev_max_acc, prev_min_diff
+
+    def get_remaining_mean(self, thresholds, offset=0):
+        # print(self.sorted_rt[rt])
+        col_idx = np.arange(number_of_solvers)
+        remaining_instances = col_idx >= thresholds[:, None] + (offset + 1)
+        sums = (self.sorted_rt_rated[rt] * remaining_instances).sum(axis=1)
+        counts = remaining_instances.sum(axis=1)
+
+        # avoid division-by-zero if any threshold==m
+        averages = sums / np.where(counts == 0, 1, counts)
+        averages = np.where(counts == 0, 10000, averages)
+        return averages
 
     def add_runtime_random_quantized(
             self,
