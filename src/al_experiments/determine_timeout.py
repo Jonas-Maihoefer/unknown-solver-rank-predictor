@@ -1,7 +1,6 @@
 import os
 import time
 from al_experiments.accuracy import Accuracy
-from al_experiments.constants import number_of_instances, number_of_reduced_solvers
 
 useCupy = os.getenv("USECUDA", "0") == "1"
 
@@ -14,6 +13,7 @@ else:
 def static_timeout_5000(
         acc_calculator: Accuracy,
         solver_string: str,
+        number_of_instances
 ):
     return np.ascontiguousarray(
         np.full((number_of_instances,), 27, dtype=np.int32)
@@ -23,6 +23,7 @@ def static_timeout_5000(
 def quantized_min_diff(
         acc_calculator: Accuracy,
         solver_string: str,
+        number_of_instances
 ):
 
     # initialize tresholds with 0
@@ -47,6 +48,7 @@ def quantized_min_diff(
 def quantized_mean_punish(
         acc_calculator: Accuracy,
         solver_string: str,
+        number_of_instances
 ):
 
     # initialize tresholds with 0

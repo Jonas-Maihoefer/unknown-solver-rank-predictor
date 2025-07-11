@@ -1,8 +1,9 @@
 import string
 import pandas as pd
 import os
-from al_experiments.constants import number_of_solvers, number_of_reduced_solvers, reduced_solver_pairs, number_of_instances, instance_idx, idx, rt
+from al_experiments.constants import Constants, idx, rt
 
+# number_of_solvers, number_of_reduced_solvers, reduced_solver_pairs, number_of_instances, instance_idx,
 
 useCupy = os.getenv("USECUDA", "0") == "1"
 
@@ -22,6 +23,7 @@ class Accuracy:
 
     def __init__(
             self,
+            con: Constants,
             total_runtime,
             break_after_runtime_fraction,
             sample_result_after_iterations,
@@ -37,6 +39,11 @@ class Accuracy:
             rt_weight: float = 0.0,
             with_remaining_mean: bool = False
     ):
+        self.number_of_solvers = con.number_of_solvers
+        self.number_of_reduced_solvers = con.number_of_reduced_solvers
+        self.reduced_solver_pairs = con.reduced_solver_pairs
+        self.number_of_instances = con.number_of_instances
+        self.instance_idx = con.instance_idx
         self.total_runtime = total_runtime
         self.break_after_runtime_fraction = break_after_runtime_fraction
         self.sample_result_after_iterations = sample_result_after_iterations
@@ -65,16 +72,16 @@ class Accuracy:
             prev_min_diff: float
     ):
         # instances not maxed out yet
-        remaining_mask = thresholds < number_of_reduced_solvers
-        valid_instances = instance_idx[remaining_mask]
+        remaining_mask = thresholds < self.number_of_reduced_solvers
+        valid_instances = self.instance_idx[remaining_mask]
 
         # current solver + its rt bearly solving the instance
-        current_solver = self.sorted_rt[idx][instance_idx, thresholds], self.sorted_rt[rt][instance_idx, thresholds]
+        current_solver = self.sorted_rt[idx][self.instance_idx, thresholds], self.sorted_rt[rt][self.instance_idx, thresholds]
 
         # next solver + its rt that would solve the instance if threshold is raised
         next_solver = (
-            np.empty(number_of_instances, dtype=int),
-            np.empty(number_of_instances, dtype=float)
+            np.empty(self.number_of_instances, dtype=int),
+            np.empty(self.number_of_instances, dtype=float)
         )
         next_solver[idx][:] = -1
         next_solver[rt][:] = -1
@@ -86,7 +93,7 @@ class Accuracy:
 
         # raising the thresh adds total_added_runtime seconds to instance i
         total_added_runtime = (
-                number_of_reduced_solvers - thresholds
+                self.number_of_reduced_solvers - thresholds
             ) * (next_solver[rt] - current_solver[rt])
 
         #print("total added runtime")
@@ -100,17 +107,17 @@ class Accuracy:
         #print(next_penalty)
 
         # copy previos pred to all instances
-        new_pred = np.tile(self.pred, (number_of_instances, 1))
+        new_pred = np.tile(self.pred, (self.number_of_instances, 1))
         # change pred for the next added solver
         next_solver[rt][next_solver[rt] == 5000] = 10000
 
-        new_pred[instance_idx, next_solver[idx]] += (next_solver[rt] - current_penalty)
+        new_pred[self.instance_idx, next_solver[idx]] += (next_solver[rt] - current_penalty)
 
         # build a mask of which solvers still timeout with the new thresh
-        index_mask = np.arange(number_of_solvers)[None, :] > thresholds[:, None] + 1
+        index_mask = np.arange(self.number_of_solvers)[None, :] > thresholds[:, None] + 1
         index_mask = np.where(index_mask, self.sorted_rt[idx] + 1, 0)
         timeout_mask = np.zeros_like(self.sorted_rt[idx], dtype=bool)
-        timeout_mask[instance_idx[:, None], index_mask] = True
+        timeout_mask[self.instance_idx[:, None], index_mask] = True
         timeout_mask = timeout_mask[:, 1:]
 
         delta = next_penalty - current_penalty
@@ -124,11 +131,29 @@ class Accuracy:
 
         similarity = self.batch_rmse(new_pred, self.par_2_scores)
 
+        print("similarity")
+        print(similarity[remaining_mask])
+
         #print("similarity")
         #print(similarity)
         #print(similarity.shape)
 
-        score = 1 / (similarity * total_added_runtime)  # similarity + self.rt_weight * total_added_runtime
+        print("total_added_runtime")
+        print(total_added_runtime[remaining_mask])
+
+        score = 135000000 / (similarity * total_added_runtime)  # similarity + self.rt_weight * total_added_runtime
+
+        print("score")
+        print(score[remaining_mask])
+
+        bad_indices = np.where(np.isneginf(score[remaining_mask]) | np.isinf(score[remaining_mask]) | np.isnan(score[remaining_mask]))[0]
+        if bad_indices.size > 0:
+            for bad_idx in bad_indices:
+                bad_idx = self.instance_idx[remaining_mask][bad_idx]
+                print(f"135000000 / ({similarity[bad_idx]} * {total_added_runtime[bad_idx]}) = {135000000 / (similarity[bad_idx] * total_added_runtime[bad_idx])}")
+                print(new_pred[bad_idx])
+                print(f"total_added_runtime is ({self.number_of_reduced_solvers} - {thresholds[bad_idx]}) * ({next_solver[rt][bad_idx]} - {current_solver[rt][bad_idx]}) = {(self.number_of_reduced_solvers - thresholds[bad_idx]) * (next_solver[rt][bad_idx] - current_solver[rt][bad_idx])}")
+
         #print("fast")
         #for th in thresholds:
         #    print(th, end=", ")
@@ -144,7 +169,7 @@ class Accuracy:
             print("No more thresholds remaining")
             return thresholds, prev_max_acc, -1
 
-        best_idx = self.select_idx(score, remaining_mask)
+        best_idx = self.select_idx(score, remaining_mask, self.instance_idx)
 
         # update
         self.pred = new_pred[best_idx]
@@ -168,16 +193,16 @@ class Accuracy:
             prev_min_diff: float
     ):
         # instances not maxed out yet
-        remaining_mask = thresholds < number_of_reduced_solvers
-        valid_instances = instance_idx[remaining_mask]
+        remaining_mask = thresholds < self.number_of_reduced_solvers
+        valid_instances = self.instance_idx[remaining_mask]
 
         # current solver + its rt bearly solving the instance
-        current_solver = self.sorted_rt[idx][instance_idx, thresholds], self.sorted_rt[rt][instance_idx, thresholds]
+        current_solver = self.sorted_rt[idx][self.instance_idx, thresholds], self.sorted_rt[rt][self.instance_idx, thresholds]
 
         # next solver + its rt that would solve the instance if threshold is raised
         next_solver = (
-            np.empty(number_of_instances, dtype=int),
-            np.empty(number_of_instances, dtype=float)
+            np.empty(self.number_of_instances, dtype=int),
+            np.empty(self.number_of_instances, dtype=float)
         )
         next_solver[idx][:] = -1
         next_solver[rt][:] = -1
@@ -189,7 +214,7 @@ class Accuracy:
 
         # raising the thresh adds total_added_runtime seconds to instance i
         total_added_runtime = (
-                number_of_reduced_solvers - thresholds
+                self.number_of_reduced_solvers - thresholds
             ) * (next_solver[rt] - current_solver[rt])
 
         #print("total added runtime")
@@ -203,21 +228,21 @@ class Accuracy:
         #print(next_penalty)
 
         # copy previos pred to all instances
-        new_pred = np.tile(self.pred, (number_of_instances, 1))
+        new_pred = np.tile(self.pred, (self.number_of_instances, 1))
         # change pred for the next added solver
         next_solver[rt][next_solver[rt] == 5000] = 10000
 
-        new_pred[instance_idx, next_solver[idx]] += (next_solver[rt] - current_penalty) / number_of_instances
+        new_pred[self.instance_idx, next_solver[idx]] += (next_solver[rt] - current_penalty) / self.number_of_instances
 
         # build a mask of which solvers still timeout with the new thresh
-        index_mask = np.arange(number_of_solvers)[None, :] > thresholds[:, None] + 1
+        index_mask = np.arange(self.number_of_solvers)[None, :] > thresholds[:, None] + 1
         index_mask = np.where(index_mask, self.sorted_rt[idx] + 1, 0)
         timeout_mask = np.zeros_like(self.sorted_rt[idx], dtype=bool)
-        timeout_mask[instance_idx[:, None], index_mask] = True
+        timeout_mask[self.instance_idx[:, None], index_mask] = True
         timeout_mask = timeout_mask[:, 1:]
 
         delta = next_penalty - current_penalty
-        new_pred += (timeout_mask * delta[:, None]) / number_of_instances
+        new_pred += (timeout_mask * delta[:, None]) / self.number_of_instances
         #print("new pred with all instances")
         #print(new_pred)
 
@@ -246,7 +271,7 @@ class Accuracy:
             print("No more thresholds remaining")
             return thresholds, prev_max_acc, -1
 
-        best_idx = self.select_idx(score, remaining_mask)
+        best_idx = self.select_idx(score, remaining_mask, self.instance_idx)
 
         # update
         self.pred = new_pred[best_idx]
@@ -267,7 +292,7 @@ class Accuracy:
 
     def get_remaining_mean(self, thresholds, offset=0):
         # print(self.sorted_rt[rt])
-        col_idx = np.arange(number_of_solvers)
+        col_idx = np.arange(self.number_of_solvers)
         remaining_instances = col_idx >= thresholds[:, None] + (offset + 1)
         sums = (self.sorted_rt_rated[rt] * remaining_instances).sum(axis=1)
         counts = remaining_instances.sum(axis=1)
@@ -284,8 +309,8 @@ class Accuracy:
             prev_min_diff: float
     ):
         # instances not maxed out yet
-        remaining_mask = thresholds < number_of_reduced_solvers
-        valid_instances = instance_idx[remaining_mask]
+        remaining_mask = thresholds < self.number_of_reduced_solvers
+        valid_instances = self.instance_idx[remaining_mask]
         best_idx = np.random.choice(valid_instances)
 
         runtime_list = self.sorted_rt[best_idx]
@@ -394,6 +419,31 @@ class Accuracy:
 
         # RMSE
         e = np.sqrt(mse)
+
+        bad_indices = np.where(np.isneginf(e) | np.isinf(e) | np.isnan(e))[0]
+        for bad_idx in bad_indices:
+            print(f"found bad idx: {bad_idx}")
+            print("pred:")
+            print(X[bad_idx])
+            print("mean")
+            print(x_mean[bad_idx])
+            print("xx_mean")
+            print(xx_mean[bad_idx])
+            print("xy_mean")
+            print(xy_mean[bad_idx])
+            print("cov_xy")
+            print(cov_xy[bad_idx])
+            print("var_x")
+            print(var_x[bad_idx])
+            print("m")
+            print(m[bad_idx])
+            print("c")
+            print(c[bad_idx])
+            print("mse")
+            print(mse[bad_idx])
+            print("e")
+            print(e[bad_idx])
+
         return e
 
     def sample_result(self, thresholds, pred, measurement, best_score=0):
@@ -426,7 +476,7 @@ class Accuracy:
             for index, runtime_list in enumerate(self.sorted_rt[rt]):
                 timeout = runtime_list[thresholds[index]]
                 # is instance maxed out?
-                if thresholds[index] == number_of_reduced_solvers:
+                if thresholds[index] == self.number_of_reduced_solvers:
                     # is solver runtime 5000?
                     used_rt_removed_solver += self.rt_removed_solver[index]
                     if self.rt_removed_solver[index] == 5000:
@@ -446,7 +496,7 @@ class Accuracy:
         true_acc = self.calc_true_acc_1(
             all_par_2_scores,
             all_pred,
-            number_of_reduced_solvers
+            self.number_of_reduced_solvers
         )
         runtime_frac = used_rt_removed_solver / self.total_rt_removed_solver
         print(f"actual key is {self.pred_vec_to_key(all_par_2_scores)}")
@@ -516,7 +566,7 @@ class Accuracy:
 
 
 
-        new_alive_instances = np.eye(number_of_instances, dtype=bool)
+        new_alive_instances = np.eye(self.number_of_instances, dtype=bool)
         already_alive_instances = thresholds != 0
         take_old_instances = already_alive_instances * ~new_alive_instances
 
@@ -618,7 +668,7 @@ class Accuracy:
 
         # 3) candidate predictions for each i
         # (new_scores - old_scores) / M is change par_2_score
-        new_par_2_scores_when_adding_thresh_to_instance_i = old_par_2[None, :] + (new_scores_adding_thresh_to_every_instance - old_scores) / number_of_instances   # (5355, allowed_idxs.size)
+        new_par_2_scores_when_adding_thresh_to_instance_i = old_par_2[None, :] + (new_scores_adding_thresh_to_every_instance - old_scores) / self.number_of_instances   # (5355, allowed_idxs.size)
 
         #print("new par_2")
 
@@ -635,7 +685,7 @@ class Accuracy:
         concordant_count = concordant.sum(axis=(1, 2))   # (5355,)
 
         # average over n*(n-1) ordered pairs
-        accs = concordant_count / reduced_solver_pairs        # (5355,)
+        accs = concordant_count / self.reduced_solver_pairs        # (5355,)
         best_acc = accs[valid_mask].max()
 
         # 6) pick all indices within tol of the max
@@ -917,14 +967,14 @@ class Accuracy:
         return np.mean(correct)
 
 
-def select_best_idx(score, remaining_mask):
+def select_best_idx(score, remaining_mask, instance_idx):
     best_idx = np.nanargmax(score[remaining_mask])
     best_idx = instance_idx[remaining_mask][best_idx]
     return best_idx
 
 
 def create_softmax_fn(temp):
-    def select_idx_softmax(score, remaining_mask):
+    def select_idx_softmax(score, remaining_mask, instance_idx):
         valid_scores = score[remaining_mask]
         valid_scores = valid_scores - np.min(valid_scores)
         """ print("scores:")

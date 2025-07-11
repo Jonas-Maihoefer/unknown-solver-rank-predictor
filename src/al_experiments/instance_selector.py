@@ -2,8 +2,9 @@ import os
 
 import pandas as pd
 from al_experiments.accuracy import Accuracy
-from al_experiments.constants import number_of_reduced_solvers, number_of_instances, instance_idx, idx, rt
+from al_experiments.constants import Constants, idx, rt
 
+# number_of_reduced_solvers, number_of_instances, instance_idx,
 
 useCupy = os.getenv("USECUDA", "0") == "1"
 
@@ -17,12 +18,16 @@ class InstanceSelector:
 
     def __init__(
             self,
+            con: Constants,
             thresholds,
             sorted_rt,
             acc_calculator: Accuracy,
             sample_intervall: int,
             choosing_fn
     ):
+        self.number_of_reduced_solvers = con.number_of_reduced_solvers
+        self.number_of_instances = con.number_of_instances
+        self.instance_idx = con.instance_idx
         self.thresholds = thresholds
         self.sorted_rt = sorted_rt
         self.acc_calculator = acc_calculator
@@ -32,23 +37,24 @@ class InstanceSelector:
         self.total_runtime = 0
         self.choosen_instances = []
         self.choosen_thresholds = np.ascontiguousarray(
-            np.full((number_of_instances,), 0), dtype=np.int32
+            np.full((self.number_of_instances,), 0), dtype=np.int32
         )
         self.pred = np.ascontiguousarray(
-            np.full((number_of_reduced_solvers,), 0), dtype=np.float32
+            np.full((self.number_of_reduced_solvers,), 0), dtype=np.float32
         )
 
     def make_selection(self):
-        not_choosen_yet = ~np.isin(instance_idx, self.choosen_instances)
+        not_choosen_yet = ~np.isin(self.instance_idx, self.choosen_instances)
         has_timeout = self.thresholds != 0
         combined_mask = not_choosen_yet & has_timeout
-        possible_instances = instance_idx[combined_mask]
+        possible_instances = self.instance_idx[combined_mask]
 
         while (len(possible_instances) > 0):
             #print("possible instances")
             #print(possible_instances)
             new_instance = self.choosing_fn(
-                possible_instances, self.thresholds, self.sorted_rt
+                possible_instances, self.thresholds,
+                self.sorted_rt, self.instance_idx
             )
             included_solvers = self.thresholds[new_instance]
             self.choosen_thresholds[new_instance] = included_solvers
@@ -79,10 +85,10 @@ class InstanceSelector:
 
             # prepare next loop
             self.choosen_instances.append(new_instance)
-            not_choosen_yet = ~np.isin(instance_idx, self.choosen_instances)
+            not_choosen_yet = ~np.isin(self.instance_idx, self.choosen_instances)
             has_timeout = self.thresholds != 0
             combined_mask = not_choosen_yet & has_timeout
-            possible_instances = instance_idx[combined_mask]
+            possible_instances = self.instance_idx[combined_mask]
 
         # sample last result
         self.acc_calculator.sample_result(
@@ -93,7 +99,8 @@ class InstanceSelector:
 def choose_instances_random(
         possible_instances,
         thresholds,
-        sorted_runtimes
+        sorted_runtimes,
+        instance_idx
 ):
     return np.random.choice(possible_instances)
 
@@ -101,7 +108,8 @@ def choose_instances_random(
 def variance_based_selection_1(
         possible_instances,
         thresholds,
-        sorted_runtimes
+        sorted_runtimes,
+        instance_idx
 ):
     """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
     timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
@@ -126,7 +134,8 @@ def variance_based_selection_1(
 def variance_based_selection_2(
         possible_instances,
         thresholds,
-        sorted_runtimes
+        sorted_runtimes,
+        instance_idx
 ):
     """this methods works slightly worse than `variance_based_selection_1` (tested in e99fb452 (this version) vs 697d3971 (version 1))"""
     timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
@@ -172,7 +181,8 @@ def variance_based_selection_2(
 def lowest_variances_per_rt(
         possible_instances,
         thresholds,
-        sorted_runtimes
+        sorted_runtimes,
+        instance_idx
 ):
     """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
     timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
@@ -197,7 +207,8 @@ def lowest_variances_per_rt(
 def lowest_variance(
         possible_instances,
         thresholds,
-        sorted_runtimes
+        sorted_runtimes,
+        instance_idx
 ):
     """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
     timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
@@ -222,7 +233,8 @@ def lowest_variance(
 def lowest_rt_selection(
         possible_instances,
         thresholds,
-        sorted_runtimes
+        sorted_runtimes,
+        instance_idx
 ):
     timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
     runtimes = sorted_runtimes[rt].copy()
@@ -245,7 +257,8 @@ def lowest_rt_selection(
 def highest_rt_selection(
         possible_instances,
         thresholds,
-        sorted_runtimes
+        sorted_runtimes,
+        instance_idx
 ):
     timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
     runtimes = sorted_runtimes[rt].copy()

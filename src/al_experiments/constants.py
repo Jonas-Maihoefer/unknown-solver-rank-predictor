@@ -8,15 +8,24 @@ if useCupy:
 else:
     import numpy as np
 
-number_of_solvers = 28
-number_of_reduced_solvers = number_of_solvers-1
-solver_fraction = 1/number_of_solvers
-square_of_solvers = number_of_solvers * number_of_solvers
-solver_pairs = number_of_solvers*(number_of_solvers-1)
-reduced_solver_pairs = (number_of_reduced_solvers * (number_of_reduced_solvers - 1))
-number_of_instances = 5355
-instance_idx = np.arange(number_of_instances)
-
 # indexes of sorted_runtimes tuple
 idx = 0
 rt = 1
+
+
+class Constants:
+    def __init__(self, df):
+        self.number_of_solvers = df.shape[1]
+        self.number_of_reduced_solvers = self.number_of_solvers-1
+        self.solver_fraction = 1/self.number_of_solvers
+        self.square_of_solvers = (
+            self.number_of_solvers * self.number_of_solvers
+        )
+        self.solver_pairs = self.number_of_solvers*(self.number_of_solvers-1)
+        self.reduced_solver_pairs = (
+            self.number_of_reduced_solvers * (
+                self.number_of_reduced_solvers - 1
+            )
+        )
+        self.number_of_instances = df.shape[0]
+        self.instance_idx = np.arange(self.number_of_instances)

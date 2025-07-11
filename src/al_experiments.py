@@ -11,7 +11,7 @@ from scipy.interpolate import interp1d
 
 from al_experiments.plot_generator import PlotGenerator
 from al_experiments.instance_selector import InstanceSelector, choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, lowest_variances_per_rt, lowest_rt_selection
-from al_experiments.constants import number_of_solvers, number_of_instances
+from al_experiments.constants import Constants
 
 useCupy = os.getenv("USECUDA", "0") == "1"
 
@@ -26,8 +26,6 @@ else:
 break_after_solvers = 200
 break_after_runtime_fraction = 2  # 0.655504  # determined by 0e993e00
 total_samples = 500  # max is 5354 because of sample_result_after_instances
-sample_result_after_iterations = int(number_of_instances * (number_of_solvers - 1) / total_samples)
-sample_result_after_instances = int(number_of_instances / total_samples)
 # total_runtime = 25860323 s
 # global results
 all_results = []
@@ -242,27 +240,13 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
 
     print(df)
 
-    print(f"sample result after {sample_result_after_iterations} iterations")
-
     # min value of df > 0.0 is 0.003021
     # clean the 3 runtimes of 0.0s
     df = df.replace(0.0, 0.0001)
 
-    df_runtimes = df.replace([np.inf, -np.inf], 5000)
-
-    df_rated = df.replace([np.inf, -np.inf], 10000)
-
-    par_2_scores_series = df_rated.mean(axis=0)
+    solver_names = df.columns.tolist()
 
     # plot_generator.visualize_predictions_exclude_instances(df_rated, df_runtimes)
-
-    results = par_2_scores_series.reset_index()
-    results.columns = ['SolverName', 'Par2Score']
-
-    results['Par2Diff'] = None
-    results['CrossAcc'] = None
-    results['TrueAcc'] = None
-    results['RuntimeFrac'] = None
 
     random_solver_order = list(range(28))
 
@@ -270,38 +254,51 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
 
     for index, solver_index in enumerate(random_solver_order):
         solver_string = f"{solver_index}_" + \
-                        f"{par_2_scores_series.index[solver_index]}"
+                        f"{solver_names[solver_index]}"
 
         if index >= break_after_solvers:
             break
 
-        print(f"removing solver {par_2_scores_series.index[solver_index]}")
+        print(f"removing solver {solver_names[solver_index]}")
 
-        # remove solver from par-2-scores and runtimes and build fast C arrays
-        reduced_par_2_scores_series = par_2_scores_series.drop(
-            par_2_scores_series.index[solver_index]
-        )
-        par_2_score_removed_solver = par_2_scores_series[solver_index]
-        runtime_of_removed_solver = np.ascontiguousarray(
-            np.asarray(df_runtimes.iloc[:, solver_index].values),
-            dtype=np.float32
-        )
+        # reduced values
+        df_reduced = df.drop(solver_names[solver_index], axis=1)
+        total_runtime = df_reduced.replace([np.inf, -np.inf], 5000).stack().sum()
+        mean_rt = df_reduced.replace([np.inf, -np.inf], 5000).mean(axis=1)
+        df_reduced_cleaned = df_reduced.loc[mean_rt != 5000.0].copy()
+        reduced_df_runtimes = df_reduced_cleaned.replace([np.inf, -np.inf], 5000)
+        reduced_df_rated = df_reduced_cleaned.replace([np.inf, -np.inf], 10000)
+        reduced_par_2_scores_series = reduced_df_rated.mean(axis=0)
         par_2_scores = np.ascontiguousarray(
             np.asarray(reduced_par_2_scores_series.values), dtype=np.float32
         )
         mean_par_2_score = par_2_scores.mean()
-        reduced_df_runtimes = df_runtimes.drop(
-            df_runtimes.columns[solver_index], axis=1
-        )
-        reduced_df_rated = df_rated.drop(
-            df_rated.columns[solver_index], axis=1
-        )
-        total_runtime = reduced_df_runtimes.stack().sum()
         sorted_runtimes = convert_to_sorted_runtimes(reduced_df_runtimes)
         sorted_runtimes_rated = convert_to_sorted_runtimes(reduced_df_rated)
 
+        # no reduced; USE WITH CARE!
+        df_cleaned = df.loc[mean_rt != 5000.0].copy()
+        df_cleaned_rated = df_cleaned.replace([np.inf, -np.inf], 10000)
+        df_cleaned_runtimes = df_cleaned.replace([np.inf, -np.inf], 5000)
+        cleaned_par_2_values = df_cleaned_rated.mean(axis=0)
+        par_2_score_removed_solver = cleaned_par_2_values[solver_index]
+        runtime_of_removed_solver = np.ascontiguousarray(
+            np.asarray(df_cleaned_runtimes.iloc[:, solver_index].values),
+            dtype=np.float32
+        )
+
+        # constants
+        con = Constants(df_cleaned)
+        sample_result_after_iterations = int(
+            con.number_of_instances * (
+                con.number_of_solvers - 1) / total_samples
+        )
+        sample_result_after_instances = int(
+            con.number_of_instances / total_samples
+        )
+
         acc_calculator = Accuracy(
-            total_runtime, break_after_runtime_fraction,
+            con, total_runtime, break_after_runtime_fraction,
             sample_result_after_iterations, sorted_runtimes,
             sorted_runtimes_rated, par_2_scores, mean_par_2_score,
             par_2_score_removed_solver, runtime_of_removed_solver,
@@ -314,7 +311,7 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
 
         # determine thresholds for perfect differentiation of remaining solvers
         thresholds = experiment_config.determine_thresholds(
-            acc_calculator, solver_string
+            acc_calculator, solver_string, con.number_of_instances
         )
 
         print("here is the calculated threshold vector:")
@@ -323,33 +320,7 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
             print(f"{threshold}", end=", ")
         print()
 
-        print(f"adding solver {par_2_scores_series.index[solver_index]} back in")
-
-        print("here are the results")
-
-        # sample last result
-        acc_calculator.sample_result(
-            thresholds, acc_calculator.pred, "last_sample"
-        )
-
-        results.iloc[
-            solver_index, results.columns.get_loc('Par2Diff')
-        ] = all_results[len(all_results) - 1]["value"]
-        results.iloc[
-            solver_index, results.columns.get_loc('CrossAcc')
-        ] = all_results[len(all_results) - 2]["value"]
-        results.iloc[
-            solver_index, results.columns.get_loc('TrueAcc')
-        ] = all_results[len(all_results) - 3]["value"]
-        results.iloc[
-            solver_index, results.columns.get_loc('RuntimeFrac')
-        ] = all_results[len(all_results) - 3]["runtime_fraction"]
-
-        print(results)
-
-        print("this gives a mean of")
-
-        print(results.mean())
+        print(f"adding solver {solver_names[solver_index]} back in")
 
         for instance_selection in experiment_config.instance_selections:
             print(f"select instances based on method {instance_selection.__name__}")
@@ -357,7 +328,7 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
                 continue
 
             selector = InstanceSelector(
-                thresholds, sorted_runtimes, acc_calculator,
+                con, thresholds, sorted_runtimes, acc_calculator,
                 sample_result_after_instances, instance_selection
             )
 
