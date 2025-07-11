@@ -339,15 +339,20 @@ class Accuracy:
         used_rt_removed_solver = 0
         if self.with_remaining_mean:
             penalties = self.get_remaining_mean(thresholds)
+            choosen_instances = 0
             for index, runtime_list in enumerate(self.sorted_rt[rt]):
                 timeout = runtime_list[thresholds[index]]
-                if timeout > self.rt_removed_solver[index]:
+                if thresholds[index] == 0:
+                    continue
+                elif timeout > self.rt_removed_solver[index]:
                     used_rt_removed_solver += self.rt_removed_solver[index]
                     new_pred += self.rt_removed_solver[index]
                 else:
                     used_rt_removed_solver += timeout
                     new_pred += penalties[index]
-            new_pred = new_pred / number_of_instances
+                choosen_instances += 1
+            new_pred = new_pred / choosen_instances
+            # TODO: calculate other solvers also only on the choosen instances
         else:
             for index, runtime_list in enumerate(self.sorted_rt[rt]):
                 timeout = runtime_list[thresholds[index]]
