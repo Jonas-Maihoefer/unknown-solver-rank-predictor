@@ -392,37 +392,26 @@ class Accuracy:
         Returns:
           e: shape (5355,)     -- e[i] is the RMSE for row i
         """
+        # 1) compute per‑row slope and intercept
+        x_mean = X.mean(axis=1)            # (N,)
+        xx_mean = (X*X).mean(axis=1)        # (N,)
+        xy_mean = (X*y).mean(axis=1)        # (N,)
+        y_mean = y.mean()                  # scalar
 
-        # precompute per‐row and global moments
-        x_mean = X.mean(axis=1)           # shape (5355,)
-        xx_mean = (X * X).mean(axis=1)     # shape (5355,)
-        xy_mean = (X * y).mean(axis=1)     # shape (5355,)
+        cov_xy = xy_mean - x_mean*y_mean    # (N,)
+        var_x = xx_mean - x_mean**2       # (N,)
+        m = cov_xy / var_x                  # (N,)
+        c = y_mean - m*x_mean               # (N,)
 
-        y_mean = y.mean()                 # scalar
-        yy_mean = (y * y).mean()           # scalar
+        # 2) build residuals and compute MSE directly
+        #    `m[:,None]` broadcasts to shape (N,27)
+        preds = m[:, None] * X + c[:, None]   # (N,27)
+        residual = preds - y                     # (N,27)
+        mse = (residual*residual).mean(axis=1)  # (N,)
 
-        # slope and intercept per row
-        cov_xy = xy_mean - x_mean*y_mean    # shape (5355,)
-        var_x = xx_mean - x_mean**2         # shape (5355,)
-        m = cov_xy / var_x                  # shape (5355,)
-        c = y_mean - m * x_mean             # shape (5355,)
-
-        # now compute mean‐squared error via moments (no big (5355,27) array)
-        # E[(m x + c - y)^2] = m^2 E[x^2] + 2 m c E[x] + c^2
-        #                     - 2 m E[x y] - 2 c E[y] + E[y^2]
-        mse = (
-            m**2 * xx_mean
-            + 2*m*c * x_mean
-            + c**2
-            - 2*m * xy_mean
-            - 2*c * y_mean
-            + yy_mean
-        )
-
-        # RMSE
+        # 3) RMSE
         e = np.sqrt(mse)
 
-        # TODO: remove!
         bad_indices = np.where(np.isneginf(e) | np.isinf(e) | np.isnan(e))[0]
         for bad_idx in bad_indices:
             print(f"found bad idx: {bad_idx}")
@@ -446,7 +435,6 @@ class Accuracy:
             print(mse[bad_idx])
             print("e")
             print(e[bad_idx])
-
         return e
 
     def sample_result(self, thresholds, pred, measurement, best_score=0):
