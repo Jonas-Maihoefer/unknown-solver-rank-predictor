@@ -148,13 +148,13 @@ class Accuracy:
         #print(score[remaining_mask])
 
         # TODO: remove!
-        bad_indices = np.where(np.isneginf(score[remaining_mask]) | np.isinf(score[remaining_mask]) | np.isnan(score[remaining_mask]))[0]
+        bad_indices = np.where(np.isneginf(score[remaining_mask]) | np.isnan(score[remaining_mask]))[0]
         if bad_indices.size > 0:
             for bad_idx in bad_indices:
                 bad_idx = self.instance_idx[remaining_mask][bad_idx]
                 print(f"135000000 / ({similarity[bad_idx]} * {total_added_runtime[bad_idx]}) = {135000000 / (similarity[bad_idx] * total_added_runtime[bad_idx])}")
                 print(new_pred[bad_idx])
-                print(f"total_added_runtime is ({self.number_of_reduced_solvers} - {thresholds[bad_idx]}) * ({next_solver[rt][bad_idx]} - {current_solver[rt][bad_idx]}) = {(self.number_of_reduced_solvers - thresholds[bad_idx]) * (next_solver[rt][bad_idx] - current_solver[rt][bad_idx])}")
+                print(f"total_added_runtime is ({self.number_of_reduced_solvers} - {thresholds[bad_idx]}) * ({next_solver[rt][bad_idx]} - {current_solver[rt][bad_idx]}) = {total_added_runtime[bad_idx]}")
 
         #print("fast")
         #for th in thresholds:
