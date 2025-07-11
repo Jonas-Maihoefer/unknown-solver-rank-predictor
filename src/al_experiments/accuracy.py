@@ -142,7 +142,7 @@ class Accuracy:
         #print("total_added_runtime")
         #print(total_added_runtime[remaining_mask])
 
-        score = 135000000 / (similarity * total_added_runtime)  # similarity + self.rt_weight * total_added_runtime
+        score = similarity  # 135000000 / (similarity * total_added_runtime)  # similarity + self.rt_weight * total_added_runtime
 
         #print("score")
         #print(score[remaining_mask])
@@ -402,6 +402,14 @@ class Accuracy:
         var_x = xx_mean - x_mean**2       # (N,)
         m = cov_xy / var_x                  # (N,)
         c = y_mean - m*x_mean               # (N,)
+
+        # detect zero‐variance rows
+        zero_var = var_x == 0.0              # boolean mask shape (N,)
+        if np.any(zero_var):
+            # override those rows to horizontal fit
+            m[zero_var] = 0.0
+            c[zero_var] = y_mean
+
 
         # 2) build residuals and compute MSE directly
         #    `m[:,None]` broadcasts to shape (N,27)
@@ -959,7 +967,7 @@ class Accuracy:
 
 
 def select_best_idx(score, remaining_mask, instance_idx):
-    best_idx = np.nanargmax(score[remaining_mask])
+    best_idx = np.nanargmin(score[remaining_mask])
     best_idx = instance_idx[remaining_mask][best_idx]
     return best_idx
 
