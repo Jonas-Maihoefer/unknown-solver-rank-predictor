@@ -264,6 +264,7 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
         # reduced values
         df_reduced = df.drop(solver_names[solver_index], axis=1)
         total_runtime = df_reduced.replace([np.inf, -np.inf], 5000).stack().sum()
+        total_rt_removed_solver = df.replace([np.inf, -np.inf], 5000)[solver_names[solver_index]].sum()
         mean_rt = df_reduced.replace([np.inf, -np.inf], 5000).mean(axis=1)
         df_reduced_cleaned = df_reduced.loc[mean_rt != 5000.0].copy()
         reduced_df_runtimes = df_reduced_cleaned.replace([np.inf, -np.inf], 5000)
@@ -298,7 +299,8 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
         )
 
         acc_calculator = Accuracy(
-            con, total_runtime, break_after_runtime_fraction,
+            con, total_runtime,
+            total_rt_removed_solver, break_after_runtime_fraction,
             sample_result_after_iterations, sorted_runtimes,
             sorted_runtimes_rated, par_2_scores, mean_par_2_score,
             par_2_score_removed_solver, runtime_of_removed_solver,

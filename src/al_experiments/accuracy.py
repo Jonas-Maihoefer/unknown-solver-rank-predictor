@@ -25,6 +25,7 @@ class Accuracy:
             self,
             con: Constants,
             total_runtime,
+            total_rt_removed_solver,
             break_after_runtime_fraction,
             sample_result_after_iterations,
             sorted_rt,
@@ -58,7 +59,7 @@ class Accuracy:
         self.all_results = all_results
         self.rt_weight = rt_weight
         self.with_remaining_mean = with_remaining_mean
-        self.total_rt_removed_solver = runtime_of_removed_solver.sum()
+        self.total_rt_removed_solver = total_rt_removed_solver
         self.n = 1
         self.used_runtime = 0
         self.pred = np.ascontiguousarray(
