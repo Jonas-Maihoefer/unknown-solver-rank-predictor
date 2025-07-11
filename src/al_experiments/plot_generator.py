@@ -3,7 +3,8 @@ import matplotlib.pyplot as plt
 import os
 import pandas as pd
 import seaborn as sns
-
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
 
 class PlotGenerator:
     def __init__(self, git_hash, exp_config, experiment=None):
@@ -575,3 +576,142 @@ class PlotGenerator:
         # Show or save
         plt.show()
         #plt.savefig("instance_histogram.png", dpi=300) """
+
+    def plot_regression(self, prediction, actual, label, color):
+        # Reshape prediction to 2D for sklearn
+        prediction_np = np.array(prediction).reshape(-1, 1)
+        actual_np = np.array(actual)
+
+        # Fit linear regression
+        model = LinearRegression()
+        model.fit(prediction_np, actual_np)
+        predicted_line = model.predict(prediction_np)
+
+        # Compute RMSE
+        rmse = mean_squared_error(actual_np, predicted_line, squared=False)
+
+        # Plot original data
+        plt.plot(prediction, actual, marker='.', linestyle='None', label=f"{label} (RMSE={rmse:.2f})", color=color)
+
+        # Plot regression line
+        sorted_indices = np.argsort(prediction)
+        plt.plot(np.array(prediction)[sorted_indices], predicted_line[sorted_indices], linestyle='-', color=color)
+
+        return model.coef_[0], model.intercept_, rmse
+
+    def visualize_predictions(self, df_rated: pd.DataFrame):
+
+        par_2_scores_series = df_rated.mean(axis=0)
+        print(par_2_scores_series)
+
+        df_rated_4000 = df_rated
+        df_rated_4000[df_rated_4000 > 4000] = 8000
+        par_2_scores_series_4000 = df_rated_4000.mean(axis=0)
+
+        df_rated_3000 = df_rated
+        df_rated_3000[df_rated_3000 > 3000] = 6000
+        par_2_scores_series_3000 = df_rated_3000.mean(axis=0)
+
+        df_rated_2000 = df_rated
+        df_rated_2000[df_rated_2000 > 2000] = 4000
+        par_2_scores_series_2000 = df_rated_2000.mean(axis=0)
+
+        df_rated_1000 = df_rated
+        df_rated_1000[df_rated_1000 > 1000] = 2000
+        par_2_scores_series_1000 = df_rated_1000.mean(axis=0)
+
+        actual = []
+        prediction_4000 = []
+        prediction_3000 = []
+        prediction_2000 = []
+        prediction_1000 = []
+        for solver in par_2_scores_series.index:
+            actual.append(par_2_scores_series[solver])
+            prediction_4000.append(par_2_scores_series_4000[solver])
+            prediction_3000.append(par_2_scores_series_3000[solver])
+            prediction_2000.append(par_2_scores_series_2000[solver])
+            prediction_1000.append(par_2_scores_series_1000[solver])
+
+        plt.figure(figsize=(10, 6))
+        #plt.plot(actual, actual, marker=".", linestyle='None', label="timeout=5000")
+        colors = ['blue', 'orange', 'green', 'red', 'black']
+        m5000, c5000, rmse5000 = self.plot_regression(actual, actual, "timeout=5000", colors[0])
+        m4000, c4000, rmse4000 = self.plot_regression(prediction_4000, actual, "timeout=4000", colors[1])
+        m3000, c3000, rmse3000 = self.plot_regression(prediction_3000, actual, "timeout=3000", colors[2])
+        m2000, c2000, rmse2000 = self.plot_regression(prediction_2000, actual, "timeout=2000", colors[3])
+        m1000, c1000, rmse1000 = self.plot_regression(prediction_1000, actual, "timeout=1000", colors[4])
+        plt.legend()
+        plt.xlabel("par-2-score with timeout < 5000")
+        plt.ylabel("par-2-score with timeout = 5000")
+        plt.title("Comparision of lower timeout par-2-scores")
+        plt.grid(True, linestyle="--", alpha=0.5)
+        plt.tight_layout()
+        # Show or save
+        plt.show()
+
+
+    def visualize_predictions_exclude_instances(self, df_rated: pd.DataFrame, df_runtimes: pd.DataFrame):
+
+        par_2_scores_series = df_rated.mean(axis=0)
+
+        instance_mean_rt = df_runtimes.mean(axis=1)
+        print(instance_mean_rt.sort_values())
+
+        mask_500 = instance_mean_rt > 500
+        df_rated_500 = df_runtimes.copy()
+        df_rated_500[mask_500] = np.nan
+        par_2_scores_500 = df_rated_500.mean(axis=0)
+
+        mask_1000 = instance_mean_rt > 1000
+        df_rated_1000 = df_runtimes.copy()
+        df_rated_1000[mask_1000] = np.nan
+        par_2_scores_1000 = df_rated_1000.mean(axis=0)
+
+        mask_3000 = instance_mean_rt > 3000
+        df_rated_3000 = df_runtimes.copy()
+        df_rated_3000[mask_3000] = np.nan
+        par_2_scores_3000 = df_rated_3000.mean(axis=0)
+
+        mask_2000 = instance_mean_rt > 2000
+        df_rated_2000 = df_runtimes.copy()
+        df_rated_2000[mask_2000] = np.nan
+        par_2_scores_2000 = df_rated_2000.mean(axis=0)
+
+        mask_4000 = instance_mean_rt > 4000
+        df_rated_4000 = df_runtimes.copy()
+        df_rated_4000[mask_4000] = np.nan
+        df_rated_4000[df_rated_4000 > 1000] = 2000
+        par_2_scores_4000 = df_rated_4000.mean(axis=0)
+
+        actual = []
+        prediction_500 = []
+        prediction_1000 = []
+        prediction_3000 = []
+        prediction_2000 = []
+        prediction_4000 = []
+        for solver in par_2_scores_series.index:
+            actual.append(par_2_scores_series[solver])
+            prediction_500.append(par_2_scores_500[solver])
+            prediction_1000.append(par_2_scores_1000[solver])
+            prediction_3000.append(par_2_scores_3000[solver])
+            prediction_2000.append(par_2_scores_2000[solver])
+            prediction_4000.append(par_2_scores_4000[solver])
+
+        plt.figure(figsize=(10, 6))
+        #plt.plot(actual, actual, marker=".", linestyle='None', label="timeout=5000")
+        colors = ['blue', 'orange', 'green', 'red', 'black', 'purple', 'gray']
+        #m100, c100, rmse100 = self.plot_regression(prediction_500, actual, "mean_time <= 500", colors[5])
+        #m1000, c1000, rmse1000 = self.plot_regression(prediction_1000, actual, "mean_time <= 1000", colors[4])        
+        #m3000, c3000, rmse3000 = self.plot_regression(prediction_2000, actual, "mean_time <= 2000", colors[2])
+        #m2000, c2000, rmse2000 = self.plot_regression(prediction_3000, actual, "mean_time <= 3000", colors[3])
+        m4000, c4000, rmse4000 = self.plot_regression(prediction_4000, actual, "mean_time <= 4000 and timeout = 1000", colors[1])
+        m5000, c5000, rmse5000 = self.plot_regression(actual, actual, "mean_time <= inf", colors[0])
+        
+        plt.legend()
+        plt.xlabel("mean_time limited")
+        plt.ylabel("mean_time unlimited")
+        plt.title("Comparision of reduced instance pool par-2-scores")
+        plt.grid(True, linestyle="--", alpha=0.5)
+        plt.tight_layout()
+        # Show or save
+        plt.show()

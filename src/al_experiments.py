@@ -156,49 +156,6 @@ def vec_to_single_runtime_frac(
     return used_runtime / total_runtime
 
 
-def compute_average_grid(list_of_dfs, grid_size=total_samples):
-    """
-    Given a list of DataFrames, each with 'runtime_frac' and measurements
-    ['cross_acc', 'true_acc', 'diff'], interpolate each onto a common grid
-    and compute the average of each measurement at each grid point.
-    """
-    # Determine global min and max of runtime_frac across all DataFrames
-    max_min_frac = max(df['runtime_frac'].min() for df in list_of_dfs)
-    min_max_frac = min(df['runtime_frac'].max() for df in list_of_dfs)
-
-    # Create an evenly spaced grid
-    grid = np.linspace(max_min_frac, min_max_frac, grid_size)
-
-    measurements = ['cross_acc', 'true_acc', 'diff']
-
-    # Collect interpolated values for each measurement from each DataFrame
-    interp_values = {m: [] for m in measurements}
-    for df in list_of_dfs:
-        # Create interpolation functions for each measurement
-        fns = {
-            m: interp1d(
-                df['runtime_frac'],
-                df[m],
-                kind='linear',
-                bounds_error=False,
-                fill_value=np.nan
-            ) for m in measurements
-        }
-        # Evaluate and store interpolated values on the grid
-        for m in measurements:
-            interp_values[m].append(fns[m](grid))
-
-    # Build the averaged DataFrame
-    avg_data = {'runtime_frac': grid}
-    for m in measurements:
-        # Stack all arrays and compute mean, ignoring NaNs
-        stacked = np.vstack(interp_values[m])
-        avg_data[m] = np.nanmean(stacked, axis=0)
-
-    avg_df = pd.DataFrame(avg_data)
-    return avg_df
-
-
 def store_and_get_mean_result(rt_weight, temp):
 
     weight_string = re.sub(r'[^0-9a-zA-Z_]', '_', str(rt_weight))
@@ -296,6 +253,8 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
     df_rated = df.replace([np.inf, -np.inf], 10000)
 
     par_2_scores_series = df_rated.mean(axis=0)
+
+    # plot_generator.visualize_predictions_exclude_instances(df_rated, df_runtimes)
 
     results = par_2_scores_series.reset_index()
     results.columns = ['SolverName', 'Par2Score']

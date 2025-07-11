@@ -122,12 +122,8 @@ class Accuracy:
         #print(new_pred.mean(axis=1))
         #print(new_pred.mean(axis=1).shape)
 
-        scaling = self.mean_par_2_score / new_pred.mean(axis=1)
-        #print("scaling")
-        #print(scaling)
-        #print(scaling.shape)
+        similarity = self.batch_rmse(new_pred, self.par_2_scores)
 
-        similarity = np.abs((new_pred * scaling[:, None]) - self.par_2_scores).sum(axis=1)
         #print("similarity")
         #print(similarity)
         #print(similarity.shape)
@@ -331,7 +327,80 @@ class Accuracy:
         self.n += 1
         return thresholds, prev_max_acc, prev_min_diff
 
+    def linear_fit(self, x: np.ndarray, y: np.ndarray):
+        """
+        Given two 1D arrays x and y of the same length,
+        finds m, c minimizing ||y - (m*x + c)||_2 and
+        returns (m, c, e), where e is the RMSE of the fit.
+        """
+
+        # Compute means
+        x_mean = x.mean()
+        y_mean = y.mean()
+
+        # Compute slope m = Cov(x,y)/Var(x)
+        # Cov = mean(x*y) - mean(x)*mean(y)
+        cov_xy = (x * y).mean() - x_mean * y_mean
+        var_x = (x * x).mean() - x_mean**2
+        m = cov_xy / var_x
+
+        # Compute intercept c = mean(y) - m*mean(x)
+        c = y_mean - m * x_mean
+
+        # Compute residuals and RMSE error term
+        y_pred = m * x + c
+        residuals = y - y_pred
+        e = np.sqrt((residuals**2).mean())
+
+        return m, c, e
+
+    def batch_rmse(self, X: np.ndarray, y: np.ndarray) -> np.ndarray:
+        """
+        For each row X[i,:], fit y ~ m*X[i,:] + c by least squares,
+        and return the RMSE of that fit.
+
+        Inputs:
+          X: shape (5355, 27)
+          y: shape (27,)
+        Returns:
+          e: shape (5355,)     -- e[i] is the RMSE for row i
+        """
+
+        # precompute per‐row and global moments
+        x_mean = X.mean(axis=1)           # shape (5355,)
+        xx_mean = (X * X).mean(axis=1)     # shape (5355,)
+        xy_mean = (X * y).mean(axis=1)     # shape (5355,)
+
+        y_mean = y.mean()                 # scalar
+        yy_mean = (y * y).mean()           # scalar
+
+        # slope and intercept per row
+        cov_xy = xy_mean - x_mean*y_mean    # shape (5355,)
+        var_x = xx_mean - x_mean**2         # shape (5355,)
+        m = cov_xy / var_x                  # shape (5355,)
+        c = y_mean - m * x_mean             # shape (5355,)
+
+        # now compute mean‐squared error via moments (no big (5355,27) array)
+        # E[(m x + c - y)^2] = m^2 E[x^2] + 2 m c E[x] + c^2
+        #                     - 2 m E[x y] - 2 c E[y] + E[y^2]
+        mse = (
+            m**2 * xx_mean
+            + 2*m*c * x_mean
+            + c**2
+            - 2*m * xy_mean
+            - 2*c * y_mean
+            + yy_mean
+        )
+
+        # RMSE
+        e = np.sqrt(mse)
+        return e
+
     def sample_result(self, thresholds, pred, measurement, best_score=0):
+
+        m, c, error = self.linear_fit(pred, self.par_2_scores)
+
+        pred = m * pred + c
 
         cross_acc = self.calc_cross_acc_2(self.par_2_scores, pred)
 
@@ -373,7 +442,7 @@ class Accuracy:
         all_par_2_scores = np.append(
             self.par_2_scores, self.par_2_score_removed_solver
         )
-        all_pred = np.append(pred, new_pred)
+        all_pred = np.append(self.par_2_scores, m * new_pred + c)
         true_acc = self.calc_true_acc_1(
             all_par_2_scores,
             all_pred,
@@ -402,7 +471,7 @@ class Accuracy:
                 "solver": self.solver_string,
                 "runtime_fraction": runtime_frac,
                 "measurement": f"{measurement}_diff",
-                "value": best_score
+                "value": error
         })
         return runtime_frac
 
