@@ -131,21 +131,22 @@ class Accuracy:
 
         similarity = self.batch_rmse(new_pred, self.par_2_scores)
 
-        print("similarity")
-        print(similarity[remaining_mask])
+        #print("similarity")
+        #print(similarity[remaining_mask])
 
         #print("similarity")
         #print(similarity)
         #print(similarity.shape)
 
-        print("total_added_runtime")
-        print(total_added_runtime[remaining_mask])
+        #print("total_added_runtime")
+        #print(total_added_runtime[remaining_mask])
 
         score = 135000000 / (similarity * total_added_runtime)  # similarity + self.rt_weight * total_added_runtime
 
-        print("score")
-        print(score[remaining_mask])
+        #print("score")
+        #print(score[remaining_mask])
 
+        # TODO: remove!
         bad_indices = np.where(np.isneginf(score[remaining_mask]) | np.isinf(score[remaining_mask]) | np.isnan(score[remaining_mask]))[0]
         if bad_indices.size > 0:
             for bad_idx in bad_indices:
@@ -420,6 +421,7 @@ class Accuracy:
         # RMSE
         e = np.sqrt(mse)
 
+        # TODO: remove!
         bad_indices = np.where(np.isneginf(e) | np.isinf(e) | np.isnan(e))[0]
         for bad_idx in bad_indices:
             print(f"found bad idx: {bad_idx}")
