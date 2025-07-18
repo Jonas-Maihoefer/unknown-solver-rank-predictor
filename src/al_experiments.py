@@ -38,8 +38,8 @@ experiment_configs = ExperimentConfig(
     determine_thresholds=quantized_min_diff,
     select_idx=select_best_idx,
     temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
-    rt_weights=[1],
-    instance_selections=[choose_instances_random, variance_based_selection_1],
+    rt_weights=[1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+    instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, lowest_variances_per_rt, lowest_rt_selection],
     individual_solver_plots=True
 )
 
@@ -163,7 +163,7 @@ def store_and_get_mean_result(rt_weight, temp):
 
     # construct df
     df = pd.DataFrame.from_records(all_results)
-    df.to_pickle(f"./pickle/{git_hash}_df.pkl.gz", compression="gzip")
+    df.to_pickle(f"./pickle/{git_hash}_rt_weigth_{weight_string}_temp_{temp_string}.pkl.gz", compression="gzip")
 
     plot_generator.plot_avg_results(df, total_samples)
 

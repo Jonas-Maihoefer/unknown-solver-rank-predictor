@@ -142,13 +142,15 @@ class Accuracy:
         #print("total_added_runtime")
         #print(total_added_runtime[remaining_mask])
 
-        score = similarity  # 135000000 / (similarity * total_added_runtime)  # similarity + self.rt_weight * total_added_runtime
+        score = 135000000 / np.float_power(similarity, self.rt_weight)
+
+        profitability_index = score / total_added_runtime  # similarity + self.rt_weight * total_added_runtime
 
         #print("score")
         #print(score[remaining_mask])
 
         # TODO: remove!
-        bad_indices = np.where(np.isneginf(score[remaining_mask]) | np.isnan(score[remaining_mask]))[0]
+        bad_indices = np.where(np.isneginf(profitability_index[remaining_mask]) | np.isnan(profitability_index[remaining_mask]))[0]
         if bad_indices.size > 0:
             for bad_idx in bad_indices:
                 bad_idx = self.instance_idx[remaining_mask][bad_idx]
@@ -171,7 +173,7 @@ class Accuracy:
             print("No more thresholds remaining")
             return thresholds, prev_max_acc, -1
 
-        best_idx = self.select_idx(score, remaining_mask, self.instance_idx)
+        best_idx = self.select_idx(profitability_index, remaining_mask, self.instance_idx)
 
         # update
         self.pred = new_pred[best_idx]
@@ -179,11 +181,13 @@ class Accuracy:
         self.used_runtime += total_added_runtime[best_idx]
 
         if self.n % self.sample_result_after_iterations == 0:
-            runtime_frac = self.sample_result(
+            runtime_frac, cross_acc = self.sample_result(
                 thresholds, self.pred,
-                "determine_timeouts", score[best_idx]
+                "determine_timeouts", profitability_index[best_idx]
             )
             if runtime_frac > self.break_after_runtime_fraction:
+                return thresholds, prev_max_acc, -1
+            if runtime_frac > 0.15 and cross_acc >= 1.0:
                 return thresholds, prev_max_acc, -1
         self.n += 1
         return thresholds, prev_max_acc, prev_min_diff
@@ -283,7 +287,7 @@ class Accuracy:
         self.used_runtime += total_added_runtime[best_idx]
 
         if self.n % self.sample_result_after_iterations == 0:
-            runtime_frac = self.sample_result(
+            runtime_frac, cross_acc = self.sample_result(
                 thresholds, self.pred,
                 "determine_timeouts", score[best_idx]
             )
@@ -346,7 +350,7 @@ class Accuracy:
         thresholds[best_idx] += 1
 
         if self.n % self.sample_result_after_iterations == 0:
-            runtime_frac = self.sample_result(
+            runtime_frac, cross_acc = self.sample_result(
                 thresholds, self.pred, "determine_timeouts"
             )
             if runtime_frac > self.break_after_runtime_fraction:
@@ -446,7 +450,6 @@ class Accuracy:
         return e
 
     def sample_result(self, thresholds, pred, measurement, best_score=0):
-
         m, c, error = self.linear_fit(pred, self.par_2_scores)
 
         pred = m * pred + c
@@ -522,7 +525,7 @@ class Accuracy:
                 "measurement": f"{measurement}_diff",
                 "value": error
         })
-        return runtime_frac
+        return runtime_frac, cross_acc
 
     def sub_optimal_acc_maxing(self, new_acc: float, prev_acc: float):
         return new_acc <= prev_acc
@@ -967,7 +970,7 @@ class Accuracy:
 
 
 def select_best_idx(score, remaining_mask, instance_idx):
-    best_idx = np.nanargmin(score[remaining_mask])
+    best_idx = np.nanargmax(score[remaining_mask])
     best_idx = instance_idx[remaining_mask][best_idx]
     return best_idx
 
