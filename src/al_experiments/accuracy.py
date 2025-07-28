@@ -130,6 +130,7 @@ class Accuracy:
         #print(new_pred.mean(axis=1))
         #print(new_pred.mean(axis=1).shape)
 
+        # Max 450
         similarity = self.batch_rmse(new_pred, self.par_2_scores)
 
         #print("similarity")
@@ -248,7 +249,7 @@ class Accuracy:
         timeout_mask = timeout_mask[:, 1:]
 
         delta = next_penalty - current_penalty
-        new_pred += (timeout_mask * delta[:, None]) / self.number_of_instances
+        new_pred += (timeout_mask * delta[:, None])
         #print("new pred with all instances")
         #print(new_pred)
 
@@ -256,12 +257,15 @@ class Accuracy:
         #print(new_pred.mean(axis=1))
         #print(new_pred.mean(axis=1).shape)
 
-        similarity = np.abs(new_pred - self.par_2_scores).sum(axis=1)
+        similarity = self.batch_rmse(new_pred, self.par_2_scores)
         #print("similarity")
         #print(similarity)
         #print(similarity.shape)
 
-        score = 1 / (similarity * total_added_runtime)  # similarity + self.rt_weight * total_added_runtime
+        score = 135000000 / np.float_power(similarity, self.rt_weight)
+
+        profitability_index = score / total_added_runtime
+
         #print("fast")
         #for th in thresholds:
         #    print(th, end=", ")
@@ -277,7 +281,7 @@ class Accuracy:
             print("No more thresholds remaining")
             return thresholds, prev_max_acc, -1
 
-        best_idx = self.select_idx(score, remaining_mask, self.instance_idx)
+        best_idx = self.select_idx(profitability_index, remaining_mask, self.instance_idx)
 
         # update
         self.pred = new_pred[best_idx]
@@ -289,9 +293,11 @@ class Accuracy:
         if self.n % self.sample_result_after_iterations == 0:
             runtime_frac, cross_acc = self.sample_result(
                 thresholds, self.pred,
-                "determine_timeouts", score[best_idx]
+                "determine_timeouts", profitability_index[best_idx]
             )
             if runtime_frac > self.break_after_runtime_fraction:
+                return thresholds, prev_max_acc, -1
+            if runtime_frac > 0.15 and cross_acc >= 1.0:
                 return thresholds, prev_max_acc, -1
         self.n += 1
         return thresholds, prev_max_acc, prev_min_diff
@@ -472,7 +478,7 @@ class Accuracy:
                     used_rt_removed_solver += timeout
                     new_pred += penalties[index]
                 choosen_instances += 1
-            new_pred = new_pred / choosen_instances
+            # new_pred = new_pred / choosen_instances
             # TODO: calculate other solvers also only on the choosen instances
         else:
             for index, runtime_list in enumerate(self.sorted_rt[rt]):
@@ -503,7 +509,7 @@ class Accuracy:
         runtime_frac = used_rt_removed_solver / self.total_rt_removed_solver
         print(f"actual key is {self.pred_vec_to_key(all_par_2_scores)}")
         print(f"pred key is   {self.pred_vec_to_key(all_pred)}")
-        print(f"best score is {best_score}")
+        print(f"best rmse is {error}")
         print(f"cross acc is {cross_acc}")
         print(f"with this, the new total is {self.used_runtime} giving a fraction of {runtime_frac}")
         print(f"true acc is {true_acc}")
