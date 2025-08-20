@@ -1,5 +1,9 @@
 # Active Learning for SAT Solver Benchmarking
 
+```
+ssh jmaihoefer@login.ae.iti.kit.edu 
+```
+
 This repository contains the code and text of the paper
 
 > Fuchs, Bach, Iser. "Active Learning for SAT Solver Benchmarking"

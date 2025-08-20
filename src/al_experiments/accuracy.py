@@ -143,9 +143,9 @@ class Accuracy:
         #print("total_added_runtime")
         #print(total_added_runtime[remaining_mask])
 
-        score = 135000000 / np.float_power(similarity, self.rt_weight)
+        score = 1 / similarity  # 135000000 / np.float_power(similarity, self.rt_weight)
 
-        profitability_index = score / total_added_runtime  # similarity + self.rt_weight * total_added_runtime
+        profitability_index = score  # / total_added_runtime  # similarity + self.rt_weight * total_added_runtime
 
         #print("score")
         #print(score[remaining_mask])
@@ -188,8 +188,8 @@ class Accuracy:
             )
             if runtime_frac > self.break_after_runtime_fraction:
                 return thresholds, prev_max_acc, -1
-            if runtime_frac > 0.15 and cross_acc >= 1.0:
-                return thresholds, prev_max_acc, -1
+            #if runtime_frac > 0.15 and cross_acc >= 1.0:
+            #    return thresholds, prev_max_acc, -1
         self.n += 1
         return thresholds, prev_max_acc, prev_min_diff
 
@@ -462,6 +462,8 @@ class Accuracy:
 
         cross_acc = self.calc_cross_acc_2(self.par_2_scores, pred)
 
+        stability = self.calc_stability(thresholds, pred, error)
+
         new_pred = 0
         used_rt_removed_solver = 0
         if self.with_remaining_mean:
@@ -510,6 +512,7 @@ class Accuracy:
         print(f"actual key is {self.pred_vec_to_key(all_par_2_scores)}")
         print(f"pred key is   {self.pred_vec_to_key(all_pred)}")
         print(f"best rmse is {error}")
+        print(f"stability of this is {stability}")
         print(f"cross acc is {cross_acc}")
         print(f"with this, the new total is {self.used_runtime} giving a fraction of {runtime_frac}")
         print(f"true acc is {true_acc}")
@@ -531,7 +534,72 @@ class Accuracy:
                 "measurement": f"{measurement}_diff",
                 "value": error
         })
+        self.all_results.append({
+                "solver": self.solver_string,
+                "runtime_fraction": runtime_frac,
+                "measurement": f"{measurement}_stability",
+                "value": error
+        })
         return runtime_frac, cross_acc
+
+    def calc_stability(self, thresholds, pred, error):
+        # instances not maxed out yet
+        remaining_mask = thresholds < self.number_of_reduced_solvers
+        valid_instances = self.instance_idx[remaining_mask]
+
+        # current solver + its rt bearly solving the instance
+        current_solver = self.sorted_rt[idx][self.instance_idx, thresholds], self.sorted_rt[rt][self.instance_idx, thresholds]
+
+        # next solver + its rt that would solve the instance if threshold is raised
+        next_solver = (
+            np.empty(self.number_of_instances, dtype=int),
+            np.empty(self.number_of_instances, dtype=float)
+        )
+        next_solver[idx][:] = -1
+        next_solver[rt][:] = -1
+        next_solver[idx][valid_instances] = self.sorted_rt[idx][valid_instances, thresholds[valid_instances] + 1]
+        next_solver[rt][valid_instances] = self.sorted_rt[rt][valid_instances, thresholds[valid_instances] + 1]
+
+        #print("extracted best next")
+        #print(next_solver)
+
+        #print("total added runtime")
+        #print(total_added_runtime)
+
+        current_penalty = current_solver[rt] * 2
+        #print("current_penalty")
+        #print(current_penalty)
+        next_penalty = next_solver[rt] * 2
+        #print("next_penalty")
+        #print(next_penalty)
+
+        # copy previos pred to all instances
+        new_pred = np.tile(pred, (self.number_of_instances, 1))
+        # change pred for the next added solver
+        next_solver[rt][next_solver[rt] == 5000] = 10000
+
+        new_pred[self.instance_idx, next_solver[idx]] += (next_solver[rt] - current_penalty)
+
+        # build a mask of which solvers still timeout with the new thresh
+        index_mask = np.arange(self.number_of_solvers)[None, :] > thresholds[:, None] + 1
+        index_mask = np.where(index_mask, self.sorted_rt[idx] + 1, 0)
+        timeout_mask = np.zeros_like(self.sorted_rt[idx], dtype=bool)
+        timeout_mask[self.instance_idx[:, None], index_mask] = True
+        timeout_mask = timeout_mask[:, 1:]
+
+        delta = next_penalty - current_penalty
+        new_pred += timeout_mask * delta[:, None]
+        #print("new pred with all instances")
+        #print(new_pred)
+
+        #print("mean pred")
+        #print(new_pred.mean(axis=1))
+        #print(new_pred.mean(axis=1).shape)
+
+        # Max 450
+        similarity = self.batch_rmse(new_pred, self.par_2_scores)
+
+        return similarity.mean()
 
     def sub_optimal_acc_maxing(self, new_acc: float, prev_acc: float):
         return new_acc <= prev_acc

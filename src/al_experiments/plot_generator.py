@@ -489,14 +489,20 @@ class PlotGenerator:
         sim_2_5 = pd.read_pickle("./pickle/106119e9_rt_weigth_2_5_temp_None.pkl.gz", compression='gzip')
         sim_3_0 = pd.read_pickle("./pickle/106119e9_rt_weigth_3_0_temp_None.pkl.gz", compression='gzip')
 
+        # whole instace (static 5000s timeout)
+        whole = pd.read_pickle("./pickle/d03ff829_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+
         al_low_delta_rt = [0.0541, 0.1035]
         al_high_delta_acc = [0.9048, 0.9233]
 
         plt.figure(figsize=(10, 6))
 
-        #self.create_average_plot(linear_only_diff, ['choose_instances_random_true_acc'], "random choosing")
-        self.create_average_plot(linear_only_diff, ['determine_timeouts_true_acc'], "precalc true acc only min diff")
-        self.create_average_plot(linear_knapsack, ['determine_timeouts_true_acc'], "precalc true acc knapsack")
+        self.create_average_plot(whole, ['choose_instances_random_true_acc'], "random choosing whole instances")
+
+        self.create_average_plot(linear_only_diff, ['choose_instances_random_true_acc'], "random choosing min diff")
+        self.create_average_plot(linear_knapsack, ['choose_instances_random_true_acc'], "random choosing knapsack")
+        #self.create_average_plot(linear_only_diff, ['determine_timeouts_true_acc'], "precalc true acc only min diff")
+        #self.create_average_plot(linear_knapsack, ['determine_timeouts_true_acc'], "precalc true acc knapsack")
         #self.create_average_plot(linear_knapsack, ['determine_timeouts_diff'], "RMSQ knapsack")
         #self.create_average_plot(linear_only_diff, ['determine_timeouts_diff'], "only min RMSQ")
 #

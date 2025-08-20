@@ -35,7 +35,7 @@ plot_generator = None
 
 # experiment config
 experiment_configs = ExperimentConfig(
-    determine_thresholds=static_timeout_5000,
+    determine_thresholds=quantized_min_diff,
     select_idx=select_best_idx,
     temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
     rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
