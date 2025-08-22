@@ -20,7 +20,7 @@ def static_timeout_5000(
     )
 
 
-def quantized_min_diff(
+def quantized_double_punish(
         acc_calculator: Accuracy,
         solver_string: str,
         number_of_instances

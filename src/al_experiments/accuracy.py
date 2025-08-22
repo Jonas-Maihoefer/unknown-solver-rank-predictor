@@ -132,9 +132,6 @@ class Accuracy:
         #print(new_pred.mean(axis=1))
         #print(new_pred.mean(axis=1).shape)
 
-        # Max 450
-        similarity = self.batch_rmse(new_pred, self.par_2_scores)
-
         #print("similarity")
         #print(similarity[remaining_mask])
 
@@ -145,7 +142,7 @@ class Accuracy:
         #print("total_added_runtime")
         #print(total_added_runtime[remaining_mask])
 
-        score = self.scoring_fn(similarity, total_added_runtime, self.rt_weight)
+        score = self.scoring_fn(new_pred, self.par_2_scores, total_added_runtime, self.rt_weight)
 
         #print("score")
         #print(score[remaining_mask])
@@ -257,7 +254,9 @@ class Accuracy:
         #print(new_pred.mean(axis=1))
         #print(new_pred.mean(axis=1).shape)
 
-        similarity = self.batch_rmse(new_pred, self.par_2_scores)
+        # TODO: the next 3 lines get outsourced linke in _double_punish
+
+        similarity = batch_rmse(new_pred, self.par_2_scores)
         #print("similarity")
         #print(similarity)
         #print(similarity.shape)
@@ -390,70 +389,6 @@ class Accuracy:
         e = np.sqrt((residuals**2).mean())
 
         return m, c, e
-
-    def batch_rmse(self, X: np.ndarray, y: np.ndarray) -> np.ndarray:
-        """
-        For each row X[i,:], fit y ~ m*X[i,:] + c by least squares,
-        and return the RMSE of that fit.
-
-        Inputs:
-          X: shape (5355, 27)
-          y: shape (27,)
-        Returns:
-          e: shape (5355,)     -- e[i] is the RMSE for row i
-        """
-        # 1) compute per‑row slope and intercept
-        x_mean = X.mean(axis=1)            # (N,)
-        xx_mean = (X*X).mean(axis=1)        # (N,)
-        xy_mean = (X*y).mean(axis=1)        # (N,)
-        y_mean = y.mean()                  # scalar
-
-        cov_xy = xy_mean - x_mean*y_mean    # (N,)
-        var_x = xx_mean - x_mean**2       # (N,)
-        m = cov_xy / var_x                  # (N,)
-        c = y_mean - m*x_mean               # (N,)
-
-        # detect zero‐variance rows
-        zero_var = var_x == 0.0              # boolean mask shape (N,)
-        if np.any(zero_var):
-            # override those rows to horizontal fit
-            m[zero_var] = 0.0
-            c[zero_var] = y_mean
-
-
-        # 2) build residuals and compute MSE directly
-        #    `m[:,None]` broadcasts to shape (N,27)
-        preds = m[:, None] * X + c[:, None]   # (N,27)
-        residual = preds - y                     # (N,27)
-        mse = (residual*residual).mean(axis=1)  # (N,)
-
-        # 3) RMSE
-        e = np.sqrt(mse)
-
-        bad_indices = np.where(np.isneginf(e) | np.isinf(e) | np.isnan(e))[0]
-        for bad_idx in bad_indices:
-            print(f"found bad idx: {bad_idx}")
-            print("pred:")
-            print(X[bad_idx])
-            print("mean")
-            print(x_mean[bad_idx])
-            print("xx_mean")
-            print(xx_mean[bad_idx])
-            print("xy_mean")
-            print(xy_mean[bad_idx])
-            print("cov_xy")
-            print(cov_xy[bad_idx])
-            print("var_x")
-            print(var_x[bad_idx])
-            print("m")
-            print(m[bad_idx])
-            print("c")
-            print(c[bad_idx])
-            print("mse")
-            print(mse[bad_idx])
-            print("e")
-            print(e[bad_idx])
-        return e
 
     def sample_result(self, thresholds, pred, measurement, best_score=0):
         m, c, error = self.linear_fit(pred, self.par_2_scores)
@@ -597,7 +532,7 @@ class Accuracy:
         #print(new_pred.mean(axis=1).shape)
 
         # Max 450
-        similarity = self.batch_rmse(new_pred, self.par_2_scores)
+        similarity = batch_rmse(new_pred, self.par_2_scores)
 
         return similarity.mean()
 
@@ -1090,11 +1025,72 @@ def create_softmax_fn(temp):
     return select_idx_softmax
 
 
-def greedy_scoring(similarity, total_added_runtime, rt_weight):
-    return 1 / similarity
+def batch_rmse(X: np.ndarray, y: np.ndarray) -> np.ndarray:
+    """
+    For each row X[i,:], fit y ~ m*X[i,:] + c by least squares,
+    and return the RMSE of that fit.
+    Inputs:
+      X: shape (5355, 27)
+      y: shape (27,)
+    Returns:
+      e: shape (5355,)     -- e[i] is the RMSE for row i
+    """
+    # 1) compute per‑row slope and intercept
+    x_mean = X.mean(axis=1)            # (N,)
+    xx_mean = (X*X).mean(axis=1)        # (N,)
+    xy_mean = (X*y).mean(axis=1)        # (N,)
+    y_mean = y.mean()                  # scalar
+    cov_xy = xy_mean - x_mean*y_mean    # (N,)
+    var_x = xx_mean - x_mean**2       # (N,)
+    m = cov_xy / var_x                  # (N,)
+    c = y_mean - m*x_mean               # (N,)
+    # detect zero‐variance rows
+    zero_var = var_x == 0.0              # boolean mask shape (N,)
+    if np.any(zero_var):
+        # override those rows to horizontal fit
+        m[zero_var] = 0.0
+        c[zero_var] = y_mean
+    # 2) build residuals and compute MSE directly
+    #    `m[:,None]` broadcasts to shape (N,27)
+    preds = m[:, None] * X + c[:, None]   # (N,27)
+    residual = preds - y                     # (N,27)
+    mse = (residual*residual).mean(axis=1)  # (N,)
+    # 3) RMSE
+    e = np.sqrt(mse)
+    bad_indices = np.where(np.isneginf(e) | np.isinf(e) | np.isnan(e))[0]
+    for bad_idx in bad_indices:
+        print(f"found bad idx: {bad_idx}")
+        print("pred:")
+        print(X[bad_idx])
+        print("mean")
+        print(x_mean[bad_idx])
+        print("xx_mean")
+        print(xx_mean[bad_idx])
+        print("xy_mean")
+        print(xy_mean[bad_idx])
+        print("cov_xy")
+        print(cov_xy[bad_idx])
+        print("var_x")
+        print(var_x[bad_idx])
+        print("m")
+        print(m[bad_idx])
+        print("c")
+        print(c[bad_idx])
+        print("mse")
+        print(mse[bad_idx])
+        print("e")
+        print(e[bad_idx])
+    return e
 
 
-def knapsack_scoring(similarity, total_added_runtime, rt_weight):
-    score = 135000000 / np.float_power(similarity, rt_weight)
+def greedy_rmse(new_pred, par_2_scores, total_added_runtime, rt_weight):
+    rmse = batch_rmse(new_pred, par_2_scores) 
+    return 1 / rmse
+
+
+def knapsack_rmse(new_pred, par_2_scores, total_added_runtime, rt_weight):
+    # Max 450
+    rmse = batch_rmse(new_pred, par_2_scores)
+    score = 135000000 / np.float_power(rmse, rt_weight)
     profitability_index = score / total_added_runtime  # similarity + self.rt_weight * total_added_runtime
     return profitability_index
