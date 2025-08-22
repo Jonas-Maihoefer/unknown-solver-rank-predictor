@@ -492,7 +492,8 @@ class PlotGenerator:
         # whole instace (static 5000s timeout)
         whole = pd.read_pickle("./pickle/d03ff829_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
 
-        stability = pd.read_pickle("./pickle/a3b9dcbc_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        stability_knap = pd.read_pickle("./pickle/a3b9dcbc_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        stability = pd.read_pickle("./pickle/39bbdecb_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
 
 
 
@@ -501,7 +502,15 @@ class PlotGenerator:
 
         plt.figure(figsize=(10, 6))
 
-        self.create_average_plot(stability, ['determine_timeouts_stability'], "stability")
+        #self.create_average_plot(stability, ['determine_timeouts_stability'], "stability")
+        self.create_average_plot(stability, ['determine_timeouts_true_acc'], "min diff determine timeout true acc")
+        self.create_average_plot(stability, ['determine_timeouts_cross_acc'], "min diff determine timeout cross acc")
+
+
+        self.create_average_plot(stability_knap, ['determine_timeouts_true_acc'], "knap determine timeout true acc")
+        self.create_average_plot(stability_knap, ['determine_timeouts_cross_acc'], "knap determine timeout cross acc")
+
+        
         #self.create_average_plot(stability, ['determine_timeouts_diff'], "rmse")
 
         #self.create_average_plot(whole, ['choose_instances_random_true_acc'], "random choosing whole instances")
