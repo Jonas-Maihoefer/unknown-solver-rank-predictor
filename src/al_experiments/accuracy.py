@@ -37,6 +37,7 @@ class Accuracy:
             select_idx,
             solver_string,
             all_results,
+            scoring_fn,
             rt_weight: float = 0.0,
             with_remaining_mean: bool = False
     ):
@@ -60,6 +61,7 @@ class Accuracy:
         self.rt_weight = rt_weight
         self.with_remaining_mean = with_remaining_mean
         self.total_rt_removed_solver = total_rt_removed_solver
+        self.scoring_fn = scoring_fn
         self.n = 1
         self.used_runtime = 0
         self.pred = np.ascontiguousarray(
@@ -143,15 +145,13 @@ class Accuracy:
         #print("total_added_runtime")
         #print(total_added_runtime[remaining_mask])
 
-        score = 135000000 / np.float_power(similarity, self.rt_weight)
-
-        profitability_index = score / total_added_runtime  # similarity + self.rt_weight * total_added_runtime
+        score = self.scoring_fn(similarity, total_added_runtime, self.rt_weight)
 
         #print("score")
         #print(score[remaining_mask])
 
         # TODO: remove!
-        bad_indices = np.where(np.isneginf(profitability_index[remaining_mask]) | np.isnan(profitability_index[remaining_mask]))[0]
+        bad_indices = np.where(np.isneginf(score[remaining_mask]) | np.isnan(score[remaining_mask]))[0]
         if bad_indices.size > 0:
             for bad_idx in bad_indices:
                 bad_idx = self.instance_idx[remaining_mask][bad_idx]
@@ -174,7 +174,7 @@ class Accuracy:
             print("No more thresholds remaining")
             return thresholds, prev_max_acc, -1
 
-        best_idx = self.select_idx(profitability_index, remaining_mask, self.instance_idx)
+        best_idx = self.select_idx(score, remaining_mask, self.instance_idx)
 
         # update
         self.pred = new_pred[best_idx]
@@ -184,7 +184,7 @@ class Accuracy:
         if self.n % self.sample_result_after_iterations == 0:
             runtime_frac, cross_acc = self.sample_result(
                 thresholds, self.pred,
-                "determine_timeouts", profitability_index[best_idx]
+                "determine_timeouts", score[best_idx]
             )
             if runtime_frac > self.break_after_runtime_fraction:
                 return thresholds, prev_max_acc, -1
@@ -1088,3 +1088,13 @@ def create_softmax_fn(temp):
 
         return chosen_idx
     return select_idx_softmax
+
+
+def greedy_scoring(similarity, total_added_runtime, rt_weight):
+    return 1 / similarity
+
+
+def knapsack_scoring(similarity, total_added_runtime, rt_weight):
+    score = 135000000 / np.float_power(similarity, rt_weight)
+    profitability_index = score / total_added_runtime  # similarity + self.rt_weight * total_added_runtime
+    return profitability_index

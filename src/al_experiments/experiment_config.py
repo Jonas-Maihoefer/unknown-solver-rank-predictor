@@ -4,6 +4,7 @@ class ExperimentConfig:
             self,
             determine_thresholds,
             select_idx,
+            scoring_fn,
             temperatures,
             rt_weights,
             instance_selections,
@@ -11,6 +12,7 @@ class ExperimentConfig:
     ):
         self.determine_thresholds = determine_thresholds
         self.select_idx = select_idx
+        self.scoring_fn = scoring_fn
         self.temperatures = temperatures
         self.rt_weights = rt_weights
         self.instance_selections = instance_selections
