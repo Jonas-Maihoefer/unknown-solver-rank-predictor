@@ -143,9 +143,9 @@ class Accuracy:
         #print("total_added_runtime")
         #print(total_added_runtime[remaining_mask])
 
-        score = 1 / similarity  # 135000000 / np.float_power(similarity, self.rt_weight)
+        score = 135000000 / np.float_power(similarity, self.rt_weight)
 
-        profitability_index = score  # / total_added_runtime  # similarity + self.rt_weight * total_added_runtime
+        profitability_index = score / total_added_runtime  # similarity + self.rt_weight * total_added_runtime
 
         #print("score")
         #print(score[remaining_mask])
@@ -188,8 +188,8 @@ class Accuracy:
             )
             if runtime_frac > self.break_after_runtime_fraction:
                 return thresholds, prev_max_acc, -1
-            #if runtime_frac > 0.15 and cross_acc >= 1.0:
-                #return thresholds, prev_max_acc, -1
+            if runtime_frac > 0.15 and cross_acc >= 1.0:
+                return thresholds, prev_max_acc, -1
         self.n += 1
         return thresholds, prev_max_acc, prev_min_diff
 

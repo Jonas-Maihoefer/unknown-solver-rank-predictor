@@ -503,17 +503,19 @@ class PlotGenerator:
         plt.figure(figsize=(10, 6))
 
         #self.create_average_plot(stability, ['determine_timeouts_stability'], "stability")
-        self.create_average_plot(stability, ['determine_timeouts_true_acc'], "min diff determine timeout true acc")
-        self.create_average_plot(stability, ['determine_timeouts_cross_acc'], "min diff determine timeout cross acc")
+        #self.create_average_plot(stability, ['determine_timeouts_true_acc'], "min diff determine timeout true acc")
+        #self.create_average_plot(stability, ['determine_timeouts_cross_acc'], "min diff determine timeout cross acc")
 
 
-        self.create_average_plot(stability_knap, ['determine_timeouts_true_acc'], "knap determine timeout true acc")
-        self.create_average_plot(stability_knap, ['determine_timeouts_cross_acc'], "knap determine timeout cross acc")
+        #self.create_average_plot(stability_knap, ['determine_timeouts_true_acc'], "knap determine timeout true acc")
+        #self.create_average_plot(stability_knap, ['determine_timeouts_cross_acc'], "knap determine timeout cross acc")
 
         
         #self.create_average_plot(stability, ['determine_timeouts_diff'], "rmse")
 
-        #self.create_average_plot(whole, ['choose_instances_random_true_acc'], "random choosing whole instances")
+        self.create_average_plot(whole, ['choose_instances_random_true_acc'], "random choosing whole instances")
+        self.create_average_plot(stability_knap, ['choose_instances_random_true_acc'], "random choosing knap")
+
 
         #self.create_average_plot(linear_only_diff, ['choose_instances_random_true_acc'], "random choosing min diff")
         #self.create_average_plot(linear_knapsack, ['choose_instances_random_true_acc'], "random choosing knapsack")
