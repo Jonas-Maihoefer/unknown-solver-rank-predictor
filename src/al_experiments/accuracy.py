@@ -38,6 +38,7 @@ class Accuracy:
             solver_string,
             all_results,
             scoring_fn,
+            thresh_breaking_condition,
             rt_weight: float = 0.0,
             with_remaining_mean: bool = False
     ):
@@ -62,6 +63,7 @@ class Accuracy:
         self.with_remaining_mean = with_remaining_mean
         self.total_rt_removed_solver = total_rt_removed_solver
         self.scoring_fn = scoring_fn
+        self.thresh_breaking_condition = thresh_breaking_condition
         self.n = 1
         self.used_runtime = 0
         self.pred = np.ascontiguousarray(
@@ -185,7 +187,7 @@ class Accuracy:
             )
             if runtime_frac > self.break_after_runtime_fraction:
                 return thresholds, prev_max_acc, -1
-            if runtime_frac > 0.15 and cross_acc >= 1.0:
+            if self.thresh_breaking_condition(runtime_frac, cross_acc):
                 return thresholds, prev_max_acc, -1
         self.n += 1
         return thresholds, prev_max_acc, prev_min_diff
@@ -1094,3 +1096,9 @@ def knapsack_rmse(new_pred, par_2_scores, total_added_runtime, rt_weight):
     score = 135000000 / np.float_power(rmse, rt_weight)
     profitability_index = score / total_added_runtime  # similarity + self.rt_weight * total_added_runtime
     return profitability_index
+
+
+def create_cross_acc_breaking(break_at):
+    def cross_acc_breaking(runtime_frac, cross_acc):
+        return cross_acc >= break_at
+    return cross_acc_breaking
