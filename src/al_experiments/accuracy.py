@@ -399,7 +399,7 @@ class Accuracy:
 
         cross_acc = self.calc_cross_acc_2(self.par_2_scores, pred)
 
-        stability = self.calc_stability(thresholds, pred, error)
+        rmse_stability, cross_acc_stability  = self.calc_stability(thresholds, pred, error)
 
         new_pred = 0
         used_rt_removed_solver = 0
@@ -449,8 +449,9 @@ class Accuracy:
         print(f"actual key is {self.pred_vec_to_key(all_par_2_scores)}")
         print(f"pred key is   {self.pred_vec_to_key(all_pred)}")
         print(f"best rmse is {error}")
-        print(f"stability of this is {stability}")
+        print(f"stability of this is {rmse_stability}")
         print(f"cross acc is {cross_acc}")
+        print(f"stability of this is {cross_acc_stability}")
         print(f"with this, the new total is {self.used_runtime} giving a fraction of {runtime_frac}")
         print(f"true acc is {true_acc}")
         self.all_results.append({
@@ -474,8 +475,14 @@ class Accuracy:
         self.all_results.append({
                 "solver": self.solver_string,
                 "runtime_fraction": runtime_frac,
-                "measurement": f"{measurement}_stability",
-                "value": stability
+                "measurement": f"{measurement}_rmse_stability",
+                "value": rmse_stability
+        })
+        self.all_results.append({
+                "solver": self.solver_string,
+                "runtime_fraction": runtime_frac,
+                "measurement": f"{measurement}_cross_acc_stability",
+                "value": cross_acc_stability
         })
         return runtime_frac, cross_acc
 
@@ -535,8 +542,9 @@ class Accuracy:
 
         # Max 450
         similarity = batch_rmse(new_pred, self.par_2_scores)
+        cross_acc = calc_cross_acc_batch(self.par_2_scores, new_pred)
 
-        return similarity.mean()
+        return similarity.mean(), cross_acc.mean()
 
     def sub_optimal_acc_maxing(self, new_acc: float, prev_acc: float):
         return new_acc <= prev_acc
@@ -1085,6 +1093,46 @@ def batch_rmse(X: np.ndarray, y: np.ndarray) -> np.ndarray:
     return e
 
 
+def calc_cross_acc_batch(actu: np.ndarray, pred: np.ndarray) -> np.ndarray:
+    """
+    Compute "cross_acc" for each row of `pred` against `actu`.
+
+    Parameters
+    ----------
+    actu : (N,) array_like
+        Ground-truth values.
+    pred : (M, N) array_like
+        Each row is a prediction vector to compare with `actu`.
+
+    Returns
+    -------
+    (M,) ndarray of float
+        For each row m of `pred`, the fraction of concordant ordered pairs
+        relative to `actu`: (# {(i,j): (pred_m[i]-pred_m[j]) and (actu[i]-actu[j]) have same nonzero sign})
+        divided by N*(N-1). Ties count as non-concordant (same as your original function).
+    """
+    #actu = np.asarray(actu)
+    #pred = np.asarray(pred)
+
+    n = actu.size
+
+    # Sign matrix for ground truth pairwise differences: shape (N, N)
+    # Using int8 saves memory vs float.
+    da_sign = np.sign(np.subtract.outer(actu, actu)).astype(np.int8)
+
+    # Sign cubes for each prediction row: shape (M, N, N)
+    dp_sign = np.sign(pred[:, :, None] - pred[:, None, :]).astype(np.int8)
+
+    # Concordant where signs match and are nonzero
+    mask = (dp_sign == da_sign) & (dp_sign != 0)
+
+    # Count concordant pairs per row (exclude diagonal automatically, as sign=0 there)
+    concordant = np.count_nonzero(mask, axis=(1, 2))
+
+    denom = n * (n - 1)
+    return concordant / denom
+
+
 def greedy_rmse(new_pred, par_2_scores, total_added_runtime, rt_weight):
     rmse = batch_rmse(new_pred, par_2_scores) 
     return 1 / rmse
@@ -1095,6 +1143,17 @@ def knapsack_rmse(new_pred, par_2_scores, total_added_runtime, rt_weight):
     rmse = batch_rmse(new_pred, par_2_scores)
     score = 135000000 / np.float_power(rmse, rt_weight)
     profitability_index = score / total_added_runtime  # similarity + self.rt_weight * total_added_runtime
+    return profitability_index
+
+
+def greedy_cross_acc(new_pred, par_2_scores, total_added_runtime, rt_weight):
+    return calc_cross_acc_batch(par_2_scores, new_pred)
+
+
+def knapsack_cross_acc(new_pred, par_2_scores, total_added_runtime, rt_weight):
+    # Max 450
+    cross_acc = calc_cross_acc_batch(par_2_scores, new_pred)
+    profitability_index = cross_acc / total_added_runtime  # similarity + self.rt_weight * total_added_runtime
     return profitability_index
 
 

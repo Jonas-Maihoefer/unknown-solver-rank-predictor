@@ -492,8 +492,15 @@ class PlotGenerator:
         # whole instace (static 5000s timeout)
         whole = pd.read_pickle("./pickle/d03ff829_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
 
-        stability_knap = pd.read_pickle("./pickle/a3b9dcbc_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        stability = pd.read_pickle("./pickle/39bbdecb_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        
+        knapsack_break_after_0_96 = pd.read_pickle("./pickle/0a083288_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_break_after_0_97 = pd.read_pickle("./pickle/341dfcaa_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_break_after_0_98 = pd.read_pickle("./pickle/939f33b9_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_break_after_0_99 = pd.read_pickle("./pickle/b5ee1717_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_break_after_1_00 = pd.read_pickle("./pickle/96285047_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+
+        knapsack_dont_break = pd.read_pickle("./pickle/2eaaeefa_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        min_rmse_dont_break = pd.read_pickle("./pickle/4d013e7e_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
 
 
 
@@ -502,19 +509,29 @@ class PlotGenerator:
 
         plt.figure(figsize=(10, 6))
 
-        #self.create_average_plot(stability, ['determine_timeouts_stability'], "stability")
-        #self.create_average_plot(stability, ['determine_timeouts_true_acc'], "min diff determine timeout true acc")
-        #self.create_average_plot(stability, ['determine_timeouts_cross_acc'], "min diff determine timeout cross acc")
 
 
-        #self.create_average_plot(stability_knap, ['determine_timeouts_true_acc'], "knap determine timeout true acc")
-        #self.create_average_plot(stability_knap, ['determine_timeouts_cross_acc'], "knap determine timeout cross acc")
+        #self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_stability'], "stability")
+        #self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_true_acc'], "min diff determine timeout true acc")
+        #self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_cross_acc'], "min diff determine timeout cross acc")
 
+
+        #self.create_average_plot(knapsack_dont_break, ['determine_timeouts_true_acc'], "knap determine timeout true acc")
+        #self.create_average_plot(knapsack_dont_break, ['determine_timeouts_cross_acc'], "knap determine timeout cross acc")
         
-        #self.create_average_plot(stability, ['determine_timeouts_diff'], "rmse")
+        self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_diff'], "knap determine timeout diff")
+        self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_stability'], "knap determine timeout stability")
+        
+        
+        #self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_diff'], "rmse")
 
-        self.create_average_plot(whole, ['choose_instances_random_true_acc'], "random choosing whole instances")
-        self.create_average_plot(stability_knap, ['choose_instances_random_true_acc'], "random choosing knap")
+        #self.create_average_plot(whole, ['choose_instances_random_true_acc'], "random choosing whole instances")
+        #self.create_average_plot(knapsack_dont_break, ['choose_instances_random_true_acc'], "random choosing knap")
+        #self.create_average_plot(knapsack_break_after_1_00, ['choose_instances_random_true_acc'], "break after 1.00")
+        #self.create_average_plot(knapsack_break_after_0_99, ['choose_instances_random_true_acc'], "break after 0.99")
+        #self.create_average_plot(knapsack_break_after_0_98, ['choose_instances_random_true_acc'], "break after 0.98")
+        #self.create_average_plot(knapsack_break_after_0_97, ['choose_instances_random_true_acc'], "break after 0.97")
+        #self.create_average_plot(knapsack_break_after_0_96, ['choose_instances_random_true_acc'], "break after 0.96")
 
 
         #self.create_average_plot(linear_only_diff, ['choose_instances_random_true_acc'], "random choosing min diff")
