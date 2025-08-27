@@ -18,9 +18,9 @@ class PlotGenerator:
 
     def plot_avg_results(self, df: pd.DataFrame, num_samples):
         # filter
-        wanted_measurements = ["determine_timeouts_true_acc", "determine_timeouts_cross_acc"]
+        wanted_measurements = ["determine_timeouts_true_acc_v2", "determine_timeouts_cross_acc"]
         for sel_fn in self.exp_config.instance_selections:
-            wanted_measurements.append(f"{sel_fn.__name__}_true_acc")
+            wanted_measurements.append(f"{sel_fn.__name__}_true_acc_v2")
         # Now plot:
 
         # 1) define grid
@@ -130,9 +130,9 @@ class PlotGenerator:
         # filtering
         wanted_solver = [solver_string]
         df_sub = df[df["solver"].isin(wanted_solver)]
-        wanted_measurements = ["determine_timeouts_true_acc", "determine_timeouts_cross_acc"]
+        wanted_measurements = ["determine_timeouts_true_acc_v2", "determine_timeouts_cross_acc"]
         for sel_fn in self.exp_config.instance_selections:
-            wanted_measurements.append(f"{sel_fn.__name__}_true_acc")
+            wanted_measurements.append(f"{sel_fn.__name__}_true_acc_v2")
         # Now plot:
         plt.figure(figsize=(8, 6))
         sns.lineplot(
@@ -247,7 +247,7 @@ class PlotGenerator:
                        ["solver", "runtime_fraction", "value"]] \
                   .rename(columns={"value": "cross_acc"})
 
-        true = df.loc[(df["measurement"] == f"{wanted_measurement}_true_acc") & df["value"].notna(),
+        true = df.loc[(df["measurement"] == f"{wanted_measurement}_true_acc_v2") & df["value"].notna(),
                       ["solver", "runtime_fraction", "value"]] \
                  .rename(columns={"value": "true_acc"})
 
@@ -585,15 +585,17 @@ class PlotGenerator:
         min_rmse_dont_break = pd.read_pickle("./pickle/4d013e7e_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
         min_cross_acc_dont_break = pd.read_pickle("./pickle/ec8f33d8_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
 
+        delta_0_4 = pd.read_pickle("./pickle/e92d3806_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+
 
         al_low_delta_rt = [0.0541, 0.1035]
         al_high_delta_acc = [0.9048, 0.9233]
 
         plt.figure(figsize=(10, 6))
 
-        self.print_lowest_rf_cross_acc(knapsack_dont_break, 'choose_instances_random', 0.95)
-        self.create_average_plot(knapsack_dont_break, ['choose_instances_random_true_acc'], "solver plot true acc")
-        self.create_average_plot(knapsack_dont_break, ['choose_instances_random_cross_acc'], "solver plot cross acc")
+        self.print_lowest_rf_cross_acc(delta_0_4, 'choose_instances_random', 0.95)
+        self.create_average_plot(delta_0_4, ['choose_instances_random_true_acc_v2'], "avg plot true acc")
+        self.create_average_plot(delta_0_4, ['choose_instances_random_cross_acc'], "avg plot cross acc")
 
         #self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_stability'], "stability")
         #self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_true_acc'], "min diff determine timeout true acc")
