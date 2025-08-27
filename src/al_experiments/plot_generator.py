@@ -79,7 +79,7 @@ class PlotGenerator:
     def create_average_plot(self, df: pd.DataFrame, wanted_measurements, legend_label, num_samples=500):
         # 0) filtering
         df = df[df['measurement'].isin(wanted_measurements)]
-        
+
         # 1) define grid
         x_min, x_max = df['runtime_fraction'].min(), df['runtime_fraction'].max()
         x_grid = np.linspace(x_min, x_max, num_samples)
@@ -208,6 +208,88 @@ class PlotGenerator:
         ax1.set_xlabel("runtime fraction")
         fig.tight_layout() """
 
+    def create_solver_plot(self, df: pd.DataFrame, wanted_measurements, legend_label, solver_name: str):
+        """
+        Plot the raw runtime_fraction-value curves for a given solver and the given measurements.
+        No interpolation, no averaging across solvers.
+        """
+        # 0) filtering
+        sub = df[
+            (df['solver'] == solver_name) &
+            (df['measurement'].isin(wanted_measurements))
+        ].copy()
+
+        if sub.empty:
+            print(f"No data found for solver {solver_name} with measurements {wanted_measurements}")
+            return
+
+        # 1) sort values for nicer lines
+        sub = sub.sort_values(by=['measurement', 'runtime_fraction'])
+
+        # 2) plot raw curves
+        sns.lineplot(
+            data=sub,
+            x='runtime_fraction',
+            y='value',
+            hue='measurement',   # separate lines for true_acc / cross_acc
+            marker="o",          # emphasize actual sample points
+            legend=True
+        )
+
+    def print_lowest_rf_cross_acc(self, df: pd.DataFrame, wanted_measurement, threshold: float = 0.9) -> pd.DataFrame:
+        """
+        For each solver, find the smallest runtime_fraction where cross_acc > threshold.
+        Also print the corresponding true_acc at that runtime_fraction.
+        Additionally, compute and print averages and std deviations across solvers.
+        """
+        # Keep only cross_acc rows
+        cross = df.loc[(df["measurement"] == f"{wanted_measurement}_cross_acc") & df["value"].notna(),
+                       ["solver", "runtime_fraction", "value"]] \
+                  .rename(columns={"value": "cross_acc"})
+
+        true = df.loc[(df["measurement"] == f"{wanted_measurement}_true_acc") & df["value"].notna(),
+                      ["solver", "runtime_fraction", "value"]] \
+                 .rename(columns={"value": "true_acc"})
+
+        if cross.empty:
+            print("No cross_acc rows found.")
+            return pd.DataFrame(columns=["solver", "min_runtime_fraction", "cross_acc", "true_acc"])
+
+        # Find lowest runtime_fraction where cross_acc > threshold
+        hits = (
+            cross.loc[cross["cross_acc"] > threshold]
+                 .groupby("solver", as_index=False)["runtime_fraction"].min()
+                 .rename(columns={"runtime_fraction": "min_runtime_fraction"})
+        )
+
+        # Merge to get the corresponding cross_acc and true_acc at that runtime_fraction
+        out = (
+            hits.merge(cross, left_on=["solver", "min_runtime_fraction"],
+                       right_on=["solver", "runtime_fraction"], how="left")
+                .drop(columns=["runtime_fraction"])
+                .merge(true, left_on=["solver", "min_runtime_fraction"],
+                       right_on=["solver", "runtime_fraction"], how="left")
+                .drop(columns=["runtime_fraction"])
+        )
+
+        # Print results solver by solver
+        for _, row in out.iterrows():
+            print(f"{row['solver']}: "
+                  f"lowest rf = {row['min_runtime_fraction']:.4f}, "
+                  f"cross_acc = {row['cross_acc']:.4f}, "
+                  f"true_acc = {row['true_acc']:.4f}")
+
+        # ---- Calculate averages and std devs ----
+        avg_rf = out["min_runtime_fraction"].mean()
+        std_rf = out["min_runtime_fraction"].std(ddof=1)  # sample std
+        avg_true = out["true_acc"].mean()
+        std_true = out["true_acc"].std(ddof=1)
+
+        print("\n=== Summary over solvers ===")
+        print(f"Runtime_fraction: mean = {avg_rf:.4f}, std = {std_rf:.4f}")
+        print(f"True_acc        : mean = {avg_true:.4f}, std = {std_true:.4f}")
+
+        return out
 
     def create_progress_plot(self):
         random_baseline_whole_instances_runtime_frac_2 = np.array([0.000592, 0.002594, 0.004597, 0.006600, 0.008603, 0.010606, 0.012608, 0.014611, 0.016614, 0.018617, 0.020620, 0.022623, 0.024625, 0.026628, 0.028631, 0.030634, 0.032637, 0.034639, 0.036642, 0.038645, 0.040648, 0.042651, 0.044654, 0.046656, 0.048659, 0.050662, 0.052665, 0.054668, 0.056671, 0.058673, 0.060676, 0.062679, 0.064682, 0.066685, 0.068687, 0.070690, 0.072693, 0.074696, 0.076699, 0.078702, 0.080704, 0.082707, 0.084710, 0.086713, 0.088716, 0.090719, 0.092721, 0.094724, 0.096727, 0.098730, 0.100733, 0.102735, 0.104738, 0.106741, 0.108744, 0.110747, 0.112750, 0.114752, 0.116755, 0.118758, 0.120761, 0.122764, 0.124767, 0.126769, 0.128772, 0.130775, 0.132778, 0.134781, 0.136783, 0.138786, 0.140789, 0.142792, 0.144795, 0.146798, 0.148800, 0.150803, 0.152806, 0.154809, 0.156812, 0.158814, 0.160817, 0.162820, 0.164823, 0.166826, 0.168829, 0.170831, 0.172834, 0.174837, 0.176840, 0.178843, 0.180846, 0.182848, 0.184851, 0.186854, 0.188857, 0.190860, 0.192862, 0.194865, 0.196868, 0.198871, 0.200874, 0.202877, 0.204879, 0.206882, 0.208885, 0.210888, 0.212891, 0.214894, 0.216896, 0.218899, 0.220902, 0.222905, 0.224908, 0.226910, 0.228913, 0.230916, 0.232919, 0.234922, 0.236925, 0.238927, 0.240930, 0.242933, 0.244936, 0.246939, 0.248941, 0.250944, 0.252947, 0.254950, 0.256953, 0.258956, 0.260958, 0.262961, 0.264964, 0.266967, 0.268970, 0.270973, 0.272975, 0.274978, 0.276981, 0.278984, 0.280987, 0.282989, 0.284992, 0.286995, 0.288998, 0.291001, 0.293004, 0.295006, 0.297009, 0.299012, 0.301015, 0.303018, 0.305021, 0.307023, 0.309026, 0.311029, 0.313032, 0.315035, 0.317037, 0.319040, 0.321043, 0.323046, 0.325049, 0.327052, 0.329054, 0.331057, 0.333060, 0.335063, 0.337066, 0.339069, 0.341071, 0.343074, 0.345077, 0.347080, 0.349083, 0.351085, 0.353088, 0.355091, 0.357094, 0.359097, 0.361100, 0.363102, 0.365105, 0.367108, 0.369111, 0.371114, 0.373116, 0.375119, 0.377122, 0.379125, 0.381128, 0.383131, 0.385133, 0.387136, 0.389139, 0.391142, 0.393145, 0.395148, 0.397150, 0.399153, 0.401156, 0.403159, 0.405162, 0.407164, 0.409167, 0.411170, 0.413173, 0.415176, 0.417179, 0.419181, 0.421184, 0.423187, 0.425190, 0.427193, 0.429196, 0.431198, 0.433201, 0.435204, 0.437207, 0.439210, 0.441212, 0.443215, 0.445218, 0.447221, 0.449224, 0.451227, 0.453229, 0.455232, 0.457235, 0.459238, 0.461241, 0.463243, 0.465246, 0.467249, 0.469252, 0.471255, 0.473258, 0.475260, 0.477263, 0.479266, 0.481269, 0.483272, 0.485275, 0.487277, 0.489280, 0.491283, 0.493286, 0.495289, 0.497291, 0.499294, 0.501297, 0.503300, 0.505303, 0.507306, 0.509308, 0.511311, 0.513314, 0.515317, 0.517320, 0.519323, 0.521325, 0.523328, 0.525331, 0.527334, 0.529337, 0.531339, 0.533342, 0.535345, 0.537348, 0.539351, 0.541354, 0.543356, 0.545359, 0.547362, 0.549365, 0.551368, 0.553371, 0.555373, 0.557376, 0.559379, 0.561382, 0.563385, 0.565387, 0.567390, 0.569393, 0.571396, 0.573399, 0.575402, 0.577404, 0.579407, 0.581410, 0.583413, 0.585416, 0.587418, 0.589421, 0.591424, 0.593427, 0.595430, 0.597433, 0.599435, 0.601438, 0.603441, 0.605444, 0.607447, 0.609450, 0.611452, 0.613455, 0.615458, 0.617461, 0.619464, 0.621466, 0.623469, 0.625472, 0.627475, 0.629478, 0.631481, 0.633483, 0.635486, 0.637489, 0.639492, 0.641495, 0.643498, 0.645500, 0.647503, 0.649506, 0.651509, 0.653512, 0.655514, 0.657517, 0.659520, 0.661523, 0.663526, 0.665529, 0.667531, 0.669534, 0.671537, 0.673540, 0.675543, 0.677545, 0.679548, 0.681551, 0.683554, 0.685557, 0.687560, 0.689562, 0.691565, 0.693568, 0.695571, 0.697574, 0.699577, 0.701579, 0.703582, 0.705585, 0.707588, 0.709591, 0.711593, 0.713596, 0.715599, 0.717602, 0.719605, 0.721608, 0.723610, 0.725613, 0.727616, 0.729619, 0.731622, 0.733625, 0.735627, 0.737630, 0.739633, 0.741636, 0.743639, 0.745641, 0.747644, 0.749647, 0.751650, 0.753653, 0.755656, 0.757658, 0.759661, 0.761664, 0.763667, 0.765670, 0.767673, 0.769675, 0.771678, 0.773681, 0.775684, 0.777687, 0.779689, 0.781692, 0.783695, 0.785698, 0.787701, 0.789704, 0.791706, 0.793709, 0.795712, 0.797715, 0.799718, 0.801720, 0.803723, 0.805726, 0.807729, 0.809732, 0.811735, 0.813737, 0.815740, 0.817743, 0.819746, 0.821749, 0.823752, 0.825754, 0.827757, 0.829760, 0.831763, 0.833766, 0.835768, 0.837771, 0.839774, 0.841777, 0.843780, 0.845783, 0.847785, 0.849788, 0.851791, 0.853794, 0.855797, 0.857800, 0.859802, 0.861805, 0.863808, 0.865811, 0.867814, 0.869816, 0.871819, 0.873822, 0.875825, 0.877828, 0.879831, 0.881833, 0.883836, 0.885839, 0.887842, 0.889845, 0.891847, 0.893850, 0.895853, 0.897856, 0.899859, 0.901862, 0.903864, 0.905867, 0.907870, 0.909873, 0.911876, 0.913879, 0.915881, 0.917884, 0.919887, 0.921890, 0.923893, 0.925895, 0.927898, 0.929901, 0.931904, 0.933907, 0.935910, 0.937912, 0.939915, 0.941918, 0.943921, 0.945924, 0.947927, 0.949929, 0.951932, 0.953935, 0.955938, 0.957941, 0.959943, 0.961946, 0.963949, 0.965952, 0.967955, 0.969958, 0.971960, 0.973963, 0.975966, 0.977969, 0.979972, 0.981974, 0.983977, 0.985980, 0.987983, 0.989986, 0.991989, 0.993991, 0.995994, 0.997997, 1.000000]) 
@@ -501,7 +583,7 @@ class PlotGenerator:
 
         knapsack_dont_break = pd.read_pickle("./pickle/2eaaeefa_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
         min_rmse_dont_break = pd.read_pickle("./pickle/4d013e7e_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-
+        min_cross_acc_dont_break = pd.read_pickle("./pickle/ec8f33d8_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
 
 
         al_low_delta_rt = [0.0541, 0.1035]
@@ -509,7 +591,9 @@ class PlotGenerator:
 
         plt.figure(figsize=(10, 6))
 
-
+        self.print_lowest_rf_cross_acc(knapsack_dont_break, 'choose_instances_random', 0.95)
+        self.create_average_plot(knapsack_dont_break, ['choose_instances_random_true_acc'], "solver plot true acc")
+        self.create_average_plot(knapsack_dont_break, ['choose_instances_random_cross_acc'], "solver plot cross acc")
 
         #self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_stability'], "stability")
         #self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_true_acc'], "min diff determine timeout true acc")
@@ -519,18 +603,26 @@ class PlotGenerator:
         #self.create_average_plot(knapsack_dont_break, ['determine_timeouts_true_acc'], "knap determine timeout true acc")
         #self.create_average_plot(knapsack_dont_break, ['determine_timeouts_cross_acc'], "knap determine timeout cross acc")
         
-        self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_diff'], "knap determine timeout diff")
-        self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_stability'], "knap determine timeout stability")
+        #self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_diff'], "knap determine timeout diff")
+        #self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_stability'], "min rmse determine timeout stability")
+        #self.create_average_plot(min_cross_acc_dont_break, ['determine_timeouts_rmse_stability'], "cross acc determine timeout stability")
+        #self.create_average_plot(min_cross_acc_dont_break, ['choose_instances_random_true_acc'], "true acc")
+        #self.create_average_plot(min_cross_acc_dont_break, ['choose_instances_random_cross_acc'], "cross acc")
         
         
-        #self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_diff'], "rmse")
+        #self.create_average_plot(min_rmse_dont_break, ['choose_instances_random_true_acc'], "rmse true acc")
+        #self.create_average_plot(min_rmse_dont_break, ['choose_instances_random_cross_acc'], "rmse cross acc")
+
+
 
         #self.create_average_plot(whole, ['choose_instances_random_true_acc'], "random choosing whole instances")
         #self.create_average_plot(knapsack_dont_break, ['choose_instances_random_true_acc'], "random choosing knap")
         #self.create_average_plot(knapsack_break_after_1_00, ['choose_instances_random_true_acc'], "break after 1.00")
         #self.create_average_plot(knapsack_break_after_0_99, ['choose_instances_random_true_acc'], "break after 0.99")
         #self.create_average_plot(knapsack_break_after_0_98, ['choose_instances_random_true_acc'], "break after 0.98")
-        #self.create_average_plot(knapsack_break_after_0_97, ['choose_instances_random_true_acc'], "break after 0.97")
+        #self.create_average_plot(knapsack_break_after_0_97, ['choose_instances_random_true_acc'], "break after 0.97 true acc")
+        #self.create_average_plot(knapsack_break_after_0_97, ['choose_instances_random_cross_acc'], "break after 0.97 cross acc")
+        
         #self.create_average_plot(knapsack_break_after_0_96, ['choose_instances_random_true_acc'], "break after 0.96")
 
 

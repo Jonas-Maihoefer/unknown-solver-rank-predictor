@@ -72,3 +72,14 @@ def quantized_mean_punish(
     print(f"took {(time.time_ns() - start) / 1_000_000_000}s")
 
     return thresholds
+
+
+def create_instance_wise(delta):
+    def instance_wise(
+            acc_calculator: Accuracy,
+            solver_string: str,
+            number_of_instances
+    ):
+        return acc_calculator.instance_wise_timeout(delta)
+
+    return instance_wise

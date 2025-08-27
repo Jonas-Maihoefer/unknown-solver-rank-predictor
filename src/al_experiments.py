@@ -4,13 +4,13 @@ import re
 import random
 import pickle
 import subprocess
-from al_experiments.determine_timeout import quantized_mean_punish, quantized_double_punish, static_timeout_5000
+from al_experiments.determine_timeout import create_instance_wise, quantized_mean_punish, quantized_double_punish, static_timeout_5000
 from al_experiments.experiment_config import ExperimentConfig
 from al_experiments.accuracy import Accuracy, create_cross_acc_breaking, create_softmax_fn, greedy_cross_acc, greedy_rmse, knapsack_rmse, select_best_idx
 from scipy.interpolate import interp1d
 
 from al_experiments.plot_generator import PlotGenerator
-from al_experiments.instance_selector import InstanceSelector, choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, lowest_variances_per_rt, lowest_rt_selection
+from al_experiments.instance_selector import InstanceSelector, choose_instances_random, highest_variance, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, lowest_variances_per_rt, lowest_rt_selection
 from al_experiments.constants import Constants
 
 useCupy = os.getenv("USECUDA", "0") == "1"
@@ -35,13 +35,13 @@ plot_generator = None
 
 # experiment config
 experiment_configs = ExperimentConfig(
-    determine_thresholds=quantized_double_punish,
+    determine_thresholds=create_instance_wise(0.4),  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
     select_idx=select_best_idx,
     scoring_fn=greedy_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
     thresh_breaking_condition=create_cross_acc_breaking(1.1),
     temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
     rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
-    instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, lowest_variances_per_rt, lowest_rt_selection],
+    instance_selections=[choose_instances_random, variance_based_selection_1],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
     individual_solver_plots=True
 )
 
@@ -326,8 +326,6 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
         for threshold in thresholds:
             print(f"{threshold}", end=", ")
         print()
-
-        print(f"adding solver {solver_names[solver_index]} back in")
 
         for instance_selection in experiment_config.instance_selections:
             print(f"select instances based on method {instance_selection.__name__}")

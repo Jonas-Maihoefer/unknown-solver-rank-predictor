@@ -392,6 +392,56 @@ class Accuracy:
 
         return m, c, e
 
+    def instance_wise_timeout(self, delta):
+
+        # initialize tresholds with 0
+        thresholds = np.ascontiguousarray(
+            np.full((self.number_of_instances,), 0, dtype=np.int32)
+        )
+        for i in self.instance_idx:
+            all_runtimes = self.sorted_rt[rt][i, np.arange(self.number_of_solvers)]
+            actu_par_2 = np.where(all_runtimes >= 5000, 10000, all_runtimes)
+            total_runtime = all_runtimes.sum()
+            best_timeout = 0
+            best_o_delta = 0
+            for j in range(self.number_of_solvers):
+                if j == 0:
+                    continue
+                threshold = self.sorted_rt[rt][i, j]
+                current_runtime = np.clip(all_runtimes, None, threshold).sum()
+                runtime_frac = current_runtime / total_runtime
+                pred_par_2 = np.where(all_runtimes > threshold, threshold * 2, all_runtimes)
+                if (threshold >= 5000):
+                    pred_par_2 = np.where(all_runtimes >= 5000, 10000, all_runtimes)
+
+                acc = 1 - (np.sum(np.abs(pred_par_2 - actu_par_2)) / total_runtime)
+
+                o_delta = delta*acc + ((1-delta) * (1-runtime_frac))
+
+                #print(pred_par_2)
+                #print(f"runtime_frac: {runtime_frac}")
+                #print(f"acc: {acc}")
+                #print(f"o_delta: {o_delta}")
+
+                if o_delta > best_o_delta:
+                    best_o_delta = o_delta
+                    best_timeout = j
+
+            thresholds[i] = best_timeout
+
+            # Update self.pred
+            best_timeout = self.sorted_rt[rt][i, thresholds[i]]
+            best_pred_par_2 = np.where(all_runtimes > best_timeout, best_timeout * 2, all_runtimes)
+            if (best_timeout >= 5000):
+                best_pred_par_2 = np.where(all_runtimes >= 5000, 10000, all_runtimes)
+            for index, solver in enumerate(self.sorted_rt[idx][i, np.arange(self.number_of_solvers)]):
+                self.pred[solver] += best_pred_par_2[index]
+
+            #if (best_timeout < 5000 and thresholds[i] < 27):
+            #    print(f"instance {i} has timeout {thresholds[i]}: {best_timeout}s")
+
+        return thresholds
+
     def sample_result(self, thresholds, pred, measurement, best_score=0):
         m, c, error = self.linear_fit(pred, self.par_2_scores)
 
@@ -430,9 +480,11 @@ class Accuracy:
                         new_pred += 10000
                     else:
                         new_pred += self.rt_removed_solver[index]
+                # will a^ solve the instance
                 elif timeout > self.rt_removed_solver[index]:
                     used_rt_removed_solver += self.rt_removed_solver[index]
                     new_pred += self.rt_removed_solver[index]
+                # will a^ not solve the instance
                 else:
                     used_rt_removed_solver += timeout
                     new_pred += 2 * timeout
