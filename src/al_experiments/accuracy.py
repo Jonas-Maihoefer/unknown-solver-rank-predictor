@@ -445,11 +445,11 @@ class Accuracy:
     def sample_result(self, thresholds, pred, measurement, best_score=0):
         m, c, error = self.linear_fit(pred, self.par_2_scores)
 
-        pred = m * pred + c
+        normalized_pred = m * pred + c
 
-        cross_acc = self.calc_cross_acc_2(self.par_2_scores, pred)
+        cross_acc = self.calc_cross_acc_2(self.par_2_scores, normalized_pred)
 
-        rmse_stability, cross_acc_stability  = self.calc_stability(thresholds, pred, error)
+        rmse_stability, cross_acc_stability  = self.calc_stability(thresholds, normalized_pred, error)
 
         new_pred = 0
         used_rt_removed_solver = 0
@@ -491,26 +491,41 @@ class Accuracy:
         all_par_2_scores = np.append(
             self.par_2_scores, self.par_2_score_removed_solver
         )
-        all_pred = np.append(self.par_2_scores, m * new_pred + c)
-        true_acc = self.calc_true_acc_1(
+        all_pred_use_known_par_2 = np.append(self.par_2_scores, m * new_pred + c)
+        actual_all_pred = np.append(pred, new_pred)
+        true_acc_v2 = self.calc_true_acc_1(
             all_par_2_scores,
-            all_pred,
+            all_pred_use_known_par_2,
             self.number_of_reduced_solvers
         )
+        true_acc_v1 = self.calc_true_acc_1(
+            all_par_2_scores,
+            actual_all_pred,
+            self.number_of_reduced_solvers
+        )
+
         runtime_frac = used_rt_removed_solver / self.total_rt_removed_solver
-        print(f"actual key is {self.pred_vec_to_key(all_par_2_scores)}")
-        print(f"pred key is   {self.pred_vec_to_key(all_pred)}")
+        #print(f"actual key  is  {self.pred_vec_to_key(all_par_2_scores)}")
+        #print(f"pred key v1 is  {self.pred_vec_to_key(actual_all_pred)}")
+        #print(f"pred key v2 is  {self.pred_vec_to_key(all_pred_use_known_par_2)}")
         print(f"best rmse is {error}")
         print(f"stability of this is {rmse_stability}")
         print(f"cross acc is {cross_acc}")
         print(f"stability of this is {cross_acc_stability}")
-        print(f"with this, the new total is {self.used_runtime} giving a fraction of {runtime_frac}")
-        print(f"true acc is {true_acc}")
+        print(f"with this, the new total is {used_rt_removed_solver} giving a fraction of {runtime_frac}")
+        print(f"true acc v1 is {true_acc_v1}")
+        print(f"true acc v2 is {true_acc_v2}")
         self.all_results.append({
                 "solver": self.solver_string,
                 "runtime_fraction": runtime_frac,
-                "measurement": f"{measurement}_true_acc",
-                "value": true_acc
+                "measurement": f"{measurement}_true_acc_v1",
+                "value": true_acc_v1
+        })
+        self.all_results.append({
+                "solver": self.solver_string,
+                "runtime_fraction": runtime_frac,
+                "measurement": f"{measurement}_true_acc_v2",
+                "value": true_acc_v2
         })
         self.all_results.append({
                 "solver": self.solver_string,
