@@ -2,6 +2,7 @@ class ExperimentConfig:
 
     def __init__(
             self,
+            filter_unsolvable,
             determine_thresholds,
             select_idx,
             scoring_fn,
@@ -11,6 +12,7 @@ class ExperimentConfig:
             instance_selections,
             individual_solver_plots: bool
     ):
+        self.filter_unsolvable = filter_unsolvable
         self.determine_thresholds = determine_thresholds
         self.select_idx = select_idx
         self.scoring_fn = scoring_fn

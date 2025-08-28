@@ -35,7 +35,8 @@ plot_generator = None
 
 # experiment config
 experiment_configs = ExperimentConfig(
-    determine_thresholds=create_instance_wise(0.9),  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+    filter_unsolvable=False,
+    determine_thresholds=create_instance_wise(0.7),  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
     select_idx=select_best_idx,
     scoring_fn=greedy_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
     thresh_breaking_condition=create_cross_acc_breaking(1.1),
@@ -268,7 +269,10 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
         total_runtime = df_reduced.replace([np.inf, -np.inf], 5000).stack().sum()
         total_rt_removed_solver = df.replace([np.inf, -np.inf], 5000)[solver_names[solver_index]].sum()
         mean_rt = df_reduced.replace([np.inf, -np.inf], 5000).mean(axis=1)
-        df_reduced_cleaned = df_reduced.loc[mean_rt != 5000.0].copy()
+        if (experiment_config.filter_unsolvable):
+            df_reduced_cleaned = df_reduced.loc[mean_rt != 5000.0].copy()
+        else:
+            df_reduced_cleaned = df_reduced.copy()
         reduced_df_runtimes = df_reduced_cleaned.replace([np.inf, -np.inf], 5000)
         reduced_df_rated = df_reduced_cleaned.replace([np.inf, -np.inf], 10000)
         reduced_par_2_scores_series = reduced_df_rated.mean(axis=0)
@@ -280,7 +284,10 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
         sorted_runtimes_rated = convert_to_sorted_runtimes(reduced_df_rated)
 
         # no reduced; USE WITH CARE!
-        df_cleaned = df.loc[mean_rt != 5000.0].copy()
+        if (experiment_config.filter_unsolvable):
+            df_cleaned = df.loc[mean_rt != 5000.0].copy()
+        else:
+            df_cleaned = df.copy()
         df_cleaned_rated = df_cleaned.replace([np.inf, -np.inf], 10000)
         df_cleaned_runtimes = df_cleaned.replace([np.inf, -np.inf], 5000)
         cleaned_par_2_values = df_cleaned_rated.mean(axis=0)

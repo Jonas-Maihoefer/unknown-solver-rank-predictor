@@ -29,3 +29,4 @@ class Constants:
         )
         self.number_of_instances = df.shape[0]
         self.instance_idx = np.arange(self.number_of_instances)
+        print(f"running on {self.number_of_instances} instances.")
