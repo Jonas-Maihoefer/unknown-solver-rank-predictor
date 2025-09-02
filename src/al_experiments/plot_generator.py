@@ -435,6 +435,9 @@ class PlotGenerator:
         delta_0_8 = pd.read_pickle("./pickle/c8a0ef69_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
         delta_0_9 = pd.read_pickle("./pickle/c6197b53_rt_weigth_1_temp_None.pkl.gz", compression='gzip')        
 
+        delta_0_7_no_filter = pd.read_pickle("./pickle/d2a147f4_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+
+
         al_low_delta_rt = [0.0541, 0.1035]
         al_high_delta_acc = [0.9048, 0.9233]
 
