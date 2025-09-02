@@ -36,7 +36,7 @@ plot_generator = None
 # experiment config
 experiment_configs = ExperimentConfig(
     filter_unsolvable=False,
-    determine_thresholds=create_instance_wise(0.6),  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+    determine_thresholds=create_instance_wise(0.8),  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
     select_idx=select_best_idx,
     scoring_fn=greedy_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
     thresh_breaking_condition=create_cross_acc_breaking(1.1),
