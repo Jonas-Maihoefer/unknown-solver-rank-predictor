@@ -242,17 +242,20 @@ class PlotGenerator:
     def get_all_measurements(self, dfs):
         result_string = ""
 
-        deltas = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+        deltas = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+        filterings = [True, True, True, True, True, True, False, False, False, False, False, False]
 
         deltas.reverse()
+        filterings.reverse()
 
         for df in dfs:
             delta = deltas.pop()
+            filtering = filterings.pop()
             for selection_method in ['choose_instances_random', 'variance_based_selection_1', 'variance_based_selection_2', 'highest_rt_selection', 'lowest_variance', 'highest_variance', 'lowest_variances_per_rt', 'lowest_rt_selection']:
-                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.9, f'δ={delta}; sel={selection_method}; breaking={0.9}')
-                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.925, f'δ={delta}; sel={selection_method}; breaking={0.925}')
-                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.95, f'δ={delta}; sel={selection_method}; breaking={0.95}')
-                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.975, f'δ={delta}; sel={selection_method}; breaking={0.975}')
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.9, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.9}')
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.925, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.925}')
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.95, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.95}')
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.975, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.975}')
 
         print()
         print("combined:")
@@ -435,15 +438,19 @@ class PlotGenerator:
         delta_0_8 = pd.read_pickle("./pickle/c8a0ef69_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
         delta_0_9 = pd.read_pickle("./pickle/c6197b53_rt_weigth_1_temp_None.pkl.gz", compression='gzip')        
 
+        delta_0_4_no_filter = pd.read_pickle("./pickle/021eda4a_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        delta_0_5_no_filter = pd.read_pickle("./pickle/71d395b7_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        delta_0_6_no_filter = pd.read_pickle("./pickle/9810d8e2_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
         delta_0_7_no_filter = pd.read_pickle("./pickle/d2a147f4_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-
+        delta_0_8_no_filter = pd.read_pickle("./pickle/73ddf9ea_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        delta_0_9_no_filter = pd.read_pickle("./pickle/3e77ebd2_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
 
         al_low_delta_rt = [0.0541, 0.1035]
         al_high_delta_acc = [0.9048, 0.9233]
 
         plt.figure(figsize=(10, 6))
 
-        self.get_all_measurements([delta_0_4, delta_0_5, delta_0_6, delta_0_7, delta_0_8, delta_0_9])
+        self.get_all_measurements([delta_0_4, delta_0_5, delta_0_6, delta_0_7, delta_0_8, delta_0_9, delta_0_4_no_filter, delta_0_5_no_filter, delta_0_6_no_filter, delta_0_7_no_filter, delta_0_8_no_filter, delta_0_9_no_filter])
         #self.create_solver_plot(delta_0_4, ['choose_instances_random_cross_acc', 'choose_instances_random_true_acc_v2'], "avg plot true acc", '0_CaDiCaL_DVDL_V1')
         #self.create_average_plot(delta_0_4, ['choose_instances_random_cross_acc'], "avg plot cross acc")
 
