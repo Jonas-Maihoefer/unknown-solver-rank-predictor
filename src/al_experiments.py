@@ -6,7 +6,7 @@ import pickle
 import subprocess
 from al_experiments.determine_timeout import create_instance_wise, quantized_mean_punish, quantized_double_punish, static_timeout_5000
 from al_experiments.experiment_config import ExperimentConfig
-from al_experiments.accuracy import Accuracy, create_cross_acc_breaking, create_softmax_fn, greedy_cross_acc, greedy_rmse, knapsack_rmse, select_best_idx
+from al_experiments.accuracy import Accuracy, create_cross_acc_breaking, create_softmax_fn, greedy_cross_acc, greedy_rmse, knapsack_cross_acc, knapsack_rmse, select_best_idx
 from scipy.interpolate import interp1d
 
 from al_experiments.plot_generator import PlotGenerator
@@ -22,6 +22,9 @@ if useCupy:
 else:
     import numpy as np
 
+run_counter = 0
+git_hash = ''
+plot_generator = 0
 # global config
 break_after_solvers = 200
 break_after_runtime_fraction = 2  # 0.655504  # determined by 0e993e00
@@ -33,18 +36,188 @@ all_timeout_results = []
 all_instance_selection_results = {}
 plot_generator = None
 
-# experiment config
-experiment_configs = ExperimentConfig(
-    filter_unsolvable=False,
-    determine_thresholds=create_instance_wise(0.9),  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
-    select_idx=select_best_idx,
-    scoring_fn=greedy_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-    thresh_breaking_condition=create_cross_acc_breaking(1.1),
-    temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
-    rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
-    instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
-    individual_solver_plots=False
-)
+# experiment configs
+experiment_configs = [
+    ExperimentConfig(
+        filter_unsolvable=True,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(1.0),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+    ExperimentConfig(
+        filter_unsolvable=False,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(1.0),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+    ExperimentConfig(
+        filter_unsolvable=True,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(1.0),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+    ExperimentConfig(
+        filter_unsolvable=False,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(1.0),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+    ####### 0.99
+    ExperimentConfig(
+        filter_unsolvable=True,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(0.99),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+    ExperimentConfig(
+        filter_unsolvable=False,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(0.99),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+    ExperimentConfig(
+        filter_unsolvable=True,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(0.99),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+    ExperimentConfig(
+        filter_unsolvable=False,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(0.99),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+    ### 0.98
+    ExperimentConfig(
+        filter_unsolvable=True,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(0.98),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+    ExperimentConfig(
+        filter_unsolvable=False,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(0.98),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+    ExperimentConfig(
+        filter_unsolvable=True,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(0.98),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+    ExperimentConfig(
+        filter_unsolvable=False,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(0.98),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+    #### 0.97
+        ExperimentConfig(
+        filter_unsolvable=True,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(0.97),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+    ExperimentConfig(
+        filter_unsolvable=False,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(0.97),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+    ExperimentConfig(
+        filter_unsolvable=True,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(0.97),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+    ExperimentConfig(
+        filter_unsolvable=False,
+        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        select_idx=select_best_idx,
+        scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
+        thresh_breaking_condition=create_cross_acc_breaking(0.97),
+        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
+        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
+        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
+        individual_solver_plots=False
+    ),
+]
 
 
 def get_git_commit_hash():
@@ -56,7 +229,10 @@ def get_git_commit_hash():
         check=True,  # raises CalledProcessError on non-zero exit
     )
     # decode bytes to str, strip newline
-    return result.stdout.decode("utf-8").strip()[:8]
+    global run_counter
+    hash_str = result.stdout.decode("utf-8").strip()[:8] + f'_{run_counter}'
+    run_counter += 1
+    return hash_str
 
 
 def convert_to_sorted_runtimes(runtimes: pd.DataFrame):
@@ -355,14 +531,22 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
     return store_and_get_mean_result(rt_weight, temp)
 
 
+def run_all_configs():
+    global experiment_configs
+    for config in experiment_configs:
+        global git_hash
+        git_hash = get_git_commit_hash()
+
+        global plot_generator
+        plot_generator = PlotGenerator(git_hash, config)
+        #plot_generator.create_progress_plot()
+
+        print(f"start experiment on {git_hash}")
+        run_multi_temp_experiments(config)
+
+        print("ended experiment")
+
+
 if __name__ == "__main__":
 
-    git_hash = get_git_commit_hash()
-
-    plot_generator = PlotGenerator(git_hash, experiment_configs)
-    #plot_generator.create_progress_plot()
-
-    print(f"start experiment on {git_hash}")
-    run_multi_temp_experiments(experiment_configs)
-
-    print("ended experiment")
+    run_all_configs()
