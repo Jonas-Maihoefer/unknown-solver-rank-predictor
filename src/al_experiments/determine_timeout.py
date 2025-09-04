@@ -13,7 +13,8 @@ else:
 def static_timeout_5000(
         acc_calculator: Accuracy,
         solver_string: str,
-        number_of_instances
+        number_of_instances,
+        prev_thresh
 ):
     return np.ascontiguousarray(
         np.full((number_of_instances,), 27, dtype=np.int32)
@@ -23,20 +24,26 @@ def static_timeout_5000(
 def quantized_double_punish(
         acc_calculator: Accuracy,
         solver_string: str,
-        number_of_instances
+        number_of_instances,
+        prev_thresh
 ):
-
-    # initialize tresholds with 0
-    thresholds = np.ascontiguousarray(
-        np.full((number_of_instances,), 0, dtype=np.int32)
-    )
     start = time.time_ns()
     max_acc = 0
     min_diff = 999999999.0
 
     while True:
+        ###### check if cond already met
+        runtime_frac, cross_acc = acc_calculator.sample_result(
+            prev_thresh, acc_calculator.pred,
+            "discard"
+        )
+        if runtime_frac > acc_calculator.break_after_runtime_fraction:
+            return prev_thresh
+        if acc_calculator.thresh_breaking_condition.fn(runtime_frac, cross_acc):
+            return prev_thresh
+        #########
         thresholds, max_acc, min_diff = acc_calculator.add_runtime_quantized(
-            thresholds, max_acc, min_diff
+            prev_thresh, max_acc, min_diff
         )
         if min_diff == -1:
             break
@@ -48,15 +55,11 @@ def quantized_double_punish(
 def quantized_mean_punish(
         acc_calculator: Accuracy,
         solver_string: str,
-        number_of_instances
+        number_of_instances,
+        prev_thresh
 ):
-
-    # initialize tresholds with 0
-    thresholds = np.ascontiguousarray(
-        np.full((number_of_instances,), 0, dtype=np.int32)
-    )
     # precalculate pred
-    mean_par_2 = acc_calculator.get_remaining_mean(thresholds).mean()
+    mean_par_2 = acc_calculator.get_remaining_mean(prev_thresh).mean()
     print(f"mean par_2_score is {mean_par_2}")
     acc_calculator.pred = np.full((27,), mean_par_2)
     start = time.time_ns()
@@ -64,8 +67,18 @@ def quantized_mean_punish(
     min_diff = 999999999.0
 
     while True:
+        ###### check if cond already met
+        runtime_frac, cross_acc = acc_calculator.sample_result(
+            prev_thresh, acc_calculator.pred,
+            "discard"
+        )
+        if runtime_frac > acc_calculator.break_after_runtime_fraction:
+            return prev_thresh
+        if acc_calculator.thresh_breaking_condition.fn(runtime_frac, cross_acc):
+            return prev_thresh
+        #########
         thresholds, max_acc, min_diff = acc_calculator.add_runtime_quantized_mean_punish(
-            thresholds, max_acc, min_diff
+            prev_thresh, max_acc, min_diff
         )
         if min_diff == -1:
             break
@@ -78,7 +91,8 @@ def create_instance_wise(delta):
     def instance_wise(
             acc_calculator: Accuracy,
             solver_string: str,
-            number_of_instances
+            number_of_instances,
+            prev_thresh
     ):
         return acc_calculator.instance_wise_timeout(delta)
 

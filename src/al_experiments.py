@@ -12,6 +12,7 @@ from scipy.interpolate import interp1d
 from al_experiments.plot_generator import PlotGenerator
 from al_experiments.instance_selector import InstanceSelector, choose_instances_random, highest_variance, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, lowest_variances_per_rt, lowest_rt_selection
 from al_experiments.constants import Constants
+from al_experiments.thresh_breaking_condition import ThreshBreakingCondition
 
 useCupy = os.getenv("USECUDA", "0") == "1"
 
@@ -26,7 +27,7 @@ run_counter = 0
 git_hash = ''
 plot_generator = 0
 # global config
-break_after_solvers = 200
+break_after_solvers = 2
 break_after_runtime_fraction = 2  # 0.655504  # determined by 0e993e00
 total_samples = 500  # max is 5354 because of sample_result_after_instances
 # total_runtime = 25860323 s
@@ -40,10 +41,10 @@ plot_generator = None
 experiment_configs = [
     ExperimentConfig(
         filter_unsolvable=True,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        determine_thresholds=quantized_double_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
         select_idx=select_best_idx,
         scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(1.0),
+        thresh_breaking_conditions=[ThreshBreakingCondition('until_cross_acc_0_96', create_cross_acc_breaking(0.96)), ThreshBreakingCondition('until_cross_acc_0_965', create_cross_acc_breaking(0.965)), ThreshBreakingCondition('until_cross_acc_0_97', create_cross_acc_breaking(0.97)), ThreshBreakingCondition('until_cross_acc_0_975', create_cross_acc_breaking(0.975)), ThreshBreakingCondition('until_cross_acc_0_98', create_cross_acc_breaking(0.98)), ThreshBreakingCondition('until_cross_acc_0_985', create_cross_acc_breaking(0.985)), ThreshBreakingCondition('until_cross_acc_0_99', create_cross_acc_breaking(0.99)), ThreshBreakingCondition('until_cross_acc_0_995', create_cross_acc_breaking(0.995)), ThreshBreakingCondition('until_cross_acc_1_00', create_cross_acc_breaking(1.00))], # leave one if no breaking cond is needed (instance wise)
         temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
         rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
         instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
@@ -51,10 +52,10 @@ experiment_configs = [
     ),
     ExperimentConfig(
         filter_unsolvable=False,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        determine_thresholds=quantized_double_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
         select_idx=select_best_idx,
         scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(1.0),
+        thresh_breaking_conditions=[ThreshBreakingCondition('until_cross_acc_0_96', create_cross_acc_breaking(0.96)), ThreshBreakingCondition('until_cross_acc_0_965', create_cross_acc_breaking(0.965)), ThreshBreakingCondition('until_cross_acc_0_97', create_cross_acc_breaking(0.97)), ThreshBreakingCondition('until_cross_acc_0_975', create_cross_acc_breaking(0.975)), ThreshBreakingCondition('until_cross_acc_0_98', create_cross_acc_breaking(0.98)), ThreshBreakingCondition('until_cross_acc_0_985', create_cross_acc_breaking(0.985)), ThreshBreakingCondition('until_cross_acc_0_99', create_cross_acc_breaking(0.99)), ThreshBreakingCondition('until_cross_acc_0_995', create_cross_acc_breaking(0.995)), ThreshBreakingCondition('until_cross_acc_1_00', create_cross_acc_breaking(1.00))], # leave one if no breaking cond is needed (instance wise)
         temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
         rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
         instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
@@ -62,10 +63,10 @@ experiment_configs = [
     ),
     ExperimentConfig(
         filter_unsolvable=True,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        determine_thresholds=quantized_double_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
         select_idx=select_best_idx,
         scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(1.0),
+        thresh_breaking_conditions=[ThreshBreakingCondition('until_cross_acc_0_96', create_cross_acc_breaking(0.96)), ThreshBreakingCondition('until_cross_acc_0_965', create_cross_acc_breaking(0.965)), ThreshBreakingCondition('until_cross_acc_0_97', create_cross_acc_breaking(0.97)), ThreshBreakingCondition('until_cross_acc_0_975', create_cross_acc_breaking(0.975)), ThreshBreakingCondition('until_cross_acc_0_98', create_cross_acc_breaking(0.98)), ThreshBreakingCondition('until_cross_acc_0_985', create_cross_acc_breaking(0.985)), ThreshBreakingCondition('until_cross_acc_0_99', create_cross_acc_breaking(0.99)), ThreshBreakingCondition('until_cross_acc_0_995', create_cross_acc_breaking(0.995)), ThreshBreakingCondition('until_cross_acc_1_00', create_cross_acc_breaking(1.00))], # leave one if no breaking cond is needed (instance wise)
         temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
         rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
         instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
@@ -73,145 +74,10 @@ experiment_configs = [
     ),
     ExperimentConfig(
         filter_unsolvable=False,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
+        determine_thresholds=quantized_double_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
         select_idx=select_best_idx,
         scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(1.0),
-        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
-        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
-        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
-        individual_solver_plots=False
-    ),
-    ####### 0.99
-    ExperimentConfig(
-        filter_unsolvable=True,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
-        select_idx=select_best_idx,
-        scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(0.99),
-        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
-        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
-        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
-        individual_solver_plots=False
-    ),
-    ExperimentConfig(
-        filter_unsolvable=False,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
-        select_idx=select_best_idx,
-        scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(0.99),
-        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
-        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
-        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
-        individual_solver_plots=False
-    ),
-    ExperimentConfig(
-        filter_unsolvable=True,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
-        select_idx=select_best_idx,
-        scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(0.99),
-        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
-        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
-        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
-        individual_solver_plots=False
-    ),
-    ExperimentConfig(
-        filter_unsolvable=False,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
-        select_idx=select_best_idx,
-        scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(0.99),
-        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
-        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
-        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
-        individual_solver_plots=False
-    ),
-    ### 0.98
-    ExperimentConfig(
-        filter_unsolvable=True,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
-        select_idx=select_best_idx,
-        scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(0.98),
-        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
-        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
-        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
-        individual_solver_plots=False
-    ),
-    ExperimentConfig(
-        filter_unsolvable=False,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
-        select_idx=select_best_idx,
-        scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(0.98),
-        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
-        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
-        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
-        individual_solver_plots=False
-    ),
-    ExperimentConfig(
-        filter_unsolvable=True,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
-        select_idx=select_best_idx,
-        scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(0.98),
-        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
-        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
-        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
-        individual_solver_plots=False
-    ),
-    ExperimentConfig(
-        filter_unsolvable=False,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
-        select_idx=select_best_idx,
-        scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(0.98),
-        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
-        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
-        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
-        individual_solver_plots=False
-    ),
-    #### 0.97
-        ExperimentConfig(
-        filter_unsolvable=True,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
-        select_idx=select_best_idx,
-        scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(0.97),
-        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
-        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
-        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
-        individual_solver_plots=False
-    ),
-    ExperimentConfig(
-        filter_unsolvable=False,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
-        select_idx=select_best_idx,
-        scoring_fn=knapsack_rmse,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(0.97),
-        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
-        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
-        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
-        individual_solver_plots=False
-    ),
-    ExperimentConfig(
-        filter_unsolvable=True,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
-        select_idx=select_best_idx,
-        scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(0.97),
-        temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
-        rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
-        instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
-        individual_solver_plots=False
-    ),
-    ExperimentConfig(
-        filter_unsolvable=False,
-        determine_thresholds=quantized_mean_punish,  # quantized_double_punish, quantized_mean_punish, create_instance_wise, static_timeout_5000
-        select_idx=select_best_idx,
-        scoring_fn=knapsack_cross_acc,  # knapsack_rmse, greedy_rmse, knapsack_cross_acc, greedy_cross_acc
-        thresh_breaking_condition=create_cross_acc_breaking(0.97),
+        thresh_breaking_conditions=[ThreshBreakingCondition('until_cross_acc_0_96', create_cross_acc_breaking(0.96)), ThreshBreakingCondition('until_cross_acc_0_965', create_cross_acc_breaking(0.965)), ThreshBreakingCondition('until_cross_acc_0_97', create_cross_acc_breaking(0.97)), ThreshBreakingCondition('until_cross_acc_0_975', create_cross_acc_breaking(0.975)), ThreshBreakingCondition('until_cross_acc_0_98', create_cross_acc_breaking(0.98)), ThreshBreakingCondition('until_cross_acc_0_985', create_cross_acc_breaking(0.985)), ThreshBreakingCondition('until_cross_acc_0_99', create_cross_acc_breaking(0.99)), ThreshBreakingCondition('until_cross_acc_0_995', create_cross_acc_breaking(0.995)), ThreshBreakingCondition('until_cross_acc_1_00', create_cross_acc_breaking(1.00))], # leave one if no breaking cond is needed (instance wise)
         temperatures=[],  # [0.5, 0.35, 0.25, 0.125, 0.09, 0.06125, 0.03075, 0.01530, 0.008, 0.004],
         rt_weights=[1],   # [1.0, 0.95, 1.1, 1.3, 1.5, 0.8, 1.6, 1.2, 1.4, 1.7, 1.05, 1.8, 1.9, 2.0, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0],
         instance_selections=[choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection],  # choose_instances_random, variance_based_selection_1, variance_based_selection_2, highest_rt_selection, lowest_variance, highest_variance, lowest_variances_per_rt, lowest_rt_selection
@@ -333,7 +199,7 @@ def vec_to_single_runtime_frac(
     return used_runtime / total_runtime
 
 
-def store_and_get_mean_result(rt_weight, temp):
+def store_and_get_mean_result(rt_weight, temp, breaking_name):
 
     weight_string = re.sub(r'[^0-9a-zA-Z_]', '_', str(rt_weight))
     temp_string = re.sub(r'[^0-9a-zA-Z_]', '_', str(temp))
@@ -342,9 +208,9 @@ def store_and_get_mean_result(rt_weight, temp):
 
     # construct df
     df = pd.DataFrame.from_records(all_results)
-    df.to_pickle(f"./pickle/{git_hash}_rt_weigth_{weight_string}_temp_{temp_string}.pkl.gz", compression="gzip")
+    df.to_pickle(f"./pickle/{git_hash}_{breaking_name}_rt_weigth_{weight_string}_temp_{temp_string}.pkl.gz", compression="gzip")
 
-    plot_generator.plot_avg_results(df, total_samples)
+    plot_generator.plot_avg_results(df, total_samples, breaking_name)
 
     return rs_string
 
@@ -493,42 +359,62 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
             solver_string,
             all_results,
             experiment_config.scoring_fn,
-
-            experiment_config.thresh_breaking_condition,
+            experiment_config.thresh_breaking_conditions[0],
             rt_weight,
             with_remaining_mean=experiment_config.determine_thresholds.__name__ == "quantized_mean_punish",
         )
 
-        # determine thresholds for perfect differentiation of remaining solvers
-        thresholds = experiment_config.determine_thresholds(
-            acc_calculator, solver_string, con.number_of_instances
+        # initialize tresholds with 0
+        prev_thresholds = np.ascontiguousarray(
+            np.full((con.number_of_instances,), 0, dtype=np.int32)
         )
 
-        print("here is the calculated threshold vector:")
+        for breaking_cond in experiment_config.thresh_breaking_conditions:
+            acc_calculator.thresh_breaking_condition = breaking_cond
 
-        for threshold in thresholds:
-            print(f"{threshold}", end=", ")
-        print()
-
-        for instance_selection in experiment_config.instance_selections:
-            print(f"select instances based on method {instance_selection.__name__}")
-            if instance_selection.__name__ == "no_selection":
-                continue
-
-            selector = InstanceSelector(
-                con, thresholds, sorted_runtimes, acc_calculator,
-                sample_result_after_instances, instance_selection
+            # determine thresholds for perfect differentiation of remaining solvers
+            thresholds = experiment_config.determine_thresholds(
+                acc_calculator, solver_string, con.number_of_instances, prev_thresholds
             )
 
-            selector.make_selection()
+            print("here is the calculated threshold vector:")
 
-        if experiment_config.individual_solver_plots:
-            plot_generator.plot_solver_results(
-                all_results,
-                solver_string
-            )
+            for threshold in thresholds:
+                print(f"{threshold}", end=", ")
+            print()
 
-    return store_and_get_mean_result(rt_weight, temp)
+            for instance_selection in experiment_config.instance_selections:
+                print(f"select instances based on method {instance_selection.__name__}")
+                if instance_selection.__name__ == "no_selection":
+                    continue
+
+                selector = InstanceSelector(
+                    con, thresholds, sorted_runtimes, acc_calculator,
+                    sample_result_after_instances, instance_selection
+                )
+
+                selector.make_selection()
+
+            if experiment_config.individual_solver_plots:
+                plot_generator.plot_solver_results(
+                    all_results,
+                    solver_string,
+                    breaking_cond.name
+                )
+
+            prev_thresholds = thresholds
+
+    for breaking_cond in experiment_config.thresh_breaking_conditions:
+        store_and_get_mean_result(rt_weight, temp, breaking_cond.name)
+
+    return ''
+
+
+def get_current_results(breaking_cond_name):
+    return [
+        e for e in all_results
+        if isinstance((m := (e.get("measurement") if isinstance(e, dict) else getattr(e, "measurement", None))), str) and breaking_cond_name in m
+    ]
 
 
 def run_all_configs():

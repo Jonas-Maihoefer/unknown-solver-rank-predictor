@@ -19,11 +19,11 @@ class PlotGenerator:
             self.out_dir = f"./plots/{self.git_hash}/{experiment}"
         self.experiment = experiment
 
-    def plot_avg_results(self, df: pd.DataFrame, num_samples):
+    def plot_avg_results(self, df: pd.DataFrame, num_samples, breaking_name):
         # filter
-        wanted_measurements = ["determine_timeouts_true_acc_v2", "determine_timeouts_cross_acc"]
+        wanted_measurements = [f"determine_timeouts_{breaking_name}_true_acc_v2", f"determine_timeouts_{breaking_name}_cross_acc"]
         for sel_fn in self.exp_config.instance_selections:
-            wanted_measurements.append(f"{sel_fn.__name__}_true_acc_v2")
+            wanted_measurements.append(f"{sel_fn.__name__}_{breaking_name}_true_acc_v2")
         # Now plot:
 
         # 1) define grid
@@ -69,7 +69,7 @@ class PlotGenerator:
             legend='full'
         )
 
-        out_path = os.path.join(self.out_dir, "average_results.png")
+        out_path = os.path.join(self.out_dir, f"average_results__{breaking_name}.png")
 
         # create the directory (and any parents) if it doesn't exist
         os.makedirs(self.out_dir, exist_ok=True)
@@ -125,7 +125,7 @@ class PlotGenerator:
         )
 
     def plot_solver_results(
-        self, all_results, solver_string
+        self, all_results, solver_string, breaking_name
     ):
         # construct df
         df = pd.DataFrame.from_records(all_results)
@@ -133,9 +133,9 @@ class PlotGenerator:
         # filtering
         wanted_solver = [solver_string]
         df_sub = df[df["solver"].isin(wanted_solver)]
-        wanted_measurements = ["determine_timeouts_true_acc_v2", "determine_timeouts_cross_acc"]
+        wanted_measurements = [f"determine_timeouts_{breaking_name}_true_acc_v2", f"determine_timeouts_{breaking_name}_cross_acc"]
         for sel_fn in self.exp_config.instance_selections:
-            wanted_measurements.append(f"{sel_fn.__name__}_true_acc_v2")
+            wanted_measurements.append(f"{sel_fn.__name__}_{breaking_name}_true_acc_v2")
         # Now plot:
         plt.figure(figsize=(8, 6))
         sns.lineplot(
@@ -148,7 +148,7 @@ class PlotGenerator:
         plt.title(f"dynamic timeouts for solver {solver_string}")
         plt.legend(title="Measurement")
 
-        out_path = os.path.join(self.out_dir, f"{solver_string}_results.png")
+        out_path = os.path.join(self.out_dir, f"{solver_string}_{breaking_name}_results.png")
 
         # create the directory (and any parents) if it doesn't exist
         os.makedirs(self.out_dir, exist_ok=True)

@@ -187,7 +187,7 @@ class Accuracy:
             )
             if runtime_frac > self.break_after_runtime_fraction:
                 return thresholds, prev_max_acc, -1
-            if self.thresh_breaking_condition(runtime_frac, cross_acc):
+            if self.thresh_breaking_condition.fn(runtime_frac, cross_acc):
                 return thresholds, prev_max_acc, -1
         self.n += 1
         return thresholds, prev_max_acc, prev_min_diff
@@ -518,37 +518,37 @@ class Accuracy:
         self.all_results.append({
                 "solver": self.solver_string,
                 "runtime_fraction": runtime_frac,
-                "measurement": f"{measurement}_true_acc_v1",
+                "measurement": f"{measurement}_{self.thresh_breaking_condition.name}_true_acc_v1",
                 "value": true_acc_v1
         })
         self.all_results.append({
                 "solver": self.solver_string,
                 "runtime_fraction": runtime_frac,
-                "measurement": f"{measurement}_true_acc_v2",
+                "measurement": f"{measurement}_{self.thresh_breaking_condition.name}_true_acc_v2",
                 "value": true_acc_v2
         })
         self.all_results.append({
                 "solver": self.solver_string,
                 "runtime_fraction": runtime_frac,
-                "measurement": f"{measurement}_cross_acc",
+                "measurement": f"{measurement}_{self.thresh_breaking_condition.name}_cross_acc",
                 "value": cross_acc
         })
         self.all_results.append({
                 "solver": self.solver_string,
                 "runtime_fraction": runtime_frac,
-                "measurement": f"{measurement}_diff",
+                "measurement": f"{measurement}_{self.thresh_breaking_condition.name}_diff",
                 "value": error
         })
         self.all_results.append({
                 "solver": self.solver_string,
                 "runtime_fraction": runtime_frac,
-                "measurement": f"{measurement}_rmse_stability",
+                "measurement": f"{measurement}_{self.thresh_breaking_condition.name}_rmse_stability",
                 "value": rmse_stability
         })
         self.all_results.append({
                 "solver": self.solver_string,
                 "runtime_fraction": runtime_frac,
-                "measurement": f"{measurement}_cross_acc_stability",
+                "measurement": f"{measurement}_{self.thresh_breaking_condition.name}_cross_acc_stability",
                 "value": cross_acc_stability
         })
         return runtime_frac, cross_acc
