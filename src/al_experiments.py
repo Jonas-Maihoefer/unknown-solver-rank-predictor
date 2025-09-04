@@ -27,7 +27,7 @@ run_counter = 0
 git_hash = ''
 plot_generator = 0
 # global config
-break_after_solvers = 2
+break_after_solvers = 200
 break_after_runtime_fraction = 2  # 0.655504  # determined by 0e993e00
 total_samples = 500  # max is 5354 because of sample_result_after_instances
 # total_runtime = 25860323 s
