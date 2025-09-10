@@ -239,7 +239,38 @@ class PlotGenerator:
             legend=True
         )
 
-    def get_all_measurements(self, dfs):
+    def get_all_measurements_greedy(self, dfs):
+        result_string = ""
+
+        breaking = [0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000, 0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000, 0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000, 0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000]
+        filterings = [False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True]
+        
+
+        breaking.reverse()
+        filterings.reverse()
+
+        for df in dfs:
+            delta = breaking.pop()
+            filtering = filterings.pop()
+            for selection_method in ['choose_instances_random', 'variance_based_selection_1', 'variance_based_selection_2', 'highest_rt_selection', 'lowest_variance', 'highest_variance', 'lowest_variances_per_rt', 'lowest_rt_selection']:
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.9, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.9}')
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.925, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.925}')
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.95, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.95}')
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.975, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.975}')
+
+        print()
+        print("combined:")
+        print(result_string)
+
+        results_df = pd.DataFrame(self.results, columns=["x", "y", "std_x", "std_y", "label"])
+
+        pareto = self.pareto_front(results_df)
+
+        self.plot_df(pareto)
+
+        self.results = []    
+
+    def get_all_measurements_instance_wise(self, dfs):
         result_string = ""
 
         deltas = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
@@ -431,6 +462,8 @@ class PlotGenerator:
         min_rmse_dont_break = pd.read_pickle("./pickle/4d013e7e_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
         min_cross_acc_dont_break = pd.read_pickle("./pickle/ec8f33d8_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
 
+        ###### INSTANCE WISE ########
+
         delta_0_4 = pd.read_pickle("./pickle/e92d3806_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
         delta_0_5 = pd.read_pickle("./pickle/3554615b_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
         delta_0_6 = pd.read_pickle("./pickle/a00e8733_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
@@ -445,12 +478,58 @@ class PlotGenerator:
         delta_0_8_no_filter = pd.read_pickle("./pickle/73ddf9ea_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
         delta_0_9_no_filter = pd.read_pickle("./pickle/3e77ebd2_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
 
+        ########## knapsack select best idx #################
+
+        knapsack_rmse_until_cross_acc_0_960_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_96_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_0_970_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_97_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_0_980_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_98_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_0_990_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_99_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_0_965_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_965_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_0_975_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_975_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_0_985_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_985_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_0_995_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_995_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_1_000_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_1_00_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+
+        knapsack_rmse_until_cross_acc_0_960_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_96_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_0_970_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_97_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_0_980_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_98_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_0_990_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_99_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_0_965_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_965_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_0_975_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_975_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_0_985_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_985_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_0_995_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_995_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_1_000_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_1_00_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+
+        knapsack_cross_acc_until_cross_acc_0_960_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_96_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_970_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_97_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_980_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_98_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_990_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_99_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_965_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_965_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_975_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_975_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_985_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_985_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_995_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_995_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_1_000_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_1_00_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+
+        knapsack_cross_acc_until_cross_acc_0_960_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_96_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_970_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_97_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_980_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_98_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_990_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_99_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_965_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_965_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_975_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_975_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_985_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_985_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_995_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_995_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_1_000_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_1_00_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+
+
         al_low_delta_rt = [0.0541, 0.1035]
         al_high_delta_acc = [0.9048, 0.9233]
 
         plt.figure(figsize=(10, 6))
 
-        self.get_all_measurements([delta_0_4, delta_0_5, delta_0_6, delta_0_7, delta_0_8, delta_0_9, delta_0_4_no_filter, delta_0_5_no_filter, delta_0_6_no_filter, delta_0_7_no_filter, delta_0_8_no_filter, delta_0_9_no_filter])
+        self.get_all_measurements_instance_wise([delta_0_4, delta_0_5, delta_0_6, delta_0_7, delta_0_8, delta_0_9, delta_0_4_no_filter, delta_0_5_no_filter, delta_0_6_no_filter, delta_0_7_no_filter, delta_0_8_no_filter, delta_0_9_no_filter])
+
+        self.get_all_measurements_greedy([knapsack_rmse_until_cross_acc_0_960_no_filter       ,knapsack_rmse_until_cross_acc_0_970_no_filter       ,knapsack_rmse_until_cross_acc_0_980_no_filter       ,knapsack_rmse_until_cross_acc_0_990_no_filter       ,knapsack_rmse_until_cross_acc_0_965_no_filter       ,knapsack_rmse_until_cross_acc_0_975_no_filter       ,knapsack_rmse_until_cross_acc_0_985_no_filter       ,knapsack_rmse_until_cross_acc_0_995_no_filter       ,knapsack_rmse_until_cross_acc_1_000_no_filter       ,knapsack_rmse_until_cross_acc_0_960_with_filter     ,knapsack_rmse_until_cross_acc_0_970_with_filter     ,knapsack_rmse_until_cross_acc_0_980_with_filter     ,knapsack_rmse_until_cross_acc_0_990_with_filter     ,knapsack_rmse_until_cross_acc_0_965_with_filter     ,knapsack_rmse_until_cross_acc_0_975_with_filter     ,knapsack_rmse_until_cross_acc_0_985_with_filter     ,knapsack_rmse_until_cross_acc_0_995_with_filter     ,knapsack_rmse_until_cross_acc_1_000_with_filter     ,knapsack_cross_acc_until_cross_acc_0_960_with_filter,knapsack_cross_acc_until_cross_acc_0_970_with_filter,knapsack_cross_acc_until_cross_acc_0_980_with_filter,knapsack_cross_acc_until_cross_acc_0_990_with_filter,knapsack_cross_acc_until_cross_acc_0_965_with_filter,knapsack_cross_acc_until_cross_acc_0_975_with_filter,knapsack_cross_acc_until_cross_acc_0_985_with_filter,knapsack_cross_acc_until_cross_acc_0_995_with_filter,knapsack_cross_acc_until_cross_acc_1_000_with_filter,knapsack_cross_acc_until_cross_acc_0_960_no_filter  ,knapsack_cross_acc_until_cross_acc_0_970_no_filter  ,knapsack_cross_acc_until_cross_acc_0_980_no_filter  ,knapsack_cross_acc_until_cross_acc_0_990_no_filter  ,knapsack_cross_acc_until_cross_acc_0_965_no_filter  ,knapsack_cross_acc_until_cross_acc_0_975_no_filter  ,knapsack_cross_acc_until_cross_acc_0_985_no_filter  ,knapsack_cross_acc_until_cross_acc_0_995_no_filter  ,knapsack_cross_acc_until_cross_acc_1_000_no_filter])
+
         #self.create_solver_plot(delta_0_4, ['choose_instances_random_cross_acc', 'choose_instances_random_true_acc_v2'], "avg plot true acc", '0_CaDiCaL_DVDL_V1')
         #self.create_average_plot(delta_0_4, ['choose_instances_random_cross_acc'], "avg plot cross acc")
 
