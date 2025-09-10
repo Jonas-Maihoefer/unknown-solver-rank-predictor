@@ -285,6 +285,8 @@ def run_experiment(experiment_config: ExperimentConfig, rt_weight, temp):
 
     print(df)
 
+    #plot_generator.visualize_predictions(df.replace([np.inf, -np.inf], 10000), df.replace([np.inf, -np.inf], 5000))
+
     # min value of df > 0.0 is 0.003021
     # clean the 3 runtimes of 0.0s
     df = df.replace(0.0, 0.0001)

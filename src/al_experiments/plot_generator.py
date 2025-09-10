@@ -667,7 +667,8 @@ class PlotGenerator:
         rmse = mean_squared_error(actual_np, predicted_line, squared=False)
 
         # Plot original data
-        plt.plot(prediction, actual, marker='.', linestyle='None', label=f"{label} (RMSE={rmse:.2f})", color=color)
+        # old label: label=f"{label} (RMSE={rmse:.2f})"
+        plt.plot(prediction, actual, marker='.', linestyle='None', label=label, color=color)
 
         # Plot regression line
         sorted_indices = np.argsort(prediction)
@@ -675,7 +676,9 @@ class PlotGenerator:
 
         return model.coef_[0], model.intercept_, rmse
 
-    def visualize_predictions(self, df_rated: pd.DataFrame):
+    def visualize_predictions(self, df_rated: pd.DataFrame, df_runtimes):
+
+        df_rated_copy = df_rated.copy()
 
         par_2_scores_series = df_rated.mean(axis=0)
         print(par_2_scores_series)
@@ -711,24 +714,26 @@ class PlotGenerator:
         plt.figure(figsize=(10, 6))
         #plt.plot(actual, actual, marker=".", linestyle='None', label="timeout=5000")
         colors = ['blue', 'orange', 'green', 'red', 'black']
-        m5000, c5000, rmse5000 = self.plot_regression(actual, actual, "timeout=5000", colors[0])
-        m4000, c4000, rmse4000 = self.plot_regression(prediction_4000, actual, "timeout=4000", colors[1])
-        m3000, c3000, rmse3000 = self.plot_regression(prediction_3000, actual, "timeout=3000", colors[2])
-        m2000, c2000, rmse2000 = self.plot_regression(prediction_2000, actual, "timeout=2000", colors[3])
-        m1000, c1000, rmse1000 = self.plot_regression(prediction_1000, actual, "timeout=1000", colors[4])
+        m5000, c5000, rmse5000 = self.plot_regression(actual, actual, r'$\mathcal{B}_{1}=(I, \tau_{5000})$', colors[0])
+        m4000, c4000, rmse4000 = self.plot_regression(prediction_4000, actual, r'$\mathcal{B}_{2}=(I, \tau_{4000})$', colors[1])
+        m3000, c3000, rmse3000 = self.plot_regression(prediction_3000, actual, r'$\mathcal{B}_{3}=(I, \tau_{3000})$', colors[2])
+        m2000, c2000, rmse2000 = self.plot_regression(prediction_2000, actual, r'$\mathcal{B}_{4}=(I, \tau_{2000})$', colors[3])
+        #m1000, c1000, rmse1000 = self.plot_regression(prediction_1000, actual, r'$\mathcal{B}=(I, \tau_{1000})$', colors[4])
+        self.visualize_predictions_exclude_instances(df_rated_copy, df_runtimes)
         plt.legend()
-        plt.xlabel("par-2-score with timeout < 5000")
-        plt.ylabel("par-2-score with timeout = 5000")
-        plt.title("Comparision of lower timeout par-2-scores")
+        plt.xlabel(r'$s_{\mathcal{B}}(a)$', fontsize=16)
+        plt.ylabel(r'$s_{\mathcal{B}_\mathrm{total}}(a)$', fontsize=16)
+        plt.title(r'functional relationship between $s_{\mathcal{B}_\mathrm{total}}(a)$ and $s_\mathcal{B}(a)$')
         plt.grid(True, linestyle="--", alpha=0.5)
         plt.tight_layout()
         # Show or save
         plt.show()
 
-
     def visualize_predictions_exclude_instances(self, df_rated: pd.DataFrame, df_runtimes: pd.DataFrame):
 
         par_2_scores_series = df_rated.mean(axis=0)
+
+        print(par_2_scores_series)
 
         instance_mean_rt = df_runtimes.mean(axis=1)
         print(instance_mean_rt.sort_values())
@@ -756,8 +761,14 @@ class PlotGenerator:
         mask_4000 = instance_mean_rt > 4000
         df_rated_4000 = df_runtimes.copy()
         df_rated_4000[mask_4000] = np.nan
-        df_rated_4000[df_rated_4000 > 1000] = 2000
+        #df_rated_4000[df_rated_4000 > 1000] = 2000
         par_2_scores_4000 = df_rated_4000.mean(axis=0)
+
+        mask_4000_th = instance_mean_rt > 4000
+        df_rated_4000_th = df_runtimes.copy()
+        df_rated_4000_th[mask_4000_th] = np.nan
+        df_rated_4000_th[df_rated_4000_th > 1000] = 2000
+        par_2_scores_4000_th = df_rated_4000_th.mean(axis=0)
 
         actual = []
         prediction_500 = []
@@ -765,6 +776,7 @@ class PlotGenerator:
         prediction_3000 = []
         prediction_2000 = []
         prediction_4000 = []
+        prediction_4000_th = []
         for solver in par_2_scores_series.index:
             actual.append(par_2_scores_series[solver])
             prediction_500.append(par_2_scores_500[solver])
@@ -772,22 +784,24 @@ class PlotGenerator:
             prediction_3000.append(par_2_scores_3000[solver])
             prediction_2000.append(par_2_scores_2000[solver])
             prediction_4000.append(par_2_scores_4000[solver])
+            prediction_4000_th.append(par_2_scores_4000_th[solver])
 
-        plt.figure(figsize=(10, 6))
+        #plt.figure(figsize=(10, 6))
         #plt.plot(actual, actual, marker=".", linestyle='None', label="timeout=5000")
-        colors = ['blue', 'orange', 'green', 'red', 'black', 'purple', 'gray']
+        colors = ['black', 'magenta', 'brown', 'olive', 'pink', 'purple', 'gray']
         #m100, c100, rmse100 = self.plot_regression(prediction_500, actual, "mean_time <= 500", colors[5])
         #m1000, c1000, rmse1000 = self.plot_regression(prediction_1000, actual, "mean_time <= 1000", colors[4])        
-        #m3000, c3000, rmse3000 = self.plot_regression(prediction_2000, actual, "mean_time <= 2000", colors[2])
+        m3000, c3000, rmse3000 = self.plot_regression(prediction_2000, actual, r'$\mathcal{B}_{5}=(I_{2000}, \tau_{5000})$', colors[2])
         #m2000, c2000, rmse2000 = self.plot_regression(prediction_3000, actual, "mean_time <= 3000", colors[3])
-        m4000, c4000, rmse4000 = self.plot_regression(prediction_4000, actual, "mean_time <= 4000 and timeout = 1000", colors[1])
-        m5000, c5000, rmse5000 = self.plot_regression(actual, actual, "mean_time <= inf", colors[0])
-        
-        plt.legend()
-        plt.xlabel("mean_time limited")
-        plt.ylabel("mean_time unlimited")
-        plt.title("Comparision of reduced instance pool par-2-scores")
-        plt.grid(True, linestyle="--", alpha=0.5)
-        plt.tight_layout()
+        m4000, c4000, rmse4000 = self.plot_regression(prediction_4000, actual, r'$\mathcal{B}_{6}=(I_{4000}, \tau_{5000})$', colors[1])
+        m4000_th, c4000_th, rmse4000_th = self.plot_regression(prediction_4000_th, actual, r'$\mathcal{B}_{7}=(I_{4000}, \tau_{1000})$', colors[0])
+        #m5000, c5000, rmse5000 = self.plot_regression(actual, actual, "mean_time <= inf", colors[0])
+
+        #plt.legend()
+        #plt.xlabel("mean_time limited")
+        #plt.ylabel("mean_time unlimited")
+        #plt.title("Comparision of reduced instance pool par-2-scores")
+        #plt.grid(True, linestyle="--", alpha=0.5)
+        #plt.tight_layout()
         # Show or save
-        plt.show()
+        #plt.show()
