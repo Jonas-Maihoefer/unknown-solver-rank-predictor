@@ -242,21 +242,27 @@ class PlotGenerator:
     def get_all_measurements_greedy(self, dfs):
         result_string = ""
 
-        breaking = [0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000, 0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000, 0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000, 0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000]
+        breakings = [0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000, 0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000, 0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000, 0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000]
+        names = ['until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00', 'until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00', 'until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00', 'until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00']
         filterings = [False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True]
-        
+        optimizations = ['rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse','rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc']
 
-        breaking.reverse()
+        breakings.reverse()
+        names.reverse()
         filterings.reverse()
+        optimizations.reverse()
 
         for df in dfs:
-            delta = breaking.pop()
+            breaking = breakings.pop()
+            name = names.pop()
             filtering = filterings.pop()
+            optimization = optimizations.pop()
+            df = pd.read_pickle(df, compression='gzip')
             for selection_method in ['choose_instances_random', 'variance_based_selection_1', 'variance_based_selection_2', 'highest_rt_selection', 'lowest_variance', 'highest_variance', 'lowest_variances_per_rt', 'lowest_rt_selection']:
-                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.9, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.9}')
-                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.925, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.925}')
-                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.95, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.95}')
-                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.975, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.975}')
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, name, selection_method, 0.9, f'filter={filtering}; opti={optimization}; break_opti={breaking}; sel={selection_method}; breaking={0.9}')
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, name, selection_method, 0.925, f'filter={filtering}; opti={optimization}; break_opti={breaking}; sel={selection_method}; breaking={0.925}')
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, name, selection_method, 0.95, f'filter={filtering}; opti={optimization}; break_opti={breaking}; sel={selection_method}; breaking={0.95}')
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, name, selection_method, 0.975, f'filter={filtering}; opti={optimization}; break_opti={breaking}; sel={selection_method}; breaking={0.975}')
 
         print()
         print("combined:")
@@ -326,6 +332,82 @@ class PlotGenerator:
         # Build legend using ordered handles
         ordered_handles = [h for h, lbl in handles_labels if lbl in unique_labels_ordered]
         plt.legend(ordered_handles, unique_labels_ordered, title="Label")
+
+    def print_lowest_rf_cross_acc_greedy(self, df: pd.DataFrame, name, wanted_measurement, threshold: float, label) -> pd.DataFrame:
+        """
+        For each solver, find the smallet runtime_fraction where cross_acc > threshold.
+        Also print the corresponding true_acc at that runtime_fraction.
+        Additionally, compute and print averages and std deviations across solvers.
+        """
+        # Keep only cross_acc rows
+        cross = df.loc[(df["measurement"] == f"{wanted_measurement}_{name}_cross_acc") & df["value"].notna(),
+                       ["solver", "runtime_fraction", "value"]] \
+                  .rename(columns={"value": "cross_acc"})
+
+        true_v1 = df.loc[(df["measurement"] == f"{wanted_measurement}_{name}_true_acc_v1") & df["value"].notna(),
+                      ["solver", "runtime_fraction", "value"]] \
+                 .rename(columns={"value": "true_acc_v1"})
+
+        true_v2 = df.loc[(df["measurement"] == f"{wanted_measurement}_{name}_true_acc_v2") & df["value"].notna(),
+                      ["solver", "runtime_fraction", "value"]] \
+                 .rename(columns={"value": "true_acc_v2"})
+
+        solvers = df['solver'].unique()
+        records = []
+
+        for solver in solvers:
+            cross_s = cross[cross['solver'] == solver]
+            true_s_v1 = true_v1[true_v1['solver'] == solver]
+            true_s_v2 = true_v2[true_v2['solver'] == solver]
+
+            if cross_s.empty or true_s_v1.empty or true_s_v2.empty:
+                continue  # skip solver if no data at all
+
+            # check which points cross the threshold
+            above_thresh = cross_s[cross_s["cross_acc"] > threshold]
+
+            if not above_thresh.empty:
+                # pick smallest runtime_fraction
+                min_rf = above_thresh["runtime_fraction"].min()
+            else:
+                # pick last sampled point (largest runtime_fraction)
+                min_rf = cross_s["runtime_fraction"].max()
+
+            # get corresponding values
+            cross_val = cross_s.loc[cross_s["runtime_fraction"] == min_rf, "cross_acc"].values[0]
+            true_val_v1 = true_s_v1.loc[true_s_v1["runtime_fraction"] == min_rf, "true_acc_v1"].values[0]
+            true_val_v2 = true_s_v2.loc[true_s_v2["runtime_fraction"] == min_rf, "true_acc_v2"].values[0]
+
+            records.append({
+                "solver": solver,
+                "min_runtime_fraction": min_rf,
+                "cross_acc": cross_val,
+                "true_acc_v1": true_val_v1,
+                "true_acc_v2": true_val_v2
+            })
+
+            print(f"{solver}: runtime_fraction = {min_rf:.4f}, cross_acc = {cross_val:.4f}, true_acc_v1 = {true_val_v1:.4f},  true_acc_v2 = {true_val_v2:.4f}")
+
+        out = pd.DataFrame.from_records(records)
+
+        # ---- averages and stds ----
+        avg_rf = out["min_runtime_fraction"].mean()
+        std_rf = out["min_runtime_fraction"].std(ddof=1)
+        avg_true_v1 = out["true_acc_v1"].mean()
+        std_true_v1 = out["true_acc_v1"].std(ddof=1)
+        avg_true_v2 = out["true_acc_v2"].mean()
+        std_true_v2 = out["true_acc_v2"].std(ddof=1)
+
+        print("\n=== Summary over solvers ===")
+        print(f"Runtime_fraction: mean = {avg_rf:.3f}, std = {std_rf:.3f}")
+        print(f"True_acc_v1     : mean = {avg_true_v1:.3f}, std = {std_true_v1:.3f}")
+        print(f"True_acc_v2     : mean = {avg_true_v2:.3f}, std = {std_true_v2:.3f}")
+
+        # (x, y, std_x, std_y)
+        self.results.append((avg_rf, avg_true_v1, std_rf, std_true_v1, label + '; v1'))
+        self.results.append((avg_rf, avg_true_v2, std_rf, std_true_v2, label + '; v2'))
+
+        return f"$0.4$ & {wanted_measurement} & ${threshold}$ & ${avg_rf:.3f} \pm {std_rf:.3f}$ & ${avg_true_v1:.3f} \pm {std_true_v1:.3f}$ & ${avg_true_v2:.3f} \pm {std_true_v2:.3f}$ \\\\\n\n"
 
     def print_lowest_rf_cross_acc(self, df: pd.DataFrame, wanted_measurement, threshold: float, label) -> pd.DataFrame:
         """
@@ -403,6 +485,7 @@ class PlotGenerator:
 
         return f"$0.4$ & {wanted_measurement} & ${threshold}$ & ${avg_rf:.3f} \pm {std_rf:.3f}$ & ${avg_true_v1:.3f} \pm {std_true_v1:.3f}$ & ${avg_true_v2:.3f} \pm {std_true_v2:.3f}$ \\\\\n\n"
 
+
     def pareto_front(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Return the Pareto front from a DataFrame with columns ["x", "y", "std_x", "std_y"].
@@ -432,6 +515,7 @@ class PlotGenerator:
         return sorted_df
 
     def create_progress_plot(self):
+        print("start")
         linear_only_diff = pd.read_pickle("./pickle/061637b4_df.pkl.gz", compression='gzip')
         linear_knapsack = pd.read_pickle("./pickle/39e39172_df.pkl.gz", compression='gzip')
 
@@ -480,45 +564,46 @@ class PlotGenerator:
 
         ########## knapsack select best idx #################
 
-        knapsack_rmse_until_cross_acc_0_960_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_96_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_0_970_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_97_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_0_980_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_98_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_0_990_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_99_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_0_965_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_965_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_0_975_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_975_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_0_985_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_985_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_0_995_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_0_995_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_1_000_no_filter = pd.read_pickle("./pickle/1f513996_0_until_cross_acc_1_00_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        print("nothing imported")
+        knapsack_rmse_until_cross_acc_0_960_no_filter = "./pickle/1f513996_0_until_cross_acc_0_96_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_0_970_no_filter = "./pickle/1f513996_0_until_cross_acc_0_97_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_0_980_no_filter = "./pickle/1f513996_0_until_cross_acc_0_98_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_0_990_no_filter = "./pickle/1f513996_0_until_cross_acc_0_99_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_0_965_no_filter = "./pickle/1f513996_0_until_cross_acc_0_965_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_0_975_no_filter = "./pickle/1f513996_0_until_cross_acc_0_975_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_0_985_no_filter = "./pickle/1f513996_0_until_cross_acc_0_985_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_0_995_no_filter = "./pickle/1f513996_0_until_cross_acc_0_995_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_1_000_no_filter = "./pickle/1f513996_0_until_cross_acc_1_00_rt_weigth_1_temp_None.pkl.gz"
 
-        knapsack_rmse_until_cross_acc_0_960_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_96_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_0_970_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_97_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_0_980_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_98_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_0_990_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_99_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_0_965_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_965_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_0_975_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_975_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_0_985_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_985_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_0_995_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_0_995_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_rmse_until_cross_acc_1_000_with_filter = pd.read_pickle("./pickle/1f513996_1_until_cross_acc_1_00_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_rmse_until_cross_acc_0_960_with_filter = "./pickle/1f513996_1_until_cross_acc_0_96_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_0_970_with_filter = "./pickle/1f513996_1_until_cross_acc_0_97_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_0_980_with_filter = "./pickle/1f513996_1_until_cross_acc_0_98_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_0_990_with_filter = "./pickle/1f513996_1_until_cross_acc_0_99_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_0_965_with_filter = "./pickle/1f513996_1_until_cross_acc_0_965_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_0_975_with_filter = "./pickle/1f513996_1_until_cross_acc_0_975_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_0_985_with_filter = "./pickle/1f513996_1_until_cross_acc_0_985_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_0_995_with_filter = "./pickle/1f513996_1_until_cross_acc_0_995_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_rmse_until_cross_acc_1_000_with_filter = "./pickle/1f513996_1_until_cross_acc_1_00_rt_weigth_1_temp_None.pkl.gz"
 
-        knapsack_cross_acc_until_cross_acc_0_960_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_96_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_0_970_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_97_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_0_980_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_98_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_0_990_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_99_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_0_965_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_965_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_0_975_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_975_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_0_985_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_985_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_0_995_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_0_995_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_1_000_with_filter = pd.read_pickle("./pickle/5cfd8084_2_until_cross_acc_1_00_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_960_with_filter = "./pickle/5cfd8084_2_until_cross_acc_0_96_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_0_970_with_filter = "./pickle/5cfd8084_2_until_cross_acc_0_97_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_0_980_with_filter = "./pickle/5cfd8084_2_until_cross_acc_0_98_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_0_990_with_filter = "./pickle/5cfd8084_2_until_cross_acc_0_99_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_0_965_with_filter = "./pickle/5cfd8084_2_until_cross_acc_0_965_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_0_975_with_filter = "./pickle/5cfd8084_2_until_cross_acc_0_975_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_0_985_with_filter = "./pickle/5cfd8084_2_until_cross_acc_0_985_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_0_995_with_filter = "./pickle/5cfd8084_2_until_cross_acc_0_995_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_1_000_with_filter = "./pickle/5cfd8084_2_until_cross_acc_1_00_rt_weigth_1_temp_None.pkl.gz"
 
-        knapsack_cross_acc_until_cross_acc_0_960_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_96_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_0_970_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_97_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_0_980_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_98_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_0_990_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_99_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_0_965_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_965_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_0_975_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_975_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_0_985_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_985_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_0_995_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_0_995_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
-        knapsack_cross_acc_until_cross_acc_1_000_no_filter = pd.read_pickle("./pickle/5cfd8084_3_until_cross_acc_1_00_rt_weigth_1_temp_None.pkl.gz", compression='gzip')
+        knapsack_cross_acc_until_cross_acc_0_960_no_filter = "./pickle/5cfd8084_3_until_cross_acc_0_96_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_0_970_no_filter = "./pickle/5cfd8084_3_until_cross_acc_0_97_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_0_980_no_filter = "./pickle/5cfd8084_3_until_cross_acc_0_98_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_0_990_no_filter = "./pickle/5cfd8084_3_until_cross_acc_0_99_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_0_965_no_filter = "./pickle/5cfd8084_3_until_cross_acc_0_965_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_0_975_no_filter = "./pickle/5cfd8084_3_until_cross_acc_0_975_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_0_985_no_filter = "./pickle/5cfd8084_3_until_cross_acc_0_985_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_0_995_no_filter = "./pickle/5cfd8084_3_until_cross_acc_0_995_rt_weigth_1_temp_None.pkl.gz"
+        knapsack_cross_acc_until_cross_acc_1_000_no_filter = "./pickle/5cfd8084_3_until_cross_acc_1_00_rt_weigth_1_temp_None.pkl.gz"
 
 
         al_low_delta_rt = [0.0541, 0.1035]
@@ -526,7 +611,7 @@ class PlotGenerator:
 
         plt.figure(figsize=(10, 6))
 
-        self.get_all_measurements_instance_wise([delta_0_4, delta_0_5, delta_0_6, delta_0_7, delta_0_8, delta_0_9, delta_0_4_no_filter, delta_0_5_no_filter, delta_0_6_no_filter, delta_0_7_no_filter, delta_0_8_no_filter, delta_0_9_no_filter])
+        #self.get_all_measurements_instance_wise([delta_0_4, delta_0_5, delta_0_6, delta_0_7, delta_0_8, delta_0_9, delta_0_4_no_filter, delta_0_5_no_filter, delta_0_6_no_filter, delta_0_7_no_filter, delta_0_8_no_filter, delta_0_9_no_filter])
 
         self.get_all_measurements_greedy([knapsack_rmse_until_cross_acc_0_960_no_filter       ,knapsack_rmse_until_cross_acc_0_970_no_filter       ,knapsack_rmse_until_cross_acc_0_980_no_filter       ,knapsack_rmse_until_cross_acc_0_990_no_filter       ,knapsack_rmse_until_cross_acc_0_965_no_filter       ,knapsack_rmse_until_cross_acc_0_975_no_filter       ,knapsack_rmse_until_cross_acc_0_985_no_filter       ,knapsack_rmse_until_cross_acc_0_995_no_filter       ,knapsack_rmse_until_cross_acc_1_000_no_filter       ,knapsack_rmse_until_cross_acc_0_960_with_filter     ,knapsack_rmse_until_cross_acc_0_970_with_filter     ,knapsack_rmse_until_cross_acc_0_980_with_filter     ,knapsack_rmse_until_cross_acc_0_990_with_filter     ,knapsack_rmse_until_cross_acc_0_965_with_filter     ,knapsack_rmse_until_cross_acc_0_975_with_filter     ,knapsack_rmse_until_cross_acc_0_985_with_filter     ,knapsack_rmse_until_cross_acc_0_995_with_filter     ,knapsack_rmse_until_cross_acc_1_000_with_filter     ,knapsack_cross_acc_until_cross_acc_0_960_with_filter,knapsack_cross_acc_until_cross_acc_0_970_with_filter,knapsack_cross_acc_until_cross_acc_0_980_with_filter,knapsack_cross_acc_until_cross_acc_0_990_with_filter,knapsack_cross_acc_until_cross_acc_0_965_with_filter,knapsack_cross_acc_until_cross_acc_0_975_with_filter,knapsack_cross_acc_until_cross_acc_0_985_with_filter,knapsack_cross_acc_until_cross_acc_0_995_with_filter,knapsack_cross_acc_until_cross_acc_1_000_with_filter,knapsack_cross_acc_until_cross_acc_0_960_no_filter  ,knapsack_cross_acc_until_cross_acc_0_970_no_filter  ,knapsack_cross_acc_until_cross_acc_0_980_no_filter  ,knapsack_cross_acc_until_cross_acc_0_990_no_filter  ,knapsack_cross_acc_until_cross_acc_0_965_no_filter  ,knapsack_cross_acc_until_cross_acc_0_975_no_filter  ,knapsack_cross_acc_until_cross_acc_0_985_no_filter  ,knapsack_cross_acc_until_cross_acc_0_995_no_filter  ,knapsack_cross_acc_until_cross_acc_1_000_no_filter])
 

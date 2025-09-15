@@ -1102,6 +1102,32 @@ def create_softmax_fn(temp):
     return select_idx_softmax
 
 
+def create_top_k_sampling(k):
+    def top_k_sampling(score, remaining_mask, instance_idx):
+        # Get scores and indices of the remaining instances
+        remaining_scores = score[remaining_mask]
+        remaining_indices = instance_idx[remaining_mask]
+
+        n = len(remaining_scores)
+
+        if n == 0:
+            return None  # or raise an error, depending on your use case
+
+        if n <= k:
+            # Not enough elements for top-k → pick randomly among all
+            chosen_local = np.random.randint(0, n)
+        else:
+            # Get indices of the top-k scores
+            top_k_local = np.argpartition(-remaining_scores, k-1)[:k]
+            # Pick one of the top-k at random
+            chosen_local = np.random.choice(top_k_local)
+
+        # Map back to global index
+        return remaining_indices[chosen_local]
+
+    return top_k_sampling
+
+
 def batch_rmse(X: np.ndarray, y: np.ndarray) -> np.ndarray:
     """
     For each row X[i,:], fit y ~ m*X[i,:] + c by least squares,
