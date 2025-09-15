@@ -50,6 +50,7 @@ class Accuracy:
         self.total_runtime = total_runtime
         self.break_after_runtime_fraction = break_after_runtime_fraction
         self.sample_result_after_iterations = sample_result_after_iterations
+        print(f"sampling result after {sample_result_after_iterations} interations.")
         self.sorted_rt = sorted_rt
         self.sorted_rt_rated = sorted_rt_rated
         self.par_2_scores = par_2_scores

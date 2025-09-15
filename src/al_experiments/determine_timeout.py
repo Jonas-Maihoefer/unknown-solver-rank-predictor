@@ -31,17 +31,18 @@ def quantized_double_punish(
     max_acc = 0
     min_diff = 999999999.0
 
+    ###### check if cond already met
+    runtime_frac, cross_acc = acc_calculator.sample_result(
+        prev_thresh, acc_calculator.pred,
+        "discard"
+    )
+    if runtime_frac > acc_calculator.break_after_runtime_fraction:
+        return prev_thresh
+    if acc_calculator.thresh_breaking_condition.fn(runtime_frac, cross_acc):
+        return prev_thresh
+    #########
+
     while True:
-        ###### check if cond already met
-        runtime_frac, cross_acc = acc_calculator.sample_result(
-            prev_thresh, acc_calculator.pred,
-            "discard"
-        )
-        if runtime_frac > acc_calculator.break_after_runtime_fraction:
-            return prev_thresh
-        if acc_calculator.thresh_breaking_condition.fn(runtime_frac, cross_acc):
-            return prev_thresh
-        #########
         thresholds, max_acc, min_diff = acc_calculator.add_runtime_quantized(
             prev_thresh, max_acc, min_diff
         )
@@ -66,17 +67,18 @@ def quantized_mean_punish(
     max_acc = 0
     min_diff = 999999999.0
 
+    ###### check if cond already met
+    runtime_frac, cross_acc = acc_calculator.sample_result(
+        prev_thresh, acc_calculator.pred,
+        "discard"
+    )
+    if runtime_frac > acc_calculator.break_after_runtime_fraction:
+        return prev_thresh
+    if acc_calculator.thresh_breaking_condition.fn(runtime_frac, cross_acc):
+        return prev_thresh
+    #########
+
     while True:
-        ###### check if cond already met
-        runtime_frac, cross_acc = acc_calculator.sample_result(
-            prev_thresh, acc_calculator.pred,
-            "discard"
-        )
-        if runtime_frac > acc_calculator.break_after_runtime_fraction:
-            return prev_thresh
-        if acc_calculator.thresh_breaking_condition.fn(runtime_frac, cross_acc):
-            return prev_thresh
-        #########
         thresholds, max_acc, min_diff = acc_calculator.add_runtime_quantized_mean_punish(
             prev_thresh, max_acc, min_diff
         )
