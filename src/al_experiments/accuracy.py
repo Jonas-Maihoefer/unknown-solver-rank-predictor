@@ -450,7 +450,7 @@ class Accuracy:
 
         cross_acc = self.calc_cross_acc_2(self.par_2_scores, normalized_pred)
 
-        rmse_stability, cross_acc_stability  = self.calc_stability(thresholds, normalized_pred, error)
+        rmse_stability, cross_acc_stability  = self.calc_stability(thresholds, pred, error)
 
         new_pred = 0
         used_rt_removed_solver = 0
@@ -561,54 +561,69 @@ class Accuracy:
 
         # current solver + its rt bearly solving the instance
         current_solver = self.sorted_rt[idx][self.instance_idx, thresholds], self.sorted_rt[rt][self.instance_idx, thresholds]
-
-        # next solver + its rt that would solve the instance if threshold is raised
-        next_solver = (
-            np.empty(self.number_of_instances, dtype=int),
-            np.empty(self.number_of_instances, dtype=float)
-        )
-        next_solver[idx][:] = -1
-        next_solver[rt][:] = -1
-        next_solver[idx][valid_instances] = self.sorted_rt[idx][valid_instances, thresholds[valid_instances] + 1]
-        next_solver[rt][valid_instances] = self.sorted_rt[rt][valid_instances, thresholds[valid_instances] + 1]
-
-        #print("extracted best next")
-        #print(next_solver)
-
-        #print("total added runtime")
-        #print(total_added_runtime)
-
         current_penalty = current_solver[rt] * 2
-        #print("current_penalty")
-        #print(current_penalty)
-        next_penalty = next_solver[rt] * 2
-        #print("next_penalty")
-        #print(next_penalty)
+
+        #_instance = 24
+        #print(f"looking at instance {_instance}")
+        #print("runtimes are:")
+        #print(self.sorted_rt[rt][_instance])
+
+        #print("solvers are:")
+        #print(self.sorted_rt[idx][_instance])
+
+        #print(f"current theshold is {thresholds[_instance]}")
+
+        #print(f"this means a runtime of {self.sorted_rt[rt][_instance, thresholds[_instance]]}")
+
+        # build a mask of which solvers timeout
+        index_mask = np.arange(self.number_of_solvers)[None, :] > thresholds[:, None]
+
+        timeout_times = self.sorted_rt[rt][self.instance_idx] * index_mask
+
+        new_punish = np.where(timeout_times >= 5000.0, 10000.0, timeout_times)
+
+        old_punish = current_penalty[:, None] * index_mask
+
+        #print("the new punishment is")
+
+        #print(new_punish[_instance])
+
+        #print("the old punishment was")
+
+        #print(old_punish[_instance])
+
+        delta = new_punish - old_punish
+
+        # Slice the -1 solver
+        delta = delta[:, 1:]
+
+        idx_chaos = self.sorted_rt[idx][:, 1:]
+
+        ordered_delta = np.empty_like(delta)
+
+        row_indices = np.arange(self.number_of_instances)[:, np.newaxis]
+        ordered_delta[row_indices, idx_chaos] = delta   
+
+        #print("delta is")
+        #print(delta[_instance])
+
+        #print("idx is")
+        #print(idx_chaos[_instance])
+
+        #print("ordered delta is")
+        #print(ordered_delta[_instance])
 
         # copy previos pred to all instances
         new_pred = np.tile(pred, (self.number_of_instances, 1))
-        # change pred for the next added solver
-        next_solver[rt][next_solver[rt] == 5000] = 10000
 
-        new_pred[self.instance_idx, next_solver[idx]] += (next_solver[rt] - current_penalty)
+        #print("previous pred was")
+        #print(pred)
 
-        # build a mask of which solvers still timeout with the new thresh
-        index_mask = np.arange(self.number_of_solvers)[None, :] > thresholds[:, None] + 1
-        index_mask = np.where(index_mask, self.sorted_rt[idx] + 1, 0)
-        timeout_mask = np.zeros_like(self.sorted_rt[idx], dtype=bool)
-        timeout_mask[self.instance_idx[:, None], index_mask] = True
-        timeout_mask = timeout_mask[:, 1:]
+        new_pred += ordered_delta
 
-        delta = next_penalty - current_penalty
-        new_pred += timeout_mask * delta[:, None]
-        #print("new pred with all instances")
-        #print(new_pred)
+        #print("new perd is")
+        #print(new_pred[_instance])
 
-        #print("mean pred")
-        #print(new_pred.mean(axis=1))
-        #print(new_pred.mean(axis=1).shape)
-
-        # Max 450
         similarity = batch_rmse(new_pred, self.par_2_scores)
         cross_acc = calc_cross_acc_batch(self.par_2_scores, new_pred)
 
