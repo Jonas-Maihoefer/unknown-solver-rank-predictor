@@ -1130,6 +1130,7 @@ def create_top_k_sampling(k):
             chosen_local = np.random.randint(0, n)
         else:
             # Get indices of the top-k scores
+            # TODO: test if this line actually looks at the best k scores or not!
             top_k_local = np.argpartition(-remaining_scores, k-1)[:k]
             # Pick one of the top-k at random
             chosen_local = np.random.choice(top_k_local)

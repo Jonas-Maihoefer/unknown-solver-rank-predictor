@@ -23,6 +23,9 @@ if useCupy:
 else:
     import numpy as np
 
+# set global seed for reproducability
+np.random.seed(42)
+
 run_counter = 0
 git_hash = ''
 plot_generator = 0
