@@ -32,13 +32,13 @@ def quantized_double_punish(
     min_diff = 999999999.0
 
     ###### check if cond already met
-    runtime_frac, cross_acc = acc_calculator.sample_result(
+    runtime_frac, cross_acc, stability = acc_calculator.sample_result(
         prev_thresh, acc_calculator.pred,
         "discard"
     )
     if runtime_frac > acc_calculator.break_after_runtime_fraction:
         return prev_thresh
-    if acc_calculator.thresh_breaking_condition.fn(runtime_frac, cross_acc):
+    if acc_calculator.thresh_breaking_condition.fn(runtime_frac, cross_acc, stability):
         return prev_thresh
     #########
 
@@ -68,13 +68,13 @@ def quantized_mean_punish(
     min_diff = 999999999.0
 
     ###### check if cond already met
-    runtime_frac, cross_acc = acc_calculator.sample_result(
+    runtime_frac, cross_acc, stability = acc_calculator.sample_result(
         prev_thresh, acc_calculator.pred,
         "discard"
     )
     if runtime_frac > acc_calculator.break_after_runtime_fraction:
         return prev_thresh
-    if acc_calculator.thresh_breaking_condition.fn(runtime_frac, cross_acc):
+    if acc_calculator.thresh_breaking_condition.fn(runtime_frac, cross_acc, stability):
         return prev_thresh
     #########
 

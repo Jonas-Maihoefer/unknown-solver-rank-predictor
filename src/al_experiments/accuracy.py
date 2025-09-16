@@ -182,13 +182,13 @@ class Accuracy:
         self.used_runtime += total_added_runtime[best_idx]
 
         if self.n % self.sample_result_after_iterations == 0:
-            runtime_frac, cross_acc = self.sample_result(
+            runtime_frac, cross_acc, stability = self.sample_result(
                 thresholds, self.pred,
                 "determine_timeouts", score[best_idx]
             )
             if runtime_frac > self.break_after_runtime_fraction:
                 return thresholds, prev_max_acc, -1
-            if self.thresh_breaking_condition.fn(runtime_frac, cross_acc):
+            if self.thresh_breaking_condition.fn(runtime_frac, cross_acc, stability):
                 return thresholds, prev_max_acc, -1
         self.n += 1
         return thresholds, prev_max_acc, prev_min_diff
@@ -293,7 +293,7 @@ class Accuracy:
         self.used_runtime += total_added_runtime[best_idx]
 
         if self.n % self.sample_result_after_iterations == 0:
-            runtime_frac, cross_acc = self.sample_result(
+            runtime_frac, cross_acc, stability = self.sample_result(
                 thresholds, self.pred,
                 "determine_timeouts", profitability_index[best_idx]
             )
@@ -358,7 +358,7 @@ class Accuracy:
         thresholds[best_idx] += 1
 
         if self.n % self.sample_result_after_iterations == 0:
-            runtime_frac, cross_acc = self.sample_result(
+            runtime_frac, cross_acc, stability = self.sample_result(
                 thresholds, self.pred, "determine_timeouts"
             )
             if runtime_frac > self.break_after_runtime_fraction:
@@ -552,13 +552,9 @@ class Accuracy:
                 "measurement": f"{measurement}_{self.thresh_breaking_condition.name}_cross_acc_stability",
                 "value": cross_acc_stability
         })
-        return runtime_frac, cross_acc
+        return runtime_frac, cross_acc, cross_acc_stability
 
     def calc_stability(self, thresholds, pred, error):
-        # instances not maxed out yet
-        remaining_mask = thresholds < self.number_of_reduced_solvers
-        valid_instances = self.instance_idx[remaining_mask]
-
         # current solver + its rt bearly solving the instance
         current_solver = self.sorted_rt[idx][self.instance_idx, thresholds], self.sorted_rt[rt][self.instance_idx, thresholds]
         current_penalty = current_solver[rt] * 2
@@ -1267,6 +1263,12 @@ def knapsack_cross_acc(new_pred, par_2_scores, total_added_runtime, rt_weight):
 
 
 def create_cross_acc_breaking(break_at):
-    def cross_acc_breaking(runtime_frac, cross_acc):
+    def cross_acc_breaking(runtime_frac, cross_acc, stability):
         return cross_acc >= break_at
+    return cross_acc_breaking
+
+
+def create_stability_breaking(break_at):
+    def cross_acc_breaking(runtime_frac, cross_acc, stability):
+        return stability >= break_at
     return cross_acc_breaking
