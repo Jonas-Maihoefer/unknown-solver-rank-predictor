@@ -27,7 +27,7 @@ else:
 np.random.seed(42)
 
 run_counter = 0
-git_hash = ''
+git_hash_with_run = ''
 plot_generator = 0
 # global config
 break_after_solvers = 200
@@ -186,9 +186,8 @@ def get_git_commit_hash():
         check=True,  # raises CalledProcessError on non-zero exit
     )
     # decode bytes to str, strip newline
-    global run_counter
-    hash_str = result.stdout.decode("utf-8").strip()[:8] + f'_{run_counter}'
-    run_counter += 1
+    # TODO: put back to 8 if save
+    hash_str = result.stdout.decode("utf-8").strip()[:7]
     return hash_str
 
 
@@ -299,7 +298,7 @@ def store_and_get_mean_result(rt_weight, temp, breaking_name):
 
     # construct df
     df = pd.DataFrame.from_records(all_results)
-    df.to_pickle(f"./pickle/{git_hash}_{breaking_name}_rt_weigth_{weight_string}_temp_{temp_string}.pkl.gz", compression="gzip")
+    df.to_pickle(f"./pickle/{git_hash_with_run}_{breaking_name}_rt_weigth_{weight_string}_temp_{temp_string}.pkl.gz", compression="gzip")
 
     plot_generator.plot_avg_results(df, total_samples, breaking_name)
 
@@ -349,12 +348,12 @@ def run_multi_rt_weights_experiments(experiment_config: ExperimentConfig, temp=N
 
     for rt_weight in experiment_config.rt_weights:
         if len(experiment_config.rt_weights) == 1 and len(experiment_config.temperatures) == 1:
-            plot_generator = PlotGenerator(git_hash, experiment_config)
+            plot_generator = PlotGenerator(git_hash_with_run, experiment_config)
         else:
             if temp is None:
-                plot_generator = PlotGenerator(git_hash, experiment_config, f"rt_weight_{rt_weight}")
+                plot_generator = PlotGenerator(git_hash_with_run, experiment_config, f"rt_weight_{rt_weight}")
             else:
-                plot_generator = PlotGenerator(git_hash, experiment_config, f"rt_weight_{rt_weight}_temp_{temp}")
+                plot_generator = PlotGenerator(git_hash_with_run, experiment_config, f"rt_weight_{rt_weight}_temp_{temp}")
                 print(f"running with a temperature of {temp}")
         print(f"running with a runtime weight of {rt_weight}")
         # reset results
@@ -512,15 +511,17 @@ def get_current_results(breaking_cond_name):
 
 def run_all_configs():
     global experiment_configs
+    global run_counter
+    global git_hash_with_run
+    git_hash = get_git_commit_hash()
     for config in experiment_configs:
-        global git_hash
-        git_hash = get_git_commit_hash()
-
+        git_hash_with_run = git_hash + f'_{run_counter}'
+        run_counter += 1
         global plot_generator
-        plot_generator = PlotGenerator(git_hash, config)
+        plot_generator = PlotGenerator(git_hash_with_run, config)
         #plot_generator.create_progress_plot()
 
-        print(f"start experiment on {git_hash}")
+        print(f"start experiment on {git_hash_with_run}")
         run_multi_temp_experiments(config)
 
         print("ended experiment")
