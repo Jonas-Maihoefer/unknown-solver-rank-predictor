@@ -272,27 +272,37 @@ class PlotGenerator:
 
         pareto = self.pareto_front(results_df)
 
-        self.plot_df(pareto)
+        self.plot_pareto_df(pareto)
 
         self.results = []    
 
-    def get_all_measurements_instance_wise(self, dfs):
+    def get_all_measurements_instance_wise(self, dfs, plot_type):
         result_string = ""
 
         deltas = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
         filterings = [True, True, True, True, True, True, False, False, False, False, False, False]
+        selection_methods = ['choose_instances_random', 'variance_based_selection_1', 'highest_rt_selection', 'lowest_variance', 'highest_variance', 'lowest_variances_per_rt', 'lowest_rt_selection']
+        selection_names = ['$\mathrm{rand}$', '$\mathrm{max}_{V/R}$', '$\mathrm{max}_{R}$', '$\mathrm{min}_{V}$', '$\mathrm{max}_{V}$', '$\mathrm{min}_{V/R}$', '$\mathrm{min}_{R}$']
 
         deltas.reverse()
         filterings.reverse()
+        selection_names.reverse()
 
         for df in dfs:
             delta = deltas.pop()
             filtering = filterings.pop()
-            for selection_method in ['choose_instances_random', 'variance_based_selection_1', 'variance_based_selection_2', 'highest_rt_selection', 'lowest_variance', 'highest_variance', 'lowest_variances_per_rt', 'lowest_rt_selection']:
-                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.9, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.9}')
-                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.925, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.925}')
-                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.95, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.95}')
-                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.975, f'filter={filtering}; δ={delta}; sel={selection_method}; breaking={0.975}')
+            selection_names_copy = selection_names.copy()
+            for selection_method in selection_methods:
+                selection_name = selection_names_copy.pop()
+                print(f"sel_method={selection_method}; sel_name={selection_name}")
+                breaking_condition = '$\mathrm{fcp}_{\geq 0.9}$'
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.9, f'{filtering} & {delta} & {selection_name} & {breaking_condition}')
+                breaking_condition = '$\mathrm{fcp}_{\geq 0.925}$'
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.925, f'{filtering} & {delta} & {selection_name} & {breaking_condition}')
+                breaking_condition = '$\mathrm{fcp}_{\geq 0.95}$'
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.95, f'{filtering} & {delta} & {selection_name} & {breaking_condition}')
+                breaking_condition = '$\mathrm{fcp}_{\geq 0.975}$'
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.975, f'{filtering} & {delta} & {selection_name} & {breaking_condition} \\')
 
         print()
         print("combined:")
@@ -300,38 +310,173 @@ class PlotGenerator:
 
         results_df = pd.DataFrame(self.results, columns=["x", "y", "std_x", "std_y", "label"])
 
-        pareto = self.pareto_front(results_df)
+        if plot_type == 'pareto':
+            pareto = self.pareto_front(results_df)
+            self.plot_pareto_df(pareto)
 
-        self.plot_df(pareto)
+        if plot_type == 'compare estimator':
+            self.compare_estimator(results_df)
 
         self.results = []
 
-    def plot_df(self, df):
-        sns.set_theme(style="whitegrid")
+    def compare_estimator(self, results_df):
+        s_b_points = results_df[results_df['label'].str.contains('$s_\mathcal{B}$', regex=False)]
+        s_fitted_points = results_df[results_df['label'].str.contains('$s_\mathrm{fitted}$', regex=False)]
 
-        # Keep track of handles and labels for legend
-        handles_labels = []
+        # Calculate the mean for the '$s_\mathcal{B}$' points
+        mean_x_sb = s_b_points['x'].mean()
+        mean_y_sb = s_b_points['y'].mean()
+
+        # Calculate the mean for the '$s_\mathrm{fitted}$' points
+        mean_x_fitted = s_fitted_points['x'].mean()
+        mean_y_fitted = s_fitted_points['y'].mean()
+
+        # Print the results
+        print("Mean values for '$s_\\mathcal{B}$' points:")
+        print(f"  Mean of x: {mean_x_sb}")
+        print(f"  Mean of y: {mean_y_sb}")
+        print("\\n" + "="*35 + "\\n") # Separator
+        print("Mean values for '$s_\\mathrm{fitted}$' points:")
+        print(f"  Mean of x: {mean_x_fitted}")
+        print(f"  Mean of y: {mean_y_fitted}")
+
+        # Create a new figure for the plot
+        plt.figure(figsize=(8, 6))
+
+        # Plot the points for '$s_\mathcal{B}$' in blue
+        plt.scatter(s_b_points['x'], s_b_points['y'], color='blue', label='$s_\\mathcal{B}$')
+
+        # Plot the points for '$s_\mathrm{fitted}$' in red
+        plt.scatter(s_fitted_points['x'], s_fitted_points['y'], color='red', label='$s_\\mathrm{fitted}$')
+        plt.legend()
+        plt.xlabel("$\overline{O}_{\mathrm{rt}}$")
+        #plt.xlim(right=1)
+        #plt.ylim(0, 1.05)
+        plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
+        plt.title("Comparison of Estimator Results")
+        plt.grid(True, linestyle="--", alpha=0.5)
+        plt.tight_layout()
+        # Show or save
+        plt.show()
+
+        # Store the results and labels for the bar chart
+        bar_labels = []
+        metric_values = []
+
+        # Helper function to perform the calculation
+        def calculate_metric(sb_df, fitted_df):
+            """Calculates the metric, returns NaN if either dataframe is empty."""
+            if sb_df.empty or fitted_df.empty:
+                return np.nan
+            mean_y_sb = sb_df['y'].mean()
+            mean_y_fitted = fitted_df['y'].mean()
+            return (mean_y_sb - mean_y_fitted) * 100
+
+        def process_slice(s_b_slice_df, s_fitted_full_df):
+            """Finds corresponding points and calculates the metric."""
+            if s_b_slice_df.empty:
+                return np.nan
+
+            # Get the s_B labels from the current slice
+            s_b_labels_in_slice = s_b_slice_df['label']
+
+            # Transform them to the corresponding s_fitted labels
+            target_fitted_labels = s_b_labels_in_slice.str.replace(
+                '$s_\mathcal{B}$', '$s_\mathrm{fitted}$', regex=False
+            )
+
+            # Find the corresponding s_fitted points from the *entire* s_fitted dataset
+            corresponding_fitted_slice = s_fitted_full_df[
+                s_fitted_full_df['label'].isin(target_fitted_labels)
+            ]
+
+            # Calculate the metric with the matched data
+            return calculate_metric(s_b_slice_df, corresponding_fitted_slice)
+
+        # ---- Calculation for y < 0.9 ----
+        label = 'y < 0.9'
+        s_b_slice = s_b_points[s_b_points['y'] < 0.9]
+        bar_labels.append(label)
+        metric_values.append(process_slice(s_b_slice, s_fitted_points))
+
+
+        # ---- Loop for intervals between 0.9 and 1.0 ----
+        for i in np.arange(0.90, 1.0, 0.01):
+            lower_bound = i
+            upper_bound = i + 0.01
+            label = f'{lower_bound:.2f} - {upper_bound:.2f}'
+
+            # Filter s_B points for the current interval
+            s_b_slice = s_b_points[(s_b_points['y'] >= lower_bound) & (s_b_points['y'] < upper_bound)]
+
+            bar_labels.append(label)
+            metric_values.append(process_slice(s_b_slice, s_fitted_points))
+
+        # --- 3. Generate the Bar Graph ---
+
+        plt.figure(figsize=(12, 7)) # Create a larger figure to fit labels
+
+        # Create the bar plot
+        plt.bar(bar_labels, metric_values, color='skyblue')
+
+        # Add titles and labels for clarity
+        plt.xlabel("$\overline{O}_\mathrm{acc}$ using the $s_\mathrm{fitted}$-estimator")
+        plt.ylabel("Improvment of $\overline{O}_\mathrm{acc}$ in %")
+        plt.title("Improvment When Using $s_\mathrm{fitted}$ Instead of $s_\mathcal{B}$")
+        plt.xticks(rotation=45, ha='right') # Rotate x-axis labels to prevent overlap
+        plt.axhline(0, color='grey', linewidth=0.8) # Add a zero line for reference
+        plt.grid(axis='y', linestyle='--', alpha=0.7)
+        plt.tight_layout() # Adjust plot to ensure everything fits
+
+        # Display the plot
+        plt.show()
+
+    def plot_pareto_df(self, df):
+        palette = sns.color_palette("tab20", n_colors=len(df))
+        sns.set_theme(style="whitegrid")
+        configuration = 1
 
         # Plot each label group
-        for lbl, df_group in df.groupby("label", sort=False):  # sort=False preserves order in df
+        for idx, row in df.iterrows():
+            config_path = '\\raisebox{-0.2\\height}{\\includegraphics[width=0.6cm]{images/label_marker/config_' + str(idx) + '.png}}'
+            color = palette[idx % len(palette)]
             h = plt.errorbar(
-                df_group["x"], df_group["y"],
-                xerr=df_group["std_x"], yerr=df_group["std_y"],
-                fmt="o", capsize=4, label=lbl
+                row["x"], row["y"],
+                xerr=row["std_x"], yerr=row["std_y"],
+                fmt="o", capsize=4, color=color
             )
-            handles_labels.append((h[0], lbl))  # store handle and label
+            print(config_path + ' & ' + row["label"] + f' & ${round(row["x"], 3)} \pm {round(row["std_x"], 3)}$ & ${round(row["y"], 3)} \pm {round(row["std_y"], 3)}$ \\\\')
+            configuration += 1
+        plt.xlabel("$\overline{O}_{\mathrm{rt}}$")
+        #plt.xlim(right=1)
+        #plt.ylim(0, 1.05)
+        plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
+        plt.title("Results for Instance-Wise Timeout Distribution")
+        plt.grid(True, linestyle="--", alpha=0.5)
+        plt.tight_layout()
+        # Show or save
+        plt.show()
 
-        # Extract unique labels in the order they appear in the DataFrame
-        unique_labels_ordered = []
-        seen = set()
-        for lbl in df["label"]:
-            if lbl not in seen:
-                unique_labels_ordered.append(lbl)
-                seen.add(lbl)
+    def save_errorbar_icons(self, n, filename_prefix="config"):
+        palette = sns.color_palette("tab20", n_colors=n)
 
-        # Build legend using ordered handles
-        ordered_handles = [h for h, lbl in handles_labels if lbl in unique_labels_ordered]
-        plt.legend(ordered_handles, unique_labels_ordered, title="Label")
+        for i, color in enumerate(palette):
+            fig, ax = plt.subplots(figsize=(0.6, 0.6))
+            ax.axis("off")
+
+            # Bigger dot: markersize=10 (adjust as you like)
+            ax.errorbar(
+                0.5, 0.5,
+                xerr=0.1, yerr=0.1,
+                fmt="o", capsize=10, color=color,
+                markersize=17,  # <-- make the central dot bigger
+                linewidth=4,
+                capthick=3
+            )
+
+            plt.savefig(f"{filename_prefix}_{i+1}.png",
+                        dpi=200, bbox_inches="tight", transparent=True)
+            plt.close(fig)
 
     def print_lowest_rf_cross_acc_greedy(self, df: pd.DataFrame, name, wanted_measurement, threshold: float, label) -> pd.DataFrame:
         """
@@ -462,7 +607,7 @@ class PlotGenerator:
                 "true_acc_v2": true_val_v2
             })
 
-            print(f"{solver}: runtime_fraction = {min_rf:.4f}, cross_acc = {cross_val:.4f}, true_acc_v1 = {true_val_v1:.4f},  true_acc_v2 = {true_val_v2:.4f}")
+            #print(f"{solver}: runtime_fraction = {min_rf:.4f}, cross_acc = {cross_val:.4f}, true_acc_v1 = {true_val_v1:.4f},  true_acc_v2 = {true_val_v2:.4f}")
 
         out = pd.DataFrame.from_records(records)
 
@@ -480,11 +625,10 @@ class PlotGenerator:
         print(f"True_acc_v2     : mean = {avg_true_v2:.3f}, std = {std_true_v2:.3f}")
 
         # (x, y, std_x, std_y)
-        self.results.append((avg_rf, avg_true_v1, std_rf, std_true_v1, label + '; v1'))
-        self.results.append((avg_rf, avg_true_v2, std_rf, std_true_v2, label + '; v2'))
+        self.results.append((avg_rf, avg_true_v1, std_rf, std_true_v1, label + ' & $s_\mathcal{B}$'))
+        self.results.append((avg_rf, avg_true_v2, std_rf, std_true_v2, label + ' & $s_\mathrm{fitted}$'))
 
         return f"$0.4$ & {wanted_measurement} & ${threshold}$ & ${avg_rf:.3f} \pm {std_rf:.3f}$ & ${avg_true_v1:.3f} \pm {std_true_v1:.3f}$ & ${avg_true_v2:.3f} \pm {std_true_v2:.3f}$ \\\\\n\n"
-
 
     def pareto_front(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -516,6 +660,7 @@ class PlotGenerator:
 
     def create_progress_plot(self):
         print("start")
+        #self.save_errorbar_icons(20, filename_prefix="config")
         linear_only_diff = pd.read_pickle("./pickle/061637b4_df.pkl.gz", compression='gzip')
         linear_knapsack = pd.read_pickle("./pickle/39e39172_df.pkl.gz", compression='gzip')
 
@@ -611,7 +756,9 @@ class PlotGenerator:
 
         plt.figure(figsize=(10, 6))
 
-        #self.get_all_measurements_instance_wise([delta_0_4, delta_0_5, delta_0_6, delta_0_7, delta_0_8, delta_0_9, delta_0_4_no_filter, delta_0_5_no_filter, delta_0_6_no_filter, delta_0_7_no_filter, delta_0_8_no_filter, delta_0_9_no_filter])
+
+        # "pareto", "compare estimator"
+        self.get_all_measurements_instance_wise([delta_0_4, delta_0_5, delta_0_6, delta_0_7, delta_0_8, delta_0_9, delta_0_4_no_filter, delta_0_5_no_filter, delta_0_6_no_filter, delta_0_7_no_filter, delta_0_8_no_filter, delta_0_9_no_filter], "compare estimator")
 
 
         #self.get_all_measurements_greedy([knapsack_rmse_until_cross_acc_0_960_no_filter       ,knapsack_rmse_until_cross_acc_0_970_no_filter       ,knapsack_rmse_until_cross_acc_0_980_no_filter       ,knapsack_rmse_until_cross_acc_0_990_no_filter       ,knapsack_rmse_until_cross_acc_0_965_no_filter       ,knapsack_rmse_until_cross_acc_0_975_no_filter       ,knapsack_rmse_until_cross_acc_0_985_no_filter       ,knapsack_rmse_until_cross_acc_0_995_no_filter       ,knapsack_rmse_until_cross_acc_1_000_no_filter       ,knapsack_rmse_until_cross_acc_0_960_with_filter     ,knapsack_rmse_until_cross_acc_0_970_with_filter     ,knapsack_rmse_until_cross_acc_0_980_with_filter     ,knapsack_rmse_until_cross_acc_0_990_with_filter     ,knapsack_rmse_until_cross_acc_0_965_with_filter     ,knapsack_rmse_until_cross_acc_0_975_with_filter     ,knapsack_rmse_until_cross_acc_0_985_with_filter     ,knapsack_rmse_until_cross_acc_0_995_with_filter     ,knapsack_rmse_until_cross_acc_1_000_with_filter     ,knapsack_cross_acc_until_cross_acc_0_960_with_filter,knapsack_cross_acc_until_cross_acc_0_970_with_filter,knapsack_cross_acc_until_cross_acc_0_980_with_filter,knapsack_cross_acc_until_cross_acc_0_990_with_filter,knapsack_cross_acc_until_cross_acc_0_965_with_filter,knapsack_cross_acc_until_cross_acc_0_975_with_filter,knapsack_cross_acc_until_cross_acc_0_985_with_filter,knapsack_cross_acc_until_cross_acc_0_995_with_filter,knapsack_cross_acc_until_cross_acc_1_000_with_filter,knapsack_cross_acc_until_cross_acc_0_960_no_filter  ,knapsack_cross_acc_until_cross_acc_0_970_no_filter  ,knapsack_cross_acc_until_cross_acc_0_980_no_filter  ,knapsack_cross_acc_until_cross_acc_0_990_no_filter  ,knapsack_cross_acc_until_cross_acc_0_965_no_filter  ,knapsack_cross_acc_until_cross_acc_0_975_no_filter  ,knapsack_cross_acc_until_cross_acc_0_985_no_filter  ,knapsack_cross_acc_until_cross_acc_0_995_no_filter  ,knapsack_cross_acc_until_cross_acc_1_000_no_filter])
@@ -631,7 +778,7 @@ class PlotGenerator:
         
         #self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_diff'], "knap determine timeout diff")
         #self.create_average_plot(min_rmse_dont_break, ['determine_timeouts_stability'], "min rmse determine timeout stability")
-        self.create_average_plot(min_cross_acc_dont_break, ['determine_timeouts_cross_acc_stability'], "cross acc determine timeout stability")
+        #self.create_average_plot(min_cross_acc_dont_break, ['determine_timeouts_cross_acc_stability'], "cross acc determine timeout stability")
         #self.create_average_plot(min_cross_acc_dont_break, ['choose_instances_random_true_acc'], "true acc")
         #self.create_average_plot(min_cross_acc_dont_break, ['choose_instances_random_cross_acc'], "cross acc")
         
@@ -793,17 +940,7 @@ class PlotGenerator:
         #plt.plot(h_8e719502_choose_instances_random_runtime_frac_rt_weight_1_temp_None, h_8e719502_choose_instances_random_true_acc_rt_weight_1_temp_None, label="knapsack to 0.4 choose random")
         #plt.plot(h_8e719502_variance_based_selection_1_runtime_frac_rt_weight_1_temp_None, h_8e719502_variance_based_selection_1_true_acc_rt_weight_1_temp_None)
 
-        plt.plot(al_low_delta_rt, al_high_delta_acc, marker='o', linestyle='None', label='active learning')
-        plt.legend()
-        plt.xlabel("Fraction of Runtime")
-        plt.xlim(right=1)
-        #plt.ylim(0, 1.05)
-        plt.ylabel("Ranking Accuracy")
-        plt.title("Comparision of different instance selection methods")
-        plt.grid(True, linestyle="--", alpha=0.5)
-        plt.tight_layout()
-        # Show or save
-        plt.show()
+        #plt.plot(al_low_delta_rt, al_high_delta_acc, marker='o', linestyle='None', label='active learning')
         #plt.savefig("instance_histogram.png", dpi=300)
 
     def plot_histogramm(self, df):
