@@ -239,30 +239,40 @@ class PlotGenerator:
             legend=True
         )
 
-    def get_all_measurements_greedy(self, dfs):
+    def get_all_measurements_bottom_up(self, paths):
         result_string = ""
 
-        breakings = [0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000, 0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000, 0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000, 0.960, 0.970, 0.980, 0.990, 0.965, 0.975, 0.985, 0.995, 1.000]
-        names = ['until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00', 'until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00', 'until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00', 'until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00']
+        timeout_breaking_methods = ['until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00', 'until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00', 'until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00', 'until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00']
+        timeout_breaking_names = ['$\mathrm{fcp}_{\geq 0.96}$', '$\mathrm{fcp}_{\geq 0.97}$', '$\mathrm{fcp}_{\geq 0.98}$', '$\mathrm{fcp}_{\geq 0.99}$', '$\mathrm{fcp}_{\geq 0.965}$', '$\mathrm{fcp}_{\geq 0.975}$', '$\mathrm{fcp}_{\geq 0.985}$', '$\mathrm{fcp}_{\geq 0.995}$', '$\mathrm{fcp}_{\geq 1.00}$', '$\mathrm{fcp}_{\geq 0.96}$', '$\mathrm{fcp}_{\geq 0.97}$', '$\mathrm{fcp}_{\geq 0.98}$', '$\mathrm{fcp}_{\geq 0.99}$', '$\mathrm{fcp}_{\geq 0.965}$', '$\mathrm{fcp}_{\geq 0.975}$', '$\mathrm{fcp}_{\geq 0.985}$', '$\mathrm{fcp}_{\geq 0.995}$', '$\mathrm{fcp}_{\geq 1.00}$', '$\mathrm{fcp}_{\geq 0.96}$', '$\mathrm{fcp}_{\geq 0.97}$', '$\mathrm{fcp}_{\geq 0.98}$', '$\mathrm{fcp}_{\geq 0.99}$', '$\mathrm{fcp}_{\geq 0.965}$', '$\mathrm{fcp}_{\geq 0.975}$', '$\mathrm{fcp}_{\geq 0.985}$', '$\mathrm{fcp}_{\geq 0.995}$', '$\mathrm{fcp}_{\geq 1.00}$', '$\mathrm{fcp}_{\geq 0.96}$', '$\mathrm{fcp}_{\geq 0.97}$', '$\mathrm{fcp}_{\geq 0.98}$', '$\mathrm{fcp}_{\geq 0.99}$', '$\mathrm{fcp}_{\geq 0.965}$', '$\mathrm{fcp}_{\geq 0.975}$', '$\mathrm{fcp}_{\geq 0.985}$', '$\mathrm{fcp}_{\geq 0.995}$', '$\mathrm{fcp}_{\geq 1.00}$']
+        selection_methods = ['choose_instances_random', 'variance_based_selection_1', 'highest_rt_selection', 'lowest_variance', 'highest_variance', 'lowest_variances_per_rt', 'lowest_rt_selection']
+        selection_names = ['$\mathrm{rand}$', '$\mathrm{max}_{V/R}$', '$\mathrm{max}_{R}$', '$\mathrm{min}_{V}$', '$\mathrm{max}_{V}$', '$\mathrm{min}_{V/R}$', '$\mathrm{min}_{R}$']
         filterings = [False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True, False, False, False, False, False, False, False, False, False, True, True, True, True, True, True, True, True, True]
-        optimizations = ['rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse','rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'rmse', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc', 'cross_acc']
+        optimizations = ['$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$','$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$']
 
-        breakings.reverse()
-        names.reverse()
+        timeout_breaking_names.reverse()
+        selection_names.reverse()
         filterings.reverse()
         optimizations.reverse()
 
-        for df in dfs:
-            breaking = breakings.pop()
-            name = names.pop()
+        for path in paths:
+            timeout_breaking = timeout_breaking_names.pop()
+            timeout_breaking_method = timeout_breaking_methods.pop()
             filtering = filterings.pop()
             optimization = optimizations.pop()
-            df = pd.read_pickle(df, compression='gzip')
-            for selection_method in ['choose_instances_random', 'variance_based_selection_1', 'variance_based_selection_2', 'highest_rt_selection', 'lowest_variance', 'highest_variance', 'lowest_variances_per_rt', 'lowest_rt_selection']:
-                result_string += self.print_lowest_rf_cross_acc_greedy(df, name, selection_method, 0.9, f'filter={filtering}; opti={optimization}; break_opti={breaking}; sel={selection_method}; breaking={0.9}')
-                result_string += self.print_lowest_rf_cross_acc_greedy(df, name, selection_method, 0.925, f'filter={filtering}; opti={optimization}; break_opti={breaking}; sel={selection_method}; breaking={0.925}')
-                result_string += self.print_lowest_rf_cross_acc_greedy(df, name, selection_method, 0.95, f'filter={filtering}; opti={optimization}; break_opti={breaking}; sel={selection_method}; breaking={0.95}')
-                result_string += self.print_lowest_rf_cross_acc_greedy(df, name, selection_method, 0.975, f'filter={filtering}; opti={optimization}; break_opti={breaking}; sel={selection_method}; breaking={0.975}')
+            selection_names_copy = selection_names.copy()
+            df = pd.read_pickle(path, compression='gzip')
+            print(df)
+            for selection_method in selection_methods:
+                selection_name = selection_names_copy.pop()
+                print(f"sel_method={selection_method}; sel_name={selection_name}")
+                instance_breaking = '$\mathrm{fcp}_{\geq 0.9}$'
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, timeout_breaking_method, selection_method, 0.9, f'{filtering} & {optimization} & {selection_method} & {timeout_breaking} & {selection_name} & {instance_breaking}')
+                instance_breaking = '$\mathrm{fcp}_{\geq 0.925}$'
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, timeout_breaking_method, selection_method, 0.925, f'{filtering} & {optimization} & {selection_method} & {timeout_breaking} & {selection_name} & {instance_breaking}')
+                instance_breaking = '$\mathrm{fcp}_{\geq 0.95}$'
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, timeout_breaking_method, selection_method, 0.95, f'{filtering} & {optimization} & {selection_method} & {timeout_breaking} & {selection_name} & {instance_breaking}')
+                instance_breaking = '$\mathrm{fcp}_{\geq 0.975}$'
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, timeout_breaking_method, selection_method, 0.975, f'{filtering} & {optimization} & {selection_method} & {timeout_breaking} & {selection_name} & {instance_breaking}')
 
         print()
         print("combined:")
@@ -270,11 +280,11 @@ class PlotGenerator:
 
         results_df = pd.DataFrame(self.results, columns=["x", "y", "std_x", "std_y", "label"])
 
-        pareto = self.pareto_front(results_df)
+        pareto = self.pareto_front(results_df, "Results for Bottom-Up Timeout Distribution")
 
         self.plot_pareto_df(pareto)
 
-        self.results = []    
+        self.results = []
 
     def get_all_measurements_instance_wise(self, dfs, plot_type):
         result_string = ""
@@ -312,7 +322,7 @@ class PlotGenerator:
 
         if plot_type == 'pareto':
             pareto = self.pareto_front(results_df)
-            self.plot_pareto_df(pareto)
+            self.plot_pareto_df(pareto, "Results for Instance-Wise Timeout Distribution")
 
         if plot_type == 'compare estimator':
             self.compare_estimator(results_df)
@@ -431,7 +441,7 @@ class PlotGenerator:
         # Display the plot
         plt.show()
 
-    def plot_pareto_df(self, df):
+    def plot_pareto_df(self, df, title):
         palette = sns.color_palette("tab20", n_colors=len(df))
         sns.set_theme(style="whitegrid")
         configuration = 1
@@ -451,7 +461,7 @@ class PlotGenerator:
         #plt.xlim(right=1)
         #plt.ylim(0, 1.05)
         plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
-        plt.title("Results for Instance-Wise Timeout Distribution")
+        plt.title(title)
         plt.grid(True, linestyle="--", alpha=0.5)
         plt.tight_layout()
         # Show or save
@@ -506,6 +516,7 @@ class PlotGenerator:
             true_s_v2 = true_v2[true_v2['solver'] == solver]
 
             if cross_s.empty or true_s_v1.empty or true_s_v2.empty:
+                print("no data")
                 continue  # skip solver if no data at all
 
             # check which points cross the threshold
@@ -531,7 +542,7 @@ class PlotGenerator:
                 "true_acc_v2": true_val_v2
             })
 
-            print(f"{solver}: runtime_fraction = {min_rf:.4f}, cross_acc = {cross_val:.4f}, true_acc_v1 = {true_val_v1:.4f},  true_acc_v2 = {true_val_v2:.4f}")
+            #print(f"{solver}: runtime_fraction = {min_rf:.4f}, cross_acc = {cross_val:.4f}, true_acc_v1 = {true_val_v1:.4f},  true_acc_v2 = {true_val_v2:.4f}")
 
         out = pd.DataFrame.from_records(records)
 
@@ -549,8 +560,8 @@ class PlotGenerator:
         print(f"True_acc_v2     : mean = {avg_true_v2:.3f}, std = {std_true_v2:.3f}")
 
         # (x, y, std_x, std_y)
-        self.results.append((avg_rf, avg_true_v1, std_rf, std_true_v1, label + '; v1'))
-        self.results.append((avg_rf, avg_true_v2, std_rf, std_true_v2, label + '; v2'))
+        self.results.append((avg_rf, avg_true_v1, std_rf, std_true_v1, label + ' & $s_\mathcal{B}$'))
+        self.results.append((avg_rf, avg_true_v2, std_rf, std_true_v2, label + ' & $s_\mathrm{fitted}$'))
 
         return f"$0.4$ & {wanted_measurement} & ${threshold}$ & ${avg_rf:.3f} \pm {std_rf:.3f}$ & ${avg_true_v1:.3f} \pm {std_true_v1:.3f}$ & ${avg_true_v2:.3f} \pm {std_true_v2:.3f}$ \\\\\n\n"
 
@@ -758,10 +769,10 @@ class PlotGenerator:
 
 
         # "pareto", "compare estimator"
-        self.get_all_measurements_instance_wise([delta_0_4, delta_0_5, delta_0_6, delta_0_7, delta_0_8, delta_0_9, delta_0_4_no_filter, delta_0_5_no_filter, delta_0_6_no_filter, delta_0_7_no_filter, delta_0_8_no_filter, delta_0_9_no_filter], "compare estimator")
+        #self.get_all_measurements_instance_wise([delta_0_4, delta_0_5, delta_0_6, delta_0_7, delta_0_8, delta_0_9, delta_0_4_no_filter, delta_0_5_no_filter, delta_0_6_no_filter, delta_0_7_no_filter, delta_0_8_no_filter, delta_0_9_no_filter], "compare estimator")
 
 
-        #self.get_all_measurements_greedy([knapsack_rmse_until_cross_acc_0_960_no_filter       ,knapsack_rmse_until_cross_acc_0_970_no_filter       ,knapsack_rmse_until_cross_acc_0_980_no_filter       ,knapsack_rmse_until_cross_acc_0_990_no_filter       ,knapsack_rmse_until_cross_acc_0_965_no_filter       ,knapsack_rmse_until_cross_acc_0_975_no_filter       ,knapsack_rmse_until_cross_acc_0_985_no_filter       ,knapsack_rmse_until_cross_acc_0_995_no_filter       ,knapsack_rmse_until_cross_acc_1_000_no_filter       ,knapsack_rmse_until_cross_acc_0_960_with_filter     ,knapsack_rmse_until_cross_acc_0_970_with_filter     ,knapsack_rmse_until_cross_acc_0_980_with_filter     ,knapsack_rmse_until_cross_acc_0_990_with_filter     ,knapsack_rmse_until_cross_acc_0_965_with_filter     ,knapsack_rmse_until_cross_acc_0_975_with_filter     ,knapsack_rmse_until_cross_acc_0_985_with_filter     ,knapsack_rmse_until_cross_acc_0_995_with_filter     ,knapsack_rmse_until_cross_acc_1_000_with_filter     ,knapsack_cross_acc_until_cross_acc_0_960_with_filter,knapsack_cross_acc_until_cross_acc_0_970_with_filter,knapsack_cross_acc_until_cross_acc_0_980_with_filter,knapsack_cross_acc_until_cross_acc_0_990_with_filter,knapsack_cross_acc_until_cross_acc_0_965_with_filter,knapsack_cross_acc_until_cross_acc_0_975_with_filter,knapsack_cross_acc_until_cross_acc_0_985_with_filter,knapsack_cross_acc_until_cross_acc_0_995_with_filter,knapsack_cross_acc_until_cross_acc_1_000_with_filter,knapsack_cross_acc_until_cross_acc_0_960_no_filter  ,knapsack_cross_acc_until_cross_acc_0_970_no_filter  ,knapsack_cross_acc_until_cross_acc_0_980_no_filter  ,knapsack_cross_acc_until_cross_acc_0_990_no_filter  ,knapsack_cross_acc_until_cross_acc_0_965_no_filter  ,knapsack_cross_acc_until_cross_acc_0_975_no_filter  ,knapsack_cross_acc_until_cross_acc_0_985_no_filter  ,knapsack_cross_acc_until_cross_acc_0_995_no_filter  ,knapsack_cross_acc_until_cross_acc_1_000_no_filter])
+        self.get_all_measurements_bottom_up([knapsack_rmse_until_cross_acc_0_960_no_filter       ,knapsack_rmse_until_cross_acc_0_970_no_filter ])#  ,knapsack_rmse_until_cross_acc_0_980_no_filter       ,knapsack_rmse_until_cross_acc_0_990_no_filter       ,knapsack_rmse_until_cross_acc_0_965_no_filter       ,knapsack_rmse_until_cross_acc_0_975_no_filter       ,knapsack_rmse_until_cross_acc_0_985_no_filter       ,knapsack_rmse_until_cross_acc_0_995_no_filter       ,knapsack_rmse_until_cross_acc_1_000_no_filter       ,knapsack_rmse_until_cross_acc_0_960_with_filter     ,knapsack_rmse_until_cross_acc_0_970_with_filter     ,knapsack_rmse_until_cross_acc_0_980_with_filter     ,knapsack_rmse_until_cross_acc_0_990_with_filter     ,knapsack_rmse_until_cross_acc_0_965_with_filter     ,knapsack_rmse_until_cross_acc_0_975_with_filter     ,knapsack_rmse_until_cross_acc_0_985_with_filter     ,knapsack_rmse_until_cross_acc_0_995_with_filter     ,knapsack_rmse_until_cross_acc_1_000_with_filter     ,knapsack_cross_acc_until_cross_acc_0_960_with_filter,knapsack_cross_acc_until_cross_acc_0_970_with_filter,knapsack_cross_acc_until_cross_acc_0_980_with_filter,knapsack_cross_acc_until_cross_acc_0_990_with_filter,knapsack_cross_acc_until_cross_acc_0_965_with_filter,knapsack_cross_acc_until_cross_acc_0_975_with_filter,knapsack_cross_acc_until_cross_acc_0_985_with_filter,knapsack_cross_acc_until_cross_acc_0_995_with_filter,knapsack_cross_acc_until_cross_acc_1_000_with_filter,knapsack_cross_acc_until_cross_acc_0_960_no_filter  ,knapsack_cross_acc_until_cross_acc_0_970_no_filter  ,knapsack_cross_acc_until_cross_acc_0_980_no_filter  ,knapsack_cross_acc_until_cross_acc_0_990_no_filter  ,knapsack_cross_acc_until_cross_acc_0_965_no_filter  ,knapsack_cross_acc_until_cross_acc_0_975_no_filter  ,knapsack_cross_acc_until_cross_acc_0_985_no_filter  ,knapsack_cross_acc_until_cross_acc_0_995_no_filter  ,knapsack_cross_acc_until_cross_acc_1_000_no_filter])
 
 
 
