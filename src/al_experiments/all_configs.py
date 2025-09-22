@@ -8,7 +8,6 @@ from al_experiments.instance_selector import InstanceSelector, choose_instances_
 from al_experiments.constants import Constants
 from al_experiments.thresh_breaking_condition import ThreshBreakingCondition
 
-
 experiment_configs = [
     ExperimentConfig(
         filter_unsolvable=True,
