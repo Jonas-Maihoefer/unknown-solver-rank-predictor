@@ -239,7 +239,7 @@ class PlotGenerator:
             legend=True
         )
 
-    def get_all_measurements_bottom_up(self, paths):
+    def get_all_measurements_bottom_up(self, paths, plot_type, attribute_1=None, attribute_2=None):
         result_string = ""
 
         timeout_breaking_methods = ['until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00', 'until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00', 'until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00', 'until_cross_acc_0_96', 'until_cross_acc_0_97', 'until_cross_acc_0_98', 'until_cross_acc_0_99', 'until_cross_acc_0_965', 'until_cross_acc_0_975', 'until_cross_acc_0_985', 'until_cross_acc_0_995', 'until_cross_acc_1_00']
@@ -279,15 +279,71 @@ class PlotGenerator:
         print(result_string)
 
         results_df = pd.DataFrame(self.results, columns=["x", "y", "std_x", "std_y", "label"])
+        results_df["method"] = "bottom-up"
 
-        pareto = self.pareto_front(results_df, "Results for Bottom-Up Timeout Distribution")
+        if plot_type == 'pareto':
+            pareto = self.pareto_front(results_df, "Results for Bottom-Up Timeout Distribution")
+            self.plot_pareto_df(pareto)
 
-        self.plot_pareto_df(pareto)
+        if plot_type == 'compare estimator':
+            self.compare_estimator(results_df)
+
+        if plot_type == 'compare':
+            self.compare_attributes(results_df, attribute_1, attribute_2)
 
         self.results = []
 
-    def get_all_measurements_instance_wise(self, dfs, plot_type):
-        result_string = ""
+    def get_all_measurements_random_timeout(self, paths, plot_type, attribute_1=None, attribute_2=None):
+        """ result_string = ""
+
+        filterings = [True, False]
+        selection_methods = ['choose_instances_random', 'variance_based_selection_1', 'highest_rt_selection', 'lowest_variance', 'highest_variance', 'lowest_variances_per_rt', 'lowest_rt_selection']
+        selection_names = ['$\mathrm{rand}$', '$\mathrm{max}_{V/R}$', '$\mathrm{max}_{R}$', '$\mathrm{min}_{V}$', '$\mathrm{max}_{V}$', '$\mathrm{min}_{V/R}$', '$\mathrm{min}_{R}$']
+
+        filterings.reverse()
+        selection_names.reverse()
+
+        for path in paths:
+            df = pd.read_pickle(path, compression='gzip')
+            filtering = filterings.pop()
+            selection_names_copy = selection_names.copy()
+            for selection_method in selection_methods:
+                selection_name = selection_names_copy.pop()
+                print(f"sel_method={selection_method}; sel_name={selection_name}")
+                breaking_condition = '$\mathrm{fcp}_{\geq 0.9}$'
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, 'not_needed', selection_method, 0.9, f'{filtering} & {selection_name} & {breaking_condition}')
+                breaking_condition = '$\mathrm{fcp}_{\geq 0.925}$'
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, 'not_needed', selection_method, 0.925, f'{filtering} & {selection_name} & {breaking_condition}')
+                breaking_condition = '$\mathrm{fcp}_{\geq 0.95}$'
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, 'not_needed', selection_method, 0.95, f'{filtering} & {selection_name} & {breaking_condition}')
+                breaking_condition = '$\mathrm{fcp}_{\geq 0.975}$'
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, 'not_needed', selection_method, 0.975, f'{filtering} & {selection_name} & {breaking_condition} \\')
+
+        print()
+        print("combined:")
+        print(result_string)
+
+        results_df = pd.DataFrame(self.results, columns=["x", "y", "std_x", "std_y", "label"])
+        results_df["method"] = "random" """
+
+        stored_df = pd.read_pickle("./pickle/all-runs.pkl.gz", compression="gzip")
+
+        results_df = stored_df[stored_df["method"] == "random"]
+
+        if plot_type == 'pareto':
+            pareto = self.pareto_front(results_df)
+            self.plot_pareto_df(pareto, "Results for Random Timeout Distribution")
+
+        if plot_type == 'compare estimator':
+            self.compare_estimator(results_df)
+
+        if plot_type == 'compare':
+            self.compare_attributes(results_df, attribute_1, attribute_2)
+
+        self.results = []
+
+    def get_all_measurements_instance_wise(self, dfs, plot_type, attribute_1=None, attribute_2=None):
+        """ result_string = ""
 
         deltas = [0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
         filterings = [True, True, True, True, True, True, False, False, False, False, False, False]
@@ -319,6 +375,11 @@ class PlotGenerator:
         print(result_string)
 
         results_df = pd.DataFrame(self.results, columns=["x", "y", "std_x", "std_y", "label"])
+        results_df["method"] = "instance-wise" """
+
+        stored_df = pd.read_pickle("./pickle/all-runs.pkl.gz", compression="gzip")
+
+        results_df = stored_df[stored_df["method"] == "instance-wise"]
 
         if plot_type == 'pareto':
             pareto = self.pareto_front(results_df)
@@ -327,7 +388,57 @@ class PlotGenerator:
         if plot_type == 'compare estimator':
             self.compare_estimator(results_df)
 
+        if plot_type == 'compare':
+            self.compare_attributes(results_df, attribute_1, attribute_2)
+
         self.results = []
+
+    def update_all_runs(self, append_df):
+        path = "./pickle/all-runs.pkl.gz"
+        stored_df = pd.read_pickle(path, compression="gzip")
+        combined = pd.concat([stored_df, append_df], ignore_index=True)
+        combined.to_pickle(path, compression="gzip")
+
+    def compare_attributes(self, df, attribute_1, attribute_2):
+        att_1 = df[df["label"].str.contains(attribute_1, regex=False, na=False)]
+        if attribute_2 is None:
+            att_2 = df[~df["label"].str.contains(attribute_1, regex=False, na=False)]
+            attribute_2 = "not " + attribute_1
+        else:
+            att_2 = df[df["label"].str.contains(attribute_2, regex=False, na=False)]
+        att_1_pareto = self.pareto_front(att_1)
+        att_2_pareto = self.pareto_front(att_2)
+
+        plt.figure(figsize=(8, 5))
+
+        # Plot df_1
+        sns.lineplot(
+            data=att_1_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=attribute_1
+        )
+
+        # Plot df_2
+        sns.lineplot(
+            data=att_2_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",
+            marker="o",
+            label=attribute_2
+        )
+
+        plt.xlabel("$\overline{O}_{\mathrm{rt}}$")
+        #plt.xlim(right=1)
+        #plt.ylim(0, 1.05)
+        plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
+        plt.title("Compare Random Instance Selection to Non-Random Selection")
+        plt.grid(True, linestyle="--", alpha=0.5)
+        plt.tight_layout()
+
+        plt.legend()
+        plt.show()
 
     def compare_estimator(self, results_df):
         s_b_points = results_df[results_df['label'].str.contains('$s_\mathcal{B}$', regex=False)]
@@ -448,7 +559,7 @@ class PlotGenerator:
 
         # Plot each label group
         for idx, row in df.iterrows():
-            config_path = '\\raisebox{-0.2\\height}{\\includegraphics[width=0.6cm]{images/label_marker/config_' + str(idx) + '.png}}'
+            config_path = '\\raisebox{-0.2\\height}{\\includegraphics[width=0.6cm]{images/label_marker/config_' + str(configuration) + '.png}}'
             color = palette[idx % len(palette)]
             h = plt.errorbar(
                 row["x"], row["y"],
@@ -761,6 +872,9 @@ class PlotGenerator:
         knapsack_cross_acc_until_cross_acc_0_995_no_filter = "./pickle/5cfd8084_3_until_cross_acc_0_995_rt_weigth_1_temp_None.pkl.gz"
         knapsack_cross_acc_until_cross_acc_1_000_no_filter = "./pickle/5cfd8084_3_until_cross_acc_1_00_rt_weigth_1_temp_None.pkl.gz"
 
+        ########### RANDOM TIMEOUT ###############
+        random_timeout_with_filter = "./pickle/955dd53_0_not_needed_rt_weigth_1_temp_None.pkl.gz"
+        random_timeout_no_filter = "./pickle/955dd53_1_not_needed_rt_weigth_1_temp_None.pkl.gz"
 
         al_low_delta_rt = [0.0541, 0.1035]
         al_high_delta_acc = [0.9048, 0.9233]
@@ -769,10 +883,11 @@ class PlotGenerator:
 
 
         # "pareto", "compare estimator"
-        #self.get_all_measurements_instance_wise([delta_0_4, delta_0_5, delta_0_6, delta_0_7, delta_0_8, delta_0_9, delta_0_4_no_filter, delta_0_5_no_filter, delta_0_6_no_filter, delta_0_7_no_filter, delta_0_8_no_filter, delta_0_9_no_filter], "compare estimator")
+        self.get_all_measurements_instance_wise([delta_0_4, delta_0_5, delta_0_6, delta_0_7, delta_0_8, delta_0_9, delta_0_4_no_filter, delta_0_5_no_filter, delta_0_6_no_filter, delta_0_7_no_filter, delta_0_8_no_filter, delta_0_9_no_filter], "pareto")#'compare', "$\mathrm{rand}$")
 
+        #self.get_all_measurements_random_timeout([random_timeout_with_filter, random_timeout_no_filter], 'compare', "$\mathrm{rand}$")
 
-        self.get_all_measurements_bottom_up([knapsack_rmse_until_cross_acc_0_960_no_filter       ,knapsack_rmse_until_cross_acc_0_970_no_filter ])#  ,knapsack_rmse_until_cross_acc_0_980_no_filter       ,knapsack_rmse_until_cross_acc_0_990_no_filter       ,knapsack_rmse_until_cross_acc_0_965_no_filter       ,knapsack_rmse_until_cross_acc_0_975_no_filter       ,knapsack_rmse_until_cross_acc_0_985_no_filter       ,knapsack_rmse_until_cross_acc_0_995_no_filter       ,knapsack_rmse_until_cross_acc_1_000_no_filter       ,knapsack_rmse_until_cross_acc_0_960_with_filter     ,knapsack_rmse_until_cross_acc_0_970_with_filter     ,knapsack_rmse_until_cross_acc_0_980_with_filter     ,knapsack_rmse_until_cross_acc_0_990_with_filter     ,knapsack_rmse_until_cross_acc_0_965_with_filter     ,knapsack_rmse_until_cross_acc_0_975_with_filter     ,knapsack_rmse_until_cross_acc_0_985_with_filter     ,knapsack_rmse_until_cross_acc_0_995_with_filter     ,knapsack_rmse_until_cross_acc_1_000_with_filter     ,knapsack_cross_acc_until_cross_acc_0_960_with_filter,knapsack_cross_acc_until_cross_acc_0_970_with_filter,knapsack_cross_acc_until_cross_acc_0_980_with_filter,knapsack_cross_acc_until_cross_acc_0_990_with_filter,knapsack_cross_acc_until_cross_acc_0_965_with_filter,knapsack_cross_acc_until_cross_acc_0_975_with_filter,knapsack_cross_acc_until_cross_acc_0_985_with_filter,knapsack_cross_acc_until_cross_acc_0_995_with_filter,knapsack_cross_acc_until_cross_acc_1_000_with_filter,knapsack_cross_acc_until_cross_acc_0_960_no_filter  ,knapsack_cross_acc_until_cross_acc_0_970_no_filter  ,knapsack_cross_acc_until_cross_acc_0_980_no_filter  ,knapsack_cross_acc_until_cross_acc_0_990_no_filter  ,knapsack_cross_acc_until_cross_acc_0_965_no_filter  ,knapsack_cross_acc_until_cross_acc_0_975_no_filter  ,knapsack_cross_acc_until_cross_acc_0_985_no_filter  ,knapsack_cross_acc_until_cross_acc_0_995_no_filter  ,knapsack_cross_acc_until_cross_acc_1_000_no_filter])
+        #self.get_all_measurements_bottom_up([knapsack_rmse_until_cross_acc_0_960_no_filter       ,knapsack_rmse_until_cross_acc_0_970_no_filter ])#  ,knapsack_rmse_until_cross_acc_0_980_no_filter       ,knapsack_rmse_until_cross_acc_0_990_no_filter       ,knapsack_rmse_until_cross_acc_0_965_no_filter       ,knapsack_rmse_until_cross_acc_0_975_no_filter       ,knapsack_rmse_until_cross_acc_0_985_no_filter       ,knapsack_rmse_until_cross_acc_0_995_no_filter       ,knapsack_rmse_until_cross_acc_1_000_no_filter       ,knapsack_rmse_until_cross_acc_0_960_with_filter     ,knapsack_rmse_until_cross_acc_0_970_with_filter     ,knapsack_rmse_until_cross_acc_0_980_with_filter     ,knapsack_rmse_until_cross_acc_0_990_with_filter     ,knapsack_rmse_until_cross_acc_0_965_with_filter     ,knapsack_rmse_until_cross_acc_0_975_with_filter     ,knapsack_rmse_until_cross_acc_0_985_with_filter     ,knapsack_rmse_until_cross_acc_0_995_with_filter     ,knapsack_rmse_until_cross_acc_1_000_with_filter     ,knapsack_cross_acc_until_cross_acc_0_960_with_filter,knapsack_cross_acc_until_cross_acc_0_970_with_filter,knapsack_cross_acc_until_cross_acc_0_980_with_filter,knapsack_cross_acc_until_cross_acc_0_990_with_filter,knapsack_cross_acc_until_cross_acc_0_965_with_filter,knapsack_cross_acc_until_cross_acc_0_975_with_filter,knapsack_cross_acc_until_cross_acc_0_985_with_filter,knapsack_cross_acc_until_cross_acc_0_995_with_filter,knapsack_cross_acc_until_cross_acc_1_000_with_filter,knapsack_cross_acc_until_cross_acc_0_960_no_filter  ,knapsack_cross_acc_until_cross_acc_0_970_no_filter  ,knapsack_cross_acc_until_cross_acc_0_980_no_filter  ,knapsack_cross_acc_until_cross_acc_0_990_no_filter  ,knapsack_cross_acc_until_cross_acc_0_965_no_filter  ,knapsack_cross_acc_until_cross_acc_0_975_no_filter  ,knapsack_cross_acc_until_cross_acc_0_985_no_filter  ,knapsack_cross_acc_until_cross_acc_0_995_no_filter  ,knapsack_cross_acc_until_cross_acc_1_000_no_filter])
 
 
 
