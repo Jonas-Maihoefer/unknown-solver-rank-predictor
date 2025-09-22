@@ -68,7 +68,7 @@ class Accuracy:
         self.n = 1
         self.used_runtime = 0
         self.pred = np.ascontiguousarray(
-            np.full((27,), 0), dtype=np.float32
+            np.full((self.number_of_reduced_solvers,), 0), dtype=np.float32
         )
 
     def add_runtime_quantized(
