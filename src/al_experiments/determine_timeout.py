@@ -12,6 +12,19 @@ else:
     import numpy as np
 
 
+def random_timeout(
+    acc_calculator: Accuracy,
+    solver_string: str,
+    number_of_instances,
+    prev_thresh,
+    number_of_reduced_solvers
+):
+    arr = np.ascontiguousarray(
+        np.random.randint(0, number_of_reduced_solvers + 1, size=(number_of_instances,), dtype=np.int32)
+    )
+    return arr
+
+
 def static_timeout(
     acc_calculator: Accuracy,
     solver_string: str,
