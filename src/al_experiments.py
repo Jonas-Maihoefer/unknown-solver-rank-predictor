@@ -399,7 +399,8 @@ def run_all_configs():
         run_counter += 1
         global plot_generator
         plot_generator = PlotGenerator(git_hash_with_run, config)
-        #plot_generator.create_progress_plot()
+        plot_generator.create_progress_plot()
+        break
 
         print(f"start experiment on {git_hash_with_run}")
         run_multi_temp_experiments(config)
