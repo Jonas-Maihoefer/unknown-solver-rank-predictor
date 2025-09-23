@@ -25,6 +25,16 @@ def random_timeout(
     return arr
 
 
+def static_timeout_test(
+    acc_calculator: Accuracy,
+    solver_string: str,
+    number_of_instances,
+    prev_thresh,
+    number_of_reduced_solvers
+):
+    return np.ascontiguousarray(np.full((number_of_instances,), number_of_reduced_solvers, dtype=np.int32))
+
+
 def static_timeout(
     acc_calculator: Accuracy,
     solver_string: str,

@@ -443,7 +443,7 @@ class Accuracy:
 
         return thresholds
 
-    def sample_result(self, thresholds, pred, measurement, best_score=0):
+    def sample_result(self, thresholds, pred, measurement, best_score=0, static_timeouts=False):
         m, c, error = self.linear_fit(pred, self.par_2_scores)
 
         normalized_pred = m * pred + c

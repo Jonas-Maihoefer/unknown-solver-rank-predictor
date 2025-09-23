@@ -23,7 +23,8 @@ class InstanceSelector:
             sorted_rt,
             acc_calculator: Accuracy,
             sample_intervall: int,
-            choosing_fn
+            choosing_fn,
+            static_timeouts
     ):
         self.number_of_reduced_solvers = con.number_of_reduced_solvers
         self.number_of_instances = con.number_of_instances
@@ -33,6 +34,7 @@ class InstanceSelector:
         self.acc_calculator = acc_calculator
         self.sample_intervall = sample_intervall
         self.choosing_fn = choosing_fn
+        self.static_timeouts = static_timeouts
         self.n = 0
         self.total_runtime = 0
         self.choosen_instances = []
@@ -54,11 +56,17 @@ class InstanceSelector:
             #print(possible_instances)
             new_instance = self.choosing_fn(
                 possible_instances, self.thresholds,
-                self.sorted_rt, self.instance_idx
+                self.sorted_rt, self.instance_idx, self.static_timeouts
             )
             included_solvers = self.thresholds[new_instance]
             self.choosen_thresholds[new_instance] = included_solvers
             runtimes = self.sorted_rt[rt][new_instance].copy()
+            if self.static_timeouts:
+                print("rt")
+                print(runtimes)
+                runtimes = np.delete(runtimes, included_solvers)
+                print("new rt")
+                print(runtimes)
             idxs = self.sorted_rt[idx][new_instance]
             timeout = runtimes[included_solvers]
             #print(f"last included solver is solver {solver}")
@@ -92,7 +100,7 @@ class InstanceSelector:
 
         # sample last result
         self.acc_calculator.sample_result(
-            self.choosen_thresholds, self.pred, self.choosing_fn.__name__
+            self.choosen_thresholds, self.pred, self.choosing_fn.__name__, static_timeouts=self.static_timeouts
         )
 
 
@@ -109,11 +117,21 @@ def variance_based_selection_1(
         possible_instances,
         thresholds,
         sorted_runtimes,
-        instance_idx
+        instance_idx,
+        static_timeout
 ):
     """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
     timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
+
     runtimes = sorted_runtimes[rt].copy()
+
+    if static_timeout:
+        # Create a mask that is True everywhere except at the positions we want to remove
+        mask = np.ones_like(runtimes, dtype=bool)
+        mask[instance_idx, thresholds] = False
+
+        # Apply mask and reshape to (N, M-1)
+        runtimes = runtimes[mask].reshape(runtimes.shape[0], runtimes.shape[1]-1)
 
     runtimes[runtimes > timeouts[:, None]] = np.nan
     runtimes[:, 0] = np.nan
@@ -135,13 +153,22 @@ def variance_based_selection_2(
         possible_instances,
         thresholds,
         sorted_runtimes,
-        instance_idx
+        instance_idx,
+        static_timeout
 ):
     """this methods works slightly worse than `variance_based_selection_1` (tested in e99fb452 (this version) vs 697d3971 (version 1))"""
     timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
 
     scores = sorted_runtimes[rt].copy()
     runtimes = sorted_runtimes[rt].copy()
+    if static_timeout:
+        # Create a mask that is True everywhere except at the positions we want to remove
+        mask = np.ones_like(runtimes, dtype=bool)
+        mask[instance_idx, thresholds] = False
+
+        # Apply mask and reshape to (N, M-1)
+        runtimes = runtimes[mask].reshape(runtimes.shape[0], runtimes.shape[1]-1)
+        scores = scores[mask].reshape(runtimes.shape[0], runtimes.shape[1]-1)
 
     scores[:, 0] = np.nan
     scores[scores == 0.0] = 0.001
@@ -182,11 +209,20 @@ def lowest_variances_per_rt(
         possible_instances,
         thresholds,
         sorted_runtimes,
-        instance_idx
+        instance_idx,
+        static_timeout
 ):
     """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
     timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
+
     runtimes = sorted_runtimes[rt].copy()
+    if static_timeout:
+        # Create a mask that is True everywhere except at the positions we want to remove
+        mask = np.ones_like(runtimes, dtype=bool)
+        mask[instance_idx, thresholds] = False
+
+        # Apply mask and reshape to (N, M-1)
+        runtimes = runtimes[mask].reshape(runtimes.shape[0], runtimes.shape[1]-1)
 
     runtimes[runtimes > timeouts[:, None]] = np.nan
     runtimes[:, 0] = np.nan
@@ -208,11 +244,19 @@ def lowest_variance(
         possible_instances,
         thresholds,
         sorted_runtimes,
-        instance_idx
+        instance_idx,
+        static_timeout
 ):
     """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
     timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
     runtimes = sorted_runtimes[rt].copy()
+    if static_timeout:
+        # Create a mask that is True everywhere except at the positions we want to remove
+        mask = np.ones_like(runtimes, dtype=bool)
+        mask[instance_idx, thresholds] = False
+
+        # Apply mask and reshape to (N, M-1)
+        runtimes = runtimes[mask].reshape(runtimes.shape[0], runtimes.shape[1]-1)
 
     runtimes[runtimes > timeouts[:, None]] = np.nan
     runtimes[:, 0] = np.nan
@@ -234,11 +278,19 @@ def highest_variance(
         possible_instances,
         thresholds,
         sorted_runtimes,
-        instance_idx
+        instance_idx,
+        static_timeout
 ):
     """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
     timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
     runtimes = sorted_runtimes[rt].copy()
+    if static_timeout:
+        # Create a mask that is True everywhere except at the positions we want to remove
+        mask = np.ones_like(runtimes, dtype=bool)
+        mask[instance_idx, thresholds] = False
+
+        # Apply mask and reshape to (N, M-1)
+        runtimes = runtimes[mask].reshape(runtimes.shape[0], runtimes.shape[1]-1)
 
     runtimes[runtimes > timeouts[:, None]] = np.nan
     runtimes[:, 0] = np.nan
@@ -260,10 +312,18 @@ def lowest_rt_selection(
         possible_instances,
         thresholds,
         sorted_runtimes,
-        instance_idx
+        instance_idx,
+        static_timeout
 ):
     timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
     runtimes = sorted_runtimes[rt].copy()
+    if static_timeout:
+        # Create a mask that is True everywhere except at the positions we want to remove
+        mask = np.ones_like(runtimes, dtype=bool)
+        mask[instance_idx, thresholds] = False
+
+        # Apply mask and reshape to (N, M-1)
+        runtimes = runtimes[mask].reshape(runtimes.shape[0], runtimes.shape[1]-1)
 
     runtimes[runtimes > timeouts[:, None]] = np.nan
     runtimes[:, 0] = np.nan
@@ -284,10 +344,18 @@ def highest_rt_selection(
         possible_instances,
         thresholds,
         sorted_runtimes,
-        instance_idx
+        instance_idx,
+        static_timeout
 ):
     timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
     runtimes = sorted_runtimes[rt].copy()
+    if static_timeout:
+        # Create a mask that is True everywhere except at the positions we want to remove
+        mask = np.ones_like(runtimes, dtype=bool)
+        mask[instance_idx, thresholds] = False
+
+        # Apply mask and reshape to (N, M-1)
+        runtimes = runtimes[mask].reshape(runtimes.shape[0], runtimes.shape[1]-1)
 
     runtimes[runtimes > timeouts[:, None]] = np.nan
     runtimes[:, 0] = np.nan
@@ -307,7 +375,8 @@ def highest_rt_selection(
 def best_cross_acc(
         possible_instances,
         thresholds,
-        sorted_runtimes
+        sorted_runtimes,
+        static_timeout
 ):
     raise Exception("implememnt!")
 
@@ -315,6 +384,7 @@ def best_cross_acc(
 def no_selection(
     possible_instances,
     thresholds,
-    sorted_runtimes
+    sorted_runtimes,
+    static_timeout
 ):
     pass
