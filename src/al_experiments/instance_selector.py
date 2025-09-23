@@ -23,7 +23,8 @@ class InstanceSelector:
             sorted_rt,
             acc_calculator: Accuracy,
             sample_intervall: int,
-            choosing_fn
+            choosing_fn,
+            static_timeout: bool
     ):
         self.number_of_reduced_solvers = con.number_of_reduced_solvers
         self.number_of_instances = con.number_of_instances
@@ -33,6 +34,7 @@ class InstanceSelector:
         self.acc_calculator = acc_calculator
         self.sample_intervall = sample_intervall
         self.choosing_fn = choosing_fn
+        self.static_timeout = static_timeout
         self.n = 0
         self.total_runtime = 0
         self.choosen_instances = []
@@ -54,21 +56,34 @@ class InstanceSelector:
             #print(possible_instances)
             new_instance = self.choosing_fn(
                 possible_instances, self.thresholds,
-                self.sorted_rt, self.instance_idx
+                self.sorted_rt, self.instance_idx,
+                self.static_timeout
             )
-            included_solvers = self.thresholds[new_instance]
-            self.choosen_thresholds[new_instance] = included_solvers
-            runtimes = self.sorted_rt[rt][new_instance].copy()
-            idxs = self.sorted_rt[idx][new_instance]
-            timeout = runtimes[included_solvers]
-            #print(f"last included solver is solver {solver}")
-            included_idxs = idxs[:included_solvers + 1]
-            included_runtimes = runtimes[:included_solvers + 1]
-            #print("included")
-            #print(included)
-            excluded_idxs = idxs[included_solvers + 1:]
-            #print("excluded")
-            #print(excluded)
+            if self.static_timeout:
+                self.choosen_thresholds[new_instance] = self.thresholds[new_instance]
+                runtimes = self.sorted_rt[rt][new_instance].copy()
+                idxs = self.sorted_rt[idx][new_instance]
+                timeout = self.thresholds[new_instance]
+                #print(f"last included solver is solver {solver}")
+                mask_below = runtimes < timeout
+                mask_above_or_equal = ~mask_below
+                included_idxs = idxs[mask_below]
+                included_runtimes = runtimes[mask_below]
+                excluded_idxs = idxs[mask_above_or_equal]
+            else:
+                included_solvers = self.thresholds[new_instance]
+                self.choosen_thresholds[new_instance] = included_solvers
+                runtimes = self.sorted_rt[rt][new_instance].copy()
+                idxs = self.sorted_rt[idx][new_instance]
+                timeout = runtimes[included_solvers]
+                #print(f"last included solver is solver {solver}")
+                included_idxs = idxs[:included_solvers + 1]
+                included_runtimes = runtimes[:included_solvers + 1]
+                #print("included")
+                #print(included)
+                excluded_idxs = idxs[included_solvers + 1:]
+                #print("excluded")
+                #print(excluded)
 
             if timeout == 5000:
                 included_runtimes[included_runtimes == 5000] = 10000
@@ -79,7 +94,8 @@ class InstanceSelector:
             if self.n % self.sample_intervall == 0:
                 self.acc_calculator.sample_result(
                     self.choosen_thresholds, self.pred,
-                    self.choosing_fn.__name__
+                    self.choosing_fn.__name__,
+                    static_timeout=self.static_timeout
                 )
             self.n += 1
 
@@ -92,7 +108,8 @@ class InstanceSelector:
 
         # sample last result
         self.acc_calculator.sample_result(
-            self.choosen_thresholds, self.pred, self.choosing_fn.__name__
+            self.choosen_thresholds, self.pred, self.choosing_fn.__name__,
+            static_timeout=self.static_timeout
         )
 
 
@@ -100,7 +117,8 @@ def choose_instances_random(
         possible_instances,
         thresholds,
         sorted_runtimes,
-        instance_idx
+        instance_idx,
+        static_timeouts
 ):
     return np.random.choice(possible_instances)
 
@@ -109,12 +127,16 @@ def variance_based_selection_1(
         possible_instances,
         thresholds,
         sorted_runtimes,
-        instance_idx
+        instance_idx,
+        static_timeouts
 ):
     """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
-    timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
-    runtimes = sorted_runtimes[rt].copy()
+    if static_timeouts:
+        timeouts = thresholds
+    else:
+        timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
 
+    runtimes = sorted_runtimes[rt].copy()
     runtimes[runtimes > timeouts[:, None]] = np.nan
     runtimes[:, 0] = np.nan
     runtimes[runtimes == 0.0] = 0.001
@@ -126,7 +148,10 @@ def variance_based_selection_1(
 
     score = score[possible_instances]
 
-    best_idx = possible_instances[np.nanargmax(score)]
+    if np.isnan(score).all():
+        best_idx = possible_instances[0]
+    else:
+        best_idx = possible_instances[np.nanargmax(score)]
 
     return best_idx
 
@@ -135,10 +160,14 @@ def variance_based_selection_2(
         possible_instances,
         thresholds,
         sorted_runtimes,
-        instance_idx
+        instance_idx,
+        static_timeouts
 ):
     """this methods works slightly worse than `variance_based_selection_1` (tested in e99fb452 (this version) vs 697d3971 (version 1))"""
-    timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
+    if static_timeouts:
+        timeouts = thresholds
+    else:
+        timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
 
     scores = sorted_runtimes[rt].copy()
     runtimes = sorted_runtimes[rt].copy()
@@ -169,11 +198,9 @@ def variance_based_selection_2(
     score = score[possible_instances]
 
     if np.isnan(score).all():
-        best_idx = 0
+        best_idx = possible_instances[0]
     else:
-        best_idx = np.nanargmax(score)
-
-    best_idx = possible_instances[best_idx]
+        best_idx = possible_instances[np.nanargmax(score)]
 
     return best_idx
 
@@ -182,10 +209,14 @@ def lowest_variances_per_rt(
         possible_instances,
         thresholds,
         sorted_runtimes,
-        instance_idx
+        instance_idx,
+        static_timeouts
 ):
     """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
-    timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
+    if static_timeouts:
+        timeouts = thresholds
+    else:
+        timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
     runtimes = sorted_runtimes[rt].copy()
 
     runtimes[runtimes > timeouts[:, None]] = np.nan
@@ -199,7 +230,10 @@ def lowest_variances_per_rt(
 
     score = score[possible_instances]
 
-    best_idx = possible_instances[np.nanargmin(score)]
+    if np.isnan(score).all():
+        best_idx = possible_instances[0]
+    else:
+        best_idx = possible_instances[np.nanargmin(score)]
 
     return best_idx
 
@@ -208,10 +242,14 @@ def lowest_variance(
         possible_instances,
         thresholds,
         sorted_runtimes,
-        instance_idx
+        instance_idx,
+        static_timeouts
 ):
     """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
-    timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
+    if static_timeouts:
+        timeouts = thresholds
+    else:
+        timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
     runtimes = sorted_runtimes[rt].copy()
 
     runtimes[runtimes > timeouts[:, None]] = np.nan
@@ -225,7 +263,10 @@ def lowest_variance(
 
     score = score[possible_instances]
 
-    best_idx = possible_instances[np.nanargmin(score)]
+    if np.isnan(score).all():
+        best_idx = possible_instances[0]
+    else:
+        best_idx = possible_instances[np.nanargmin(score)]
 
     return best_idx
 
@@ -234,10 +275,14 @@ def highest_variance(
         possible_instances,
         thresholds,
         sorted_runtimes,
-        instance_idx
+        instance_idx,
+        static_timeouts
 ):
     """this methods works slightly better (tested in e99fb452 (version 2) vs 697d3971 (this version))"""
-    timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
+    if static_timeouts:
+        timeouts = thresholds
+    else:
+        timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
     runtimes = sorted_runtimes[rt].copy()
 
     runtimes[runtimes > timeouts[:, None]] = np.nan
@@ -251,7 +296,10 @@ def highest_variance(
 
     score = score[possible_instances]
 
-    best_idx = possible_instances[np.nanargmax(score)]
+    if np.isnan(score).all():
+        best_idx = possible_instances[0]
+    else:
+        best_idx = possible_instances[np.nanargmax(score)]
 
     return best_idx
 
@@ -260,9 +308,13 @@ def lowest_rt_selection(
         possible_instances,
         thresholds,
         sorted_runtimes,
-        instance_idx
+        instance_idx,
+        static_timeouts
 ):
-    timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
+    if static_timeouts:
+        timeouts = thresholds
+    else:
+        timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
     runtimes = sorted_runtimes[rt].copy()
 
     runtimes[runtimes > timeouts[:, None]] = np.nan
@@ -275,7 +327,10 @@ def lowest_rt_selection(
 
     score = score[possible_instances]
 
-    best_idx = possible_instances[np.nanargmin(score)]
+    if np.isnan(score).all():
+        best_idx = possible_instances[0]
+    else:
+        best_idx = possible_instances[np.nanargmin(score)]
 
     return best_idx
 
@@ -284,9 +339,13 @@ def highest_rt_selection(
         possible_instances,
         thresholds,
         sorted_runtimes,
-        instance_idx
+        instance_idx,
+        static_timeouts
 ):
-    timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
+    if static_timeouts:
+        timeouts = thresholds
+    else:
+        timeouts = sorted_runtimes[rt][instance_idx, thresholds[instance_idx]]
     runtimes = sorted_runtimes[rt].copy()
 
     runtimes[runtimes > timeouts[:, None]] = np.nan
@@ -299,7 +358,10 @@ def highest_rt_selection(
 
     score = score[possible_instances]
 
-    best_idx = possible_instances[np.nanargmax(score)]
+    if np.isnan(score).all():
+        best_idx = possible_instances[0]
+    else:
+        best_idx = possible_instances[np.nanargmax(score)]
 
     return best_idx
 
@@ -307,7 +369,8 @@ def highest_rt_selection(
 def best_cross_acc(
         possible_instances,
         thresholds,
-        sorted_runtimes
+        sorted_runtimes,
+        static_timeouts
 ):
     raise Exception("implememnt!")
 
@@ -315,6 +378,7 @@ def best_cross_acc(
 def no_selection(
     possible_instances,
     thresholds,
-    sorted_runtimes
+    sorted_runtimes,
+    static_timeouts
 ):
     pass

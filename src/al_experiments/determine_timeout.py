@@ -12,6 +12,16 @@ else:
     import numpy as np
 
 
+def test_static_timeout(
+    acc_calculator: Accuracy,
+    solver_string: str,
+    number_of_instances,
+    prev_thresh,
+    number_of_reduced_solvers
+):
+    return np.ascontiguousarray(np.full((number_of_instances,), number_of_reduced_solvers, dtype=np.int32))
+
+
 def random_timeout(
     acc_calculator: Accuracy,
     solver_string: str,
@@ -25,21 +35,16 @@ def random_timeout(
     return arr
 
 
-def static_timeout(
-    acc_calculator: Accuracy,
-    solver_string: str,
-    number_of_instances,
-    prev_thresh,
-    number_of_reduced_solvers
-):
-    print(acc_calculator.sorted_rt[idx])
-    print(number_of_reduced_solvers)
-    wanted_timeout = (acc_calculator.sorted_rt[idx] == number_of_reduced_solvers-1)
-    print(wanted_timeout)
-    indices = np.argmax(wanted_timeout, axis=1)
-    print(indices)
-    print(acc_calculator.sorted_rt[rt][np.arange(number_of_instances), indices])
-    return indices
+def build_static_timeout(n):
+    def static_timeout(
+        acc_calculator: Accuracy,
+        solver_string: str,
+        number_of_instances,
+        prev_thresh,
+        number_of_reduced_solvers
+    ):
+        return np.ascontiguousarray(np.full((number_of_instances,), n, dtype=np.int32))
+    return static_timeout
 
 
 def quantized_double_punish(

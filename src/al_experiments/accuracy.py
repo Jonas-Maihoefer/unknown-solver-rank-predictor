@@ -443,18 +443,19 @@ class Accuracy:
 
         return thresholds
 
-    def sample_result(self, thresholds, pred, measurement, best_score=0):
+    def sample_result(self, thresholds, pred, measurement, best_score=0, static_timeout=False):
         m, c, error = self.linear_fit(pred, self.par_2_scores)
 
         normalized_pred = m * pred + c
 
         cross_acc = self.calc_cross_acc_2(self.par_2_scores, normalized_pred)
 
-        rmse_stability, cross_acc_stability  = self.calc_stability(thresholds, pred, error)
+        rmse_stability, cross_acc_stability  = self.calc_stability(thresholds, pred, error, static_timeout)
 
         new_pred = 0
         used_rt_removed_solver = 0
         if self.with_remaining_mean:
+            # TODO: does not work with static_timeout=True
             penalties = self.get_remaining_mean(thresholds)
             choosen_instances = 0
             for index, runtime_list in enumerate(self.sorted_rt[rt]):
@@ -472,9 +473,12 @@ class Accuracy:
             # TODO: calculate other solvers also only on the choosen instances
         else:
             for index, runtime_list in enumerate(self.sorted_rt[rt]):
-                timeout = runtime_list[thresholds[index]]
+                if static_timeout:
+                    timeout = thresholds[index]
+                else:
+                    timeout = runtime_list[thresholds[index]]
                 # is instance maxed out?
-                if thresholds[index] == self.number_of_reduced_solvers:
+                if thresholds[index] == self.number_of_reduced_solvers and static_timeout is False:
                     # is solver runtime 5000?
                     used_rt_removed_solver += self.rt_removed_solver[index]
                     if self.rt_removed_solver[index] == 5000:
@@ -554,10 +558,13 @@ class Accuracy:
         })
         return runtime_frac, cross_acc, cross_acc_stability
 
-    def calc_stability(self, thresholds, pred, error):
+    def calc_stability(self, thresholds, pred, error, static_timeout=False):
         # current solver + its rt bearly solving the instance
-        current_solver = self.sorted_rt[idx][self.instance_idx, thresholds], self.sorted_rt[rt][self.instance_idx, thresholds]
-        current_penalty = current_solver[rt] * 2
+        if static_timeout:
+            current_penalty = thresholds * 2
+        else:
+            current_solver = self.sorted_rt[idx][self.instance_idx, thresholds], self.sorted_rt[rt][self.instance_idx, thresholds]
+            current_penalty = current_solver[rt] * 2
 
         #_instance = 24
         #print(f"looking at instance {_instance}")
