@@ -282,7 +282,7 @@ class PlotGenerator:
         results_df = pd.DataFrame(self.results, columns=["x", "y", "std_x", "std_y", "label"])
         results_df["method"] = "bottom-up"
 
-        #self.update_all_runs(results_df)
+        self.update_all_runs(results_df)
 
         if plot_type == 'pareto':
             pareto = self.pareto_front(results_df)
