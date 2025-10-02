@@ -242,13 +242,13 @@ class PlotGenerator:
     def get_all_measurements_bottom_up(self, paths, plot_type, attribute_1=None, attribute_2=None):
         """ result_string = ""
 
-        timeout_breaking_methods = ['until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00']
-        timeout_breaking_names = ['$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$']
+        timeout_breaking_methods = ['until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975'] #['until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00']
+        timeout_breaking_names = ['$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$'] #['$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$']
         selection_methods = ['choose_instances_random', 'variance_based_selection_1', 'highest_rt_selection', 'lowest_variance', 'highest_variance', 'lowest_variances_per_rt', 'lowest_rt_selection']
         selection_names = ['$\mathrm{rand}$', '$\mathrm{max}_{V/R}$', '$\mathrm{max}_{R}$', '$\mathrm{min}_{V}$', '$\mathrm{max}_{V}$', '$\mathrm{min}_{V/R}$', '$\mathrm{min}_{R}$']
-        filterings = [False               ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,True             ,True             ,True             ,True             ,True             ,True             ,True             ,True             ,True             ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,True              ,True              ,True              ,True              ,True              ,True              ,True              ,True              ,False                ,False                ,False                ,False                ,False                ,False                ,False                ,False                ,True                   ,True                   ,True                   ,True                   ,True                   ,True                   ,True                   ,True                   ,False                     ,False                     ,False                     ,False                     ,False                     ,False                     ,False                     ,False                     ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,True             ,True             ,True             ,True             ,True             ,True             ,True             ,True             ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,True            ,True            ,True            ,True            ,True            ,True            ,True            ,True            ,False              ,False              ,False              ,False              ,False              ,False              ,False              ,False              ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,True      ,True      ,True      ,True      ,True      ,True      ,True      ,True      ,True      ,False        ,False        ,False        ,False        ,False        ,False        ,False        ,False        ,False        ,True ,True ,True ,True ,True ,True ,True ,True ,True ,False   ,False   ,False   ,False   ,False   ,False   ,False   ,False   ,False] 
-        t_instance_selections=['$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$']
-        optimizations = ['$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$']
+        filterings = [True, True, True, True, True, True, True, True] #[False               ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,True             ,True             ,True             ,True             ,True             ,True             ,True             ,True             ,True             ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,True              ,True              ,True              ,True              ,True              ,True              ,True              ,True              ,False                ,False                ,False                ,False                ,False                ,False                ,False                ,False                ,True                   ,True                   ,True                   ,True                   ,True                   ,True                   ,True                   ,True                   ,False                     ,False                     ,False                     ,False                     ,False                     ,False                     ,False                     ,False                     ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,True             ,True             ,True             ,True             ,True             ,True             ,True             ,True             ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,True            ,True            ,True            ,True            ,True            ,True            ,True            ,True            ,False              ,False              ,False              ,False              ,False              ,False              ,False              ,False              ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,True      ,True      ,True      ,True      ,True      ,True      ,True      ,True      ,True      ,False        ,False        ,False        ,False        ,False        ,False        ,False        ,False        ,False        ,True ,True ,True ,True ,True ,True ,True ,True ,True ,False   ,False   ,False   ,False   ,False   ,False   ,False   ,False   ,False] 
+        t_instance_selections = ['$\mathrm{top}_3$', '$\mathrm{top}_3$', '$\mathrm{top}_3$', '$\mathrm{top}_3$', '$\mathrm{top}_3$', '$\mathrm{top}_3$', '$\mathrm{top}_3$', '$\mathrm{top}_3$']  #['$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$']
+        optimizations = ['$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$'] #['$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$']
         timeout_breaking_methods.reverse()
         timeout_breaking_names.reverse()
         selection_names.reverse()
@@ -282,23 +282,34 @@ class PlotGenerator:
         print(result_string)
 
         results_df = pd.DataFrame(self.results, columns=["x", "y", "std_x", "std_y", "label"])
-        results_df["method"] = "bottom-up"
+        results_df["method"] = "bottom-up" """
 
-        #self.update_all_runs(results_df)
-
-        """
         stored_df = pd.read_pickle("./pickle/all-runs.pkl.gz", compression='gzip')
         results_df = stored_df[stored_df["method"] == "bottom-up"]
+        no_filter_df = results_df[results_df["label"].str.contains("False", regex=False, na=False)]
 
         if plot_type == 'pareto':
-            pareto = self.pareto_front(results_df)
+            pareto = self.pareto_front(no_filter_df)
             self.plot_pareto_df(pareto, "Results for Bottom-Up Timeout Distribution")
 
         if plot_type == 'compare estimator':
-            self.compare_estimator(results_df)
+            self.compare_estimator(no_filter_df)
 
         if plot_type == 'compare':
-            self.compare_attributes(results_df, attribute_1, attribute_2)
+            self.compare_attributes(no_filter_df, attribute_1, attribute_2)
+
+        if plot_type == 'variance':
+            self.plot_variance(no_filter_df)
+            self.plot_binned_variance(no_filter_df)
+
+        if plot_type == 'compare instance chooser':
+            self.compare_instance_selection(no_filter_df)
+        if plot_type == 'baseline':
+            self.compare_against_baseline(stored_df, 'bottom-up', "Compare Bottom Up Timeout Distribution to Baseline")
+        if plot_type == 'utility':
+            self.compare_utility(no_filter_df)
+        if plot_type == 'timeout instance chooser':
+            self.compare_timeout_instance_chooser(no_filter_df)
 
         self.results = []
 
@@ -351,6 +362,70 @@ class PlotGenerator:
 
         self.results = []
 
+    def get_all_measurements_static(self, paths, plot_type, attribute_1=None, attribute_2=None):
+        """ result_string = ""
+
+        timeouts = [5000, 4000, 3000, 2000, 1000, 5000, 4000, 3000, 2000, 1000]
+        filterings = [True, True, True, True, True, False, False, False, False, False]
+        selection_methods = ['choose_instances_random_', 'variance_based_selection_1_', 'highest_rt_selection_', 'lowest_variance_', 'highest_variance_', 'lowest_variances_per_rt_', 'lowest_rt_selection_']
+        selection_names = ['$\mathrm{rand}$', '$\mathrm{max}_{V/R}$', '$\mathrm{max}_{R}$', '$\mathrm{min}_{V}$', '$\mathrm{max}_{V}$', '$\mathrm{min}_{V/R}$', '$\mathrm{min}_{R}$']
+
+        timeouts.reverse()
+        filterings.reverse()
+        selection_names.reverse()
+
+        for path in paths:
+            df = pd.read_pickle(path, compression='gzip')
+            print(df)
+            timeout = timeouts.pop()
+            filtering = filterings.pop()
+            selection_names_copy = selection_names.copy()
+            for selection_method in selection_methods:
+                selection_name = selection_names_copy.pop()
+                print(f"sel_method={selection_method}; sel_name={selection_name}")
+                breaking_condition = '$\mathrm{fcp}_{\geq 0.9}$'
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.9, f'{filtering} & {timeout} & {selection_name} & {breaking_condition}')
+                breaking_condition = '$\mathrm{fcp}_{\geq 0.925}$'
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.925, f'{filtering} & {timeout} & {selection_name} & {breaking_condition}')
+                breaking_condition = '$\mathrm{fcp}_{\geq 0.95}$'
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.95, f'{filtering} & {timeout} & {selection_name} & {breaking_condition}')
+                breaking_condition = '$\mathrm{fcp}_{\geq 0.975}$'
+                result_string += self.print_lowest_rf_cross_acc(df, selection_method, 0.975, f'{filtering} & {timeout} & {selection_name} & {breaking_condition} \\')
+
+        print()
+        print("combined:")
+        print(result_string)
+
+        results_df = pd.DataFrame(self.results, columns=["x", "y", "std_x", "std_y", "label"])
+        results_df["method"] = "static" """
+
+        stored_df = pd.read_pickle("./pickle/all-runs.pkl.gz", compression="gzip")
+
+        results_df = stored_df[stored_df["method"] == "static"]
+        no_filter_df = results_df[results_df["label"].str.contains("False", regex=False, na=False)]
+
+        if plot_type == 'pareto':
+            pareto = self.pareto_front(no_filter_df)
+            self.plot_pareto_df(pareto, "Results for Static Timeout Distribution")
+
+        if plot_type == 'compare estimator':
+            self.compare_estimator(no_filter_df)
+
+        if plot_type == 'compare':
+            self.compare_attributes(no_filter_df, attribute_1, attribute_2)
+
+        if plot_type == 'variance':
+            self.plot_variance(no_filter_df)
+            self.plot_binned_variance(no_filter_df)
+
+        if plot_type == 'timeout':
+            self.compare_timeout(no_filter_df)
+
+        if plot_type == 'compare instance chooser':
+            self.compare_instance_selection(no_filter_df)
+
+        self.results = []
+
     def get_all_measurements_instance_wise(self, dfs, plot_type, attribute_1=None, attribute_2=None):
         """ result_string = ""
 
@@ -387,26 +462,177 @@ class PlotGenerator:
         results_df["method"] = "instance-wise" """
 
         stored_df = pd.read_pickle("./pickle/all-runs.pkl.gz", compression="gzip")
-
         results_df = stored_df[stored_df["method"] == "instance-wise"]
+        no_filter_df = results_df[results_df["label"].str.contains("False", regex=False, na=False)]
 
         if plot_type == 'pareto':
-            pareto = self.pareto_front(results_df)
+            pareto = self.pareto_front(no_filter_df)
             self.plot_pareto_df(pareto, "Results for Instance-Wise Timeout Distribution")
 
         if plot_type == 'compare estimator':
-            self.compare_estimator(results_df)
+            self.compare_estimator(no_filter_df)
 
         if plot_type == 'compare':
-            self.compare_attributes(results_df, attribute_1, attribute_2)
+            self.compare_attributes(no_filter_df, attribute_1, attribute_2)
+
+        if plot_type == 'baseline':
+            self.compare_against_baseline(stored_df, 'instance-wise')
+
+        if plot_type == 'variance':
+            self.plot_variance(no_filter_df)
+            self.plot_binned_variance(no_filter_df)
+
+        if plot_type == 'compare instance chooser':
+            self.compare_instance_selection(no_filter_df)
 
         self.results = []
+
+    def plot_all_results(self, plot_type):
+        stored_df = pd.read_pickle("./pickle/all-runs.pkl.gz", compression="gzip")
+        print("read pickle")
+        #self.compare_methods(stored_df, "static", "instance-wise")
+        self.compare_against_baseline(stored_df, "instance-wise")
 
     def update_all_runs(self, append_df):
         path = "./pickle/all-runs.pkl.gz"
         stored_df = pd.read_pickle(path, compression="gzip")
         combined = pd.concat([stored_df, append_df], ignore_index=True)
         combined.to_pickle(path, compression="gzip")
+
+    def compare_against_baseline(self, df, method, title="Compare Instance-Wise Timeout Distribution to Baseline"):
+        met = df[df["method"] == method]
+        met = met[met["label"].str.contains("False", regex=False, na=False)]
+        baseline = df[df["method"] == "static"]
+        baseline = baseline[baseline["label"].str.contains("False", regex=False, na=False)]
+        baseline = baseline[baseline["label"].str.contains("5000", regex=False, na=False)]
+
+        met_pareto = self.pareto_front(met)
+        baseline_pareto = self.pareto_front(baseline)
+
+        plt.figure(figsize=(8, 5))
+
+        # Plot df_1
+        sns.lineplot(
+            data=met_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=method
+        )
+
+        # Plot df_2
+        sns.lineplot(
+            data=baseline_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",
+            marker="o",
+            label="baseline"
+        )
+
+        plt.xlabel("$\overline{O}_{\mathrm{rt}}$")
+        #plt.xlim(right=1)
+        #plt.ylim(0, 1.05)
+        plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
+        plt.title(title)
+        plt.grid(True, linestyle="--", alpha=0.5)
+        plt.tight_layout()
+
+        plt.legend()
+        plt.show()
+
+    def plot_variance(self, df):
+        # df has columns=["x", "y", "std_x", "std_y", "label"].
+        # use seaborn to plot all points (x,y) with x=x and y=std_y
+        plt.figure(figsize=(8, 6))
+        sns.scatterplot(
+            data=df,
+            x="x",
+            y="std_y",
+            palette="deep",
+            s=80
+        )
+        plt.title("Variance plot (x vs std_y)")
+        plt.xlabel("x")
+        plt.ylabel("std_y")
+        plt.legend(title="Label", bbox_to_anchor=(1.05, 1), loc="upper left")
+        plt.tight_layout()
+        plt.show()
+
+    def plot_binned_variance(self, df, bin_size=0.02):
+        """
+        Bin x values into bins of size `bin_size`, then plot the average std_y per bin.
+        X-axis displays bin spans (e.g., '0.00–0.02').
+        """
+        # define bins
+        min_x, max_x = df["x"].min(), df["x"].max()
+        bins = np.arange(min_x, max_x + bin_size, bin_size)
+
+        # assign each x to a bin
+        df["x_bin"] = pd.cut(df["x"], bins=bins, include_lowest=True)
+
+        # compute average std_y per bin
+        grouped = df.groupby("x_bin", observed=True)["std_y"].mean().reset_index()
+
+        # create labels like "0.00–0.02"
+        grouped["bin_label"] = grouped["x_bin"].apply(
+            lambda b: f"{b.left:.2f}–{b.right:.2f}"
+        )
+
+        # plot barplot
+        plt.figure(figsize=(12, 6))
+        sns.barplot(
+            data=grouped,
+            x="bin_label",
+            y="std_y",
+            color="steelblue"
+        )
+        plt.title(f"Average std_y per x-bin (bin size={bin_size})")
+        plt.xlabel("x-bin")
+        plt.ylabel("Average std_y")
+        plt.xticks(rotation=45, ha="right")
+        plt.tight_layout()
+        plt.show()
+        
+    def compare_methods(self, df, method1, method2):
+        met_1 = df[df["method"] == method1]
+        if method2 is None:
+            met_2 = df[~df["method"] == method1]
+            method2 = "not " + method1
+        else:
+            met_2 = df[df["method"] == method2]
+        att_1_pareto = self.pareto_front(met_1)
+        att_2_pareto = self.pareto_front(met_2)
+
+        plt.figure(figsize=(8, 5))
+
+        # Plot df_1
+        sns.lineplot(
+            data=att_1_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=method1
+        )
+
+        # Plot df_2
+        sns.lineplot(
+            data=att_2_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",
+            marker="o",
+            label=method2
+        )
+
+        plt.xlabel("$\overline{O}_{\mathrm{rt}}$")
+        #plt.xlim(right=1)
+        #plt.ylim(0, 1.05)
+        plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
+        plt.title("Compare Static to Instance-Wise Timeout Distribution")
+        plt.grid(True, linestyle="--", alpha=0.5)
+        plt.tight_layout()
+
+        plt.legend()
+        plt.show()
 
     def compare_attributes(self, df, attribute_1, attribute_2):
         att_1 = df[df["label"].str.contains(attribute_1, regex=False, na=False)]
@@ -426,7 +652,7 @@ class PlotGenerator:
             x="x", y="y",
             drawstyle="steps-post",  # ensures horizontal, then vertical
             marker="o",
-            label=attribute_1
+            label="random instance selection"
         )
 
         # Plot df_2
@@ -435,14 +661,246 @@ class PlotGenerator:
             x="x", y="y",
             drawstyle="steps-post",
             marker="o",
-            label=attribute_2
+            label="all other instance selection methods"
         )
 
         plt.xlabel("$\overline{O}_{\mathrm{rt}}$")
         #plt.xlim(right=1)
         #plt.ylim(0, 1.05)
         plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
-        plt.title("Compare Results With and Without Filtering")
+        plt.title("Baselines With and Without Filtering")
+        plt.grid(True, linestyle="--", alpha=0.5)
+        plt.tight_layout()
+
+        plt.legend()
+        plt.show()
+
+    def compare_instance_selection(self, df):
+        random_mask = df["label"].str.contains(r"\mathrm{rand}", regex=False, na=False)
+        var_based_mask = df["label"].str.contains(r"\mathrm{max}_{V/R}", regex=False, na=False)
+        #min_r_mask = df["label"].str.contains(r"\mathrm{min}_{R}", regex=False, na=False)
+
+        random = df[random_mask]
+        var_based = df[var_based_mask]
+        #min_r = df[min_r_mask]
+        other = df[~(random_mask | var_based_mask)]
+
+        random_pareto = self.pareto_front(random)
+        var_based_pareto = self.pareto_front(var_based)
+        #min_r_pareto = self.pareto_front(min_r)
+        other_pareto = self.pareto_front(other)
+        plt.figure(figsize=(8, 5))
+
+        # Plot df_1
+        sns.lineplot(
+            data=random_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=r"$\mathrm{rand}$"
+        )
+
+        sns.lineplot(
+            data=var_based_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=r"$\mathrm{max}_{V/R}$"
+        )
+
+        sns.lineplot(
+            data=other_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label="all other instance chooser"
+        )
+
+        plt.xlabel("$\overline{O}_{\mathrm{rt}}$")
+        #plt.xlim(right=1)
+        #plt.ylim(0, 1.05)
+        plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
+        plt.title("Comparing Instance Chooser")
+        plt.grid(True, linestyle="--", alpha=0.5)
+        plt.tight_layout()
+
+        plt.legend()
+        plt.show()
+
+    def compare_timeout(self, df):
+        att_5000 = df[df["label"].str.contains("5000", regex=False, na=False)]
+        att_4000 = df[df["label"].str.contains("4000", regex=False, na=False)]
+        att_3000 = df[df["label"].str.contains("3000", regex=False, na=False)]
+        att_2000 = df[df["label"].str.contains("2000", regex=False, na=False)]
+        att_1000 = df[df["label"].str.contains("1000", regex=False, na=False)]
+        att_5000_pareto = self.pareto_front(att_5000)
+        att_4000_pareto = self.pareto_front(att_4000)
+        att_3000_pareto = self.pareto_front(att_3000)
+        att_2000_pareto = self.pareto_front(att_2000)
+        att_1000_pareto = self.pareto_front(att_1000)
+
+        plt.figure(figsize=(8, 5))
+
+        # Plot df_1
+        sns.lineplot(
+            data=att_5000_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=r'$\tau_{5000}$'
+        )
+
+        sns.lineplot(
+            data=att_4000_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=r'$\tau_{4000}$'
+        )
+
+        sns.lineplot(
+            data=att_3000_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=r'$\tau_{3000}$'
+        )
+
+        sns.lineplot(
+            data=att_2000_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=r'$\tau_{2000}$'
+        )
+
+        sns.lineplot(
+            data=att_1000_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=r'$\tau_{1000}$'
+        )
+
+        plt.xlabel("$\overline{O}_{\mathrm{rt}}$")
+        #plt.xlim(right=1)
+        #plt.ylim(0, 1.05)
+        plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
+        plt.title("Comparing Different Static Timeouts $\\tau_t$")
+        plt.grid(True, linestyle="--", alpha=0.5)
+        plt.tight_layout()
+
+        plt.legend()
+        plt.show()
+
+    def compare_utility(self, df):
+        ui1 = df[df["label"].str.contains("u_i^1", regex=False, na=False)]
+        ui2 = df[df["label"].str.contains("u_i^2", regex=False, na=False)]
+        ui3 = df[df["label"].str.contains("u_i^3", regex=False, na=False)]
+        ui4 = df[df["label"].str.contains("u_i^4", regex=False, na=False)]
+
+        ui1_pareto = self.pareto_front(ui1)
+        ui2_pareto = self.pareto_front(ui2)
+        ui3_pareto = self.pareto_front(ui3)
+        ui4_pareto = self.pareto_front(ui4)
+
+        plt.figure(figsize=(8, 5))
+
+        # Plot df_1
+        sns.lineplot(
+            data=ui1_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=r'$u_i^1$'
+        )
+
+        sns.lineplot(
+            data=ui2_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=r'$u_i^2$'
+        )
+
+        sns.lineplot(
+            data=ui3_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=r'$u_i^3$'
+        )
+
+        sns.lineplot(
+            data=ui4_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=r'$u_i^4$'
+        )
+
+        plt.xlabel("$\overline{O}_{\mathrm{rt}}$")
+        #plt.xlim(right=1)
+        #plt.ylim(0, 1.05)
+        plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
+        plt.title("Comparing Different Utility Functions $u_i$")
+        plt.grid(True, linestyle="--", alpha=0.5)
+        plt.tight_layout()
+
+        plt.legend()
+        plt.show()
+
+    def compare_timeout_instance_chooser(self, df):
+        best = df[df["label"].str.contains("best", regex=False, na=False)]
+        top_3 = df[df["label"].str.contains("mathrm{top}_3", regex=False, na=False)]
+        top_9 = df[df["label"].str.contains("mathrm{top}_9", regex=False, na=False)]
+        top_27 = df[df["label"].str.contains("mathrm{top}_27", regex=False, na=False)]
+
+        best_pareto = self.pareto_front(best)
+        top_3_pareto = self.pareto_front(top_3)
+        top_9_pareto = self.pareto_front(top_9)
+        top_27_pareto = self.pareto_front(top_27)
+
+        plt.figure(figsize=(8, 5))
+
+        # Plot df_1
+        sns.lineplot(
+            data=best_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=r'$\mathrm{best}$'
+        )
+
+        sns.lineplot(
+            data=top_3_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=r'$\mathrm{top}_3$'
+        )
+
+        sns.lineplot(
+            data=top_9_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=r'$\mathrm{top}_9$'
+        )
+
+        sns.lineplot(
+            data=top_27_pareto,
+            x="x", y="y",
+            drawstyle="steps-post",  # ensures horizontal, then vertical
+            marker="o",
+            label=r'$\mathrm{top}_{27}$'
+        )
+
+        plt.xlabel("$\overline{O}_{\mathrm{rt}}$")
+        #plt.xlim(right=1)
+        #plt.ylim(0, 1.05)
+        plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
+        plt.title("Comparing Different Timeout Distribution Instance Chooser")
         plt.grid(True, linestyle="--", alpha=0.5)
         plt.tight_layout()
 
@@ -452,6 +910,9 @@ class PlotGenerator:
     def compare_estimator(self, results_df):
         s_b_points = results_df[results_df['label'].str.contains('$s_\mathcal{B}$', regex=False)]
         s_fitted_points = results_df[results_df['label'].str.contains('$s_\mathrm{fitted}$', regex=False)]
+
+        #s_b_points = s_b_points[s_b_points['x'] < 0.4]
+        #s_fitted_points = s_fitted_points[s_fitted_points['x'] < 0.4]
 
         # Calculate the mean for the '$s_\mathcal{B}$' points
         mean_x_sb = s_b_points['x'].mean()
@@ -507,6 +968,8 @@ class PlotGenerator:
             if s_b_slice_df.empty:
                 return np.nan
 
+            print(f"slice has {s_b_slice_df.shape[0]} members")
+
             # Get the s_B labels from the current slice
             s_b_labels_in_slice = s_b_slice_df['label']
 
@@ -524,7 +987,7 @@ class PlotGenerator:
             return calculate_metric(s_b_slice_df, corresponding_fitted_slice)
 
         # ---- Calculation for y < 0.9 ----
-        label = 'y < 0.9'
+        label = '< 0.9'
         s_b_slice = s_b_points[s_b_points['y'] < 0.9]
         bar_labels.append(label)
         metric_values.append(process_slice(s_b_slice, s_fitted_points))
@@ -535,6 +998,7 @@ class PlotGenerator:
             lower_bound = i
             upper_bound = i + 0.01
             label = f'{lower_bound:.2f} - {upper_bound:.2f}'
+            print(label)
 
             # Filter s_B points for the current interval
             s_b_slice = s_b_points[(s_b_points['y'] >= lower_bound) & (s_b_points['y'] < upper_bound)]
@@ -571,7 +1035,7 @@ class PlotGenerator:
             if row["x"] < 0.01:
                 continue
             config_path = '\\raisebox{-0.2\\height}{\\includegraphics[width=0.6cm]{images/label_marker/config_' + str(configuration) + '.png}}'
-            color = palette[idx % len(palette)]
+            color = palette[(configuration - 1) % len(palette)]
             h = plt.errorbar(
                 row["x"], row["y"],
                 xerr=row["std_x"], yerr=row["std_y"],
@@ -763,33 +1227,44 @@ class PlotGenerator:
 
         return f"$0.4$ & {wanted_measurement} & ${threshold}$ & ${avg_rf:.3f} \pm {std_rf:.3f}$ & ${avg_true_v1:.3f} \pm {std_true_v1:.3f}$ & ${avg_true_v2:.3f} \pm {std_true_v2:.3f}$ \\\\\n\n"
 
-    def pareto_front(self, df: pd.DataFrame) -> pd.DataFrame:
+    def pareto_front(self, df: pd.DataFrame, tol: float = 1e-12) -> pd.DataFrame:
         """
-        Return the Pareto front from a DataFrame with columns ["x", "y", "std_x", "std_y"].
+        Return the Pareto front from a DataFrame with columns ["x", "y", ...].
         Optimization: smaller x is better, larger y is better.
+
+        Rules:
+        - If there exists j with x_j < x_i and y_j == y_i, drop i.
+        - If there exists j with x_j == x_i and y_j > y_i, drop i.
         """
-        pareto_points = []
-        for i, row in df.iterrows():
-            x_i, y_i = row["x"], row["y"]
+        if df.empty:
+            return df.copy()
 
-            # A point is on the Pareto front if no other point dominates it
-            dominated = False
-            for j, other in df.iterrows():
-                if j == i:
-                    continue
-                x_j, y_j = other["x"], other["y"]
+        if not {"x", "y"}.issubset(df.columns):
+            raise ValueError("DataFrame must contain 'x' and 'y' columns")
 
-                if (x_j <= x_i and y_j >= y_i) and (x_j < x_i or y_j > y_i):
-                    dominated = True
-                    break
+        # Drop NaN
+        df2 = df.dropna(subset=["x", "y"]).copy()
 
-            if not dominated:
-                pareto_points.append(i)
+        # For equal x, keep the one with max y (drop others)
+        df2 = df2.sort_values(["x", "y"], ascending=[True, False], kind="mergesort")
+        df2 = df2.groupby("x", as_index=False, sort=False).first()
 
-        pareto_df = df.loc[pareto_points].reset_index(drop=True)
-        sorted_df = pareto_df.sort_values(by="x").reset_index(drop=True)
+        # Sort by x ascending (smaller x = better)
+        df_sorted = df2.sort_values(by="x", ascending=True, kind="mergesort").reset_index(drop=True)
 
-        return sorted_df
+        ys = df_sorted["y"].to_numpy()
+        keep_mask = np.zeros(len(df_sorted), dtype=bool)
+
+        max_y_so_far = -np.inf
+        for i, yi in enumerate(ys):
+            # Keep only if yi is strictly greater than max_y_so_far (beyond tol)
+            if yi > max_y_so_far + tol:
+                keep_mask[i] = True
+                max_y_so_far = yi
+            # else drop: either strictly worse or same y but larger x
+
+        pareto_df = df_sorted.loc[keep_mask].reset_index(drop=True)
+        return pareto_df
 
     def create_progress_plot(self):
         print("start")
@@ -921,14 +1396,14 @@ class PlotGenerator:
         greedy_rmse_until_stab_0_9975_no_filter = "./pickle/409696c_3_until_stab_0_9975_rt_weigth_1_temp_None.pkl.gz"
 
         ########## bottom-up: greedy top k #################
-        greedy_rmse_until_stab_0_9800_top_3_with_filter      = None # wrong config"./pickle/8be74ab_0_until_stab_0_9800_rt_weigth_1_temp_None.pkl.gz"
-        greedy_rmse_until_stab_0_9825_top_3_with_filter      = None # wrong config"./pickle/8be74ab_0_until_stab_0_9825_rt_weigth_1_temp_None.pkl.gz"
-        greedy_rmse_until_stab_0_9850_top_3_with_filter      = None # wrong config"./pickle/8be74ab_0_until_stab_0_9850_rt_weigth_1_temp_None.pkl.gz"
-        greedy_rmse_until_stab_0_9875_top_3_with_filter      = None # wrong config"./pickle/8be74ab_0_until_stab_0_9875_rt_weigth_1_temp_None.pkl.gz"
-        greedy_rmse_until_stab_0_9900_top_3_with_filter      = None # wrong config"./pickle/8be74ab_0_until_stab_0_9900_rt_weigth_1_temp_None.pkl.gz"
-        greedy_rmse_until_stab_0_9925_top_3_with_filter      = None # wrong config"./pickle/8be74ab_0_until_stab_0_9925_rt_weigth_1_temp_None.pkl.gz"
-        greedy_rmse_until_stab_0_9950_top_3_with_filter      = None # wrong config"./pickle/8be74ab_0_until_stab_0_9950_rt_weigth_1_temp_None.pkl.gz"
-        greedy_rmse_until_stab_0_9975_top_3_with_filter      = None # wrong config"./pickle/8be74ab_0_until_stab_0_9975_rt_weigth_1_temp_None.pkl.gz"
+        greedy_rmse_until_stab_0_9800_top_3_with_filter      = "./pickle/1d5b79d_0_until_stab_0_9800_rt_weigth_1_temp_None.pkl.gz"
+        greedy_rmse_until_stab_0_9825_top_3_with_filter      = "./pickle/1d5b79d_0_until_stab_0_9825_rt_weigth_1_temp_None.pkl.gz"
+        greedy_rmse_until_stab_0_9850_top_3_with_filter      = "./pickle/1d5b79d_0_until_stab_0_9850_rt_weigth_1_temp_None.pkl.gz"
+        greedy_rmse_until_stab_0_9875_top_3_with_filter      = "./pickle/1d5b79d_0_until_stab_0_9875_rt_weigth_1_temp_None.pkl.gz"
+        greedy_rmse_until_stab_0_9900_top_3_with_filter      = "./pickle/1d5b79d_0_until_stab_0_9900_rt_weigth_1_temp_None.pkl.gz"
+        greedy_rmse_until_stab_0_9925_top_3_with_filter      = "./pickle/1d5b79d_0_until_stab_0_9925_rt_weigth_1_temp_None.pkl.gz"
+        greedy_rmse_until_stab_0_9950_top_3_with_filter      = "./pickle/1d5b79d_0_until_stab_0_9950_rt_weigth_1_temp_None.pkl.gz"
+        greedy_rmse_until_stab_0_9975_top_3_with_filter      = "./pickle/1d5b79d_0_until_stab_0_9975_rt_weigth_1_temp_None.pkl.gz"
         greedy_rmse_until_stab_0_9800_top_3_no_filter        = "./pickle/8be74ab_1_until_stab_0_9800_rt_weigth_1_temp_None.pkl.gz"
         greedy_rmse_until_stab_0_9825_top_3_no_filter        = "./pickle/8be74ab_1_until_stab_0_9825_rt_weigth_1_temp_None.pkl.gz"
         greedy_rmse_until_stab_0_9850_top_3_no_filter        = "./pickle/8be74ab_1_until_stab_0_9850_rt_weigth_1_temp_None.pkl.gz"
@@ -1139,9 +1614,11 @@ class PlotGenerator:
         static_3000_with_filter = "./pickle/93e13f5_2__rt_weigth_1_temp_None.pkl.gz"
         static_2000_with_filter = "./pickle/93e13f5_3__rt_weigth_1_temp_None.pkl.gz"
         static_1000_with_filter = "./pickle/93e13f5_4__rt_weigth_1_temp_None.pkl.gz"
-        static_5000_with_filter = "./pickle/93e13f5_5__rt_weigth_1_temp_None.pkl.gz"
-        static_5000_with_filter = "./pickle/93e13f5_6__rt_weigth_1_temp_None.pkl.gz"
-        static_5000_with_filter = "./pickle/93e13f5_7__rt_weigth_1_temp_None.pkl.gz"
+        static_5000_no_filter = "./pickle/93e13f5_5__rt_weigth_1_temp_None.pkl.gz"
+        static_4000_no_filter = "./pickle/93e13f5_6__rt_weigth_1_temp_None.pkl.gz"
+        static_3000_no_filter = "./pickle/93e13f5_7__rt_weigth_1_temp_None.pkl.gz"
+        static_2000_no_filter = "./pickle/93e13f5_8__rt_weigth_1_temp_None.pkl.gz"
+        static_1000_no_filter = "./pickle/93e13f5_9__rt_weigth_1_temp_None.pkl.gz"
 
         al_low_delta_rt = [0.0541, 0.1035]
         al_high_delta_acc = [0.9048, 0.9233]
@@ -1149,10 +1626,23 @@ class PlotGenerator:
         plt.figure(figsize=(10, 6))
 
 
+        #self.get_all_measurements_bottom_up([], 'compare', "True", "False")
+        #self.get_all_measurements_static([], 'compare', "True & 5000", "False & 5000")
+
+        #self.plot_all_results("test")
+        #self.get_all_measurements_static([], 'compare estimator')
+        #self.get_all_measurements_instance_wise([], 'compare estimator')
+        #self.get_all_measurements_instance_wise([], 'variance')
+        self.get_all_measurements_bottom_up([], 'timeout instance chooser')
+
         # "pareto", "compare estimator"
+        #self.get_all_measurements_static([static_5000_with_filter, static_4000_with_filter, static_3000_with_filter, static_2000_with_filter, static_1000_with_filter, static_5000_no_filter, static_4000_no_filter, static_3000_no_filter, static_2000_no_filter, static_1000_no_filter], "pareto")
+
         #self.get_all_measurements_instance_wise([delta_0_4, delta_0_5, delta_0_6, delta_0_7, delta_0_8, delta_0_9, delta_0_4_no_filter, delta_0_5_no_filter, delta_0_6_no_filter, delta_0_7_no_filter, delta_0_8_no_filter, delta_0_9_no_filter], 'compare', "True", "False")
 
-        self.get_all_measurements_random_timeout([random_timeout_with_filter, random_timeout_no_filter], 'compare', "True", "False")
+        #self.get_all_measurements_random_timeout([random_timeout_with_filter, random_timeout_no_filter], 'compare', "True", "False")
+
+        #self.get_all_measurements_bottom_up([greedy_rmse_until_stab_0_9800_top_3_with_filter, greedy_rmse_until_stab_0_9825_top_3_with_filter, greedy_rmse_until_stab_0_9850_top_3_with_filter, greedy_rmse_until_stab_0_9875_top_3_with_filter, greedy_rmse_until_stab_0_9900_top_3_with_filter, greedy_rmse_until_stab_0_9925_top_3_with_filter, greedy_rmse_until_stab_0_9950_top_3_with_filter, greedy_rmse_until_stab_0_9975_top_3_with_filter], "pareto")
 
         #self.get_all_measurements_bottom_up([knapsack_rmse_until_cross_acc_0_960_no_filter               ,knapsack_rmse_until_cross_acc_0_970_no_filter               ,knapsack_rmse_until_cross_acc_0_980_no_filter               ,knapsack_rmse_until_cross_acc_0_990_no_filter               ,knapsack_rmse_until_cross_acc_0_965_no_filter               ,knapsack_rmse_until_cross_acc_0_975_no_filter               ,knapsack_rmse_until_cross_acc_0_985_no_filter               ,knapsack_rmse_until_cross_acc_0_995_no_filter               ,knapsack_rmse_until_cross_acc_1_000_no_filter               ,knapsack_rmse_until_cross_acc_0_960_with_filter             ,knapsack_rmse_until_cross_acc_0_970_with_filter             ,knapsack_rmse_until_cross_acc_0_980_with_filter             ,knapsack_rmse_until_cross_acc_0_990_with_filter             ,knapsack_rmse_until_cross_acc_0_965_with_filter             ,knapsack_rmse_until_cross_acc_0_975_with_filter             ,knapsack_rmse_until_cross_acc_0_985_with_filter             ,knapsack_rmse_until_cross_acc_0_995_with_filter             ,knapsack_rmse_until_cross_acc_1_000_with_filter             ,knapsack_cross_acc_until_cross_acc_0_960_with_filter        ,knapsack_cross_acc_until_cross_acc_0_970_with_filter        ,knapsack_cross_acc_until_cross_acc_0_980_with_filter        ,knapsack_cross_acc_until_cross_acc_0_990_with_filter        ,knapsack_cross_acc_until_cross_acc_0_965_with_filter        ,knapsack_cross_acc_until_cross_acc_0_975_with_filter        ,knapsack_cross_acc_until_cross_acc_0_985_with_filter        ,knapsack_cross_acc_until_cross_acc_0_995_with_filter        ,knapsack_cross_acc_until_cross_acc_1_000_with_filter        ,knapsack_cross_acc_until_cross_acc_0_960_no_filter          ,knapsack_cross_acc_until_cross_acc_0_970_no_filter          ,knapsack_cross_acc_until_cross_acc_0_980_no_filter          ,knapsack_cross_acc_until_cross_acc_0_990_no_filter          ,knapsack_cross_acc_until_cross_acc_0_965_no_filter          ,knapsack_cross_acc_until_cross_acc_0_975_no_filter          ,knapsack_cross_acc_until_cross_acc_0_985_no_filter          ,knapsack_cross_acc_until_cross_acc_0_995_no_filter          ,knapsack_cross_acc_until_cross_acc_1_000_no_filter          ,greedy_cross_acc_until_stab_0_9800_with_filter              ,greedy_cross_acc_until_stab_0_9825_with_filter              ,greedy_cross_acc_until_stab_0_9850_with_filter              ,greedy_cross_acc_until_stab_0_9875_with_filter              ,greedy_cross_acc_until_stab_0_9900_with_filter              ,greedy_cross_acc_until_stab_0_9925_with_filter              ,greedy_cross_acc_until_stab_0_9950_with_filter              ,greedy_cross_acc_until_stab_0_9975_with_filter              ,greedy_cross_acc_until_stab_0_9800_no_filter                ,greedy_cross_acc_until_stab_0_9825_no_filter                ,greedy_cross_acc_until_stab_0_9850_no_filter                ,greedy_cross_acc_until_stab_0_9875_no_filter                ,greedy_cross_acc_until_stab_0_9900_no_filter                ,greedy_cross_acc_until_stab_0_9925_no_filter                ,greedy_cross_acc_until_stab_0_9950_no_filter                ,greedy_cross_acc_until_stab_0_9975_no_filter                ,greedy_rmse_until_stab_0_9800_with_filter                   ,greedy_rmse_until_stab_0_9825_with_filter                   ,greedy_rmse_until_stab_0_9850_with_filter                   ,greedy_rmse_until_stab_0_9875_with_filter                   ,greedy_rmse_until_stab_0_9900_with_filter                   ,greedy_rmse_until_stab_0_9925_with_filter                   ,greedy_rmse_until_stab_0_9950_with_filter                   ,greedy_rmse_until_stab_0_9975_with_filter                   ,greedy_rmse_until_stab_0_9800_no_filter                     ,greedy_rmse_until_stab_0_9825_no_filter                     ,greedy_rmse_until_stab_0_9850_no_filter                     ,greedy_rmse_until_stab_0_9875_no_filter                     ,greedy_rmse_until_stab_0_9900_no_filter                     ,greedy_rmse_until_stab_0_9925_no_filter                     ,greedy_rmse_until_stab_0_9950_no_filter                     ,greedy_rmse_until_stab_0_9975_no_filter                     ,greedy_rmse_until_stab_0_9800_top_3_no_filter               ,greedy_rmse_until_stab_0_9825_top_3_no_filter               ,greedy_rmse_until_stab_0_9850_top_3_no_filter               ,greedy_rmse_until_stab_0_9875_top_3_no_filter               ,greedy_rmse_until_stab_0_9900_top_3_no_filter               ,greedy_rmse_until_stab_0_9925_top_3_no_filter               ,greedy_rmse_until_stab_0_9950_top_3_no_filter               ,greedy_rmse_until_stab_0_9975_top_3_no_filter               ,greedy_cross_acc_until_stab_0_9800_top_3_with_filter        ,greedy_cross_acc_until_stab_0_9825_top_3_with_filter        ,greedy_cross_acc_until_stab_0_9850_top_3_with_filter        ,greedy_cross_acc_until_stab_0_9875_top_3_with_filter        ,greedy_cross_acc_until_stab_0_9900_top_3_with_filter        ,greedy_cross_acc_until_stab_0_9925_top_3_with_filter        ,greedy_cross_acc_until_stab_0_9950_top_3_with_filter        ,greedy_cross_acc_until_stab_0_9975_top_3_with_filter        ,greedy_cross_acc_until_stab_0_9800_top_3_no_filter          ,greedy_cross_acc_until_stab_0_9825_top_3_no_filter          ,greedy_cross_acc_until_stab_0_9850_top_3_no_filter          ,greedy_cross_acc_until_stab_0_9875_top_3_no_filter          ,greedy_cross_acc_until_stab_0_9900_top_3_no_filter          ,greedy_cross_acc_until_stab_0_9925_top_3_no_filter          ,greedy_cross_acc_until_stab_0_9950_top_3_no_filter          ,greedy_cross_acc_until_stab_0_9975_top_3_no_filter          ,greedy_rmse_until_stab_0_9800_top_9_with_filter             ,greedy_rmse_until_stab_0_9825_top_9_with_filter             ,greedy_rmse_until_stab_0_9850_top_9_with_filter             ,greedy_rmse_until_stab_0_9875_top_9_with_filter             ,greedy_rmse_until_stab_0_9900_top_9_with_filter             ,greedy_rmse_until_stab_0_9925_top_9_with_filter             ,greedy_rmse_until_stab_0_9950_top_9_with_filter             ,greedy_rmse_until_stab_0_9975_top_9_with_filter             ,greedy_rmse_until_stab_0_9800_top_9_no_filter               ,greedy_rmse_until_stab_0_9825_top_9_no_filter               ,greedy_rmse_until_stab_0_9850_top_9_no_filter               ,greedy_rmse_until_stab_0_9875_top_9_no_filter               ,greedy_rmse_until_stab_0_9900_top_9_no_filter               ,greedy_rmse_until_stab_0_9925_top_9_no_filter               ,greedy_rmse_until_stab_0_9950_top_9_no_filter               ,greedy_rmse_until_stab_0_9975_top_9_no_filter               ,greedy_cross_acc_until_stab_0_9800_top_9_with_filter        ,greedy_cross_acc_until_stab_0_9825_top_9_with_filter        ,greedy_cross_acc_until_stab_0_9850_top_9_with_filter        ,greedy_cross_acc_until_stab_0_9875_top_9_with_filter        ,greedy_cross_acc_until_stab_0_9900_top_9_with_filter        ,greedy_cross_acc_until_stab_0_9925_top_9_with_filter        ,greedy_cross_acc_until_stab_0_9950_top_9_with_filter        ,greedy_cross_acc_until_stab_0_9975_top_9_with_filter        ,greedy_cross_acc_until_stab_0_9800_top_9_no_filter          ,greedy_cross_acc_until_stab_0_9825_top_9_no_filter          ,greedy_cross_acc_until_stab_0_9850_top_9_no_filter          ,greedy_cross_acc_until_stab_0_9875_top_9_no_filter          ,greedy_cross_acc_until_stab_0_9900_top_9_no_filter          ,greedy_cross_acc_until_stab_0_9925_top_9_no_filter          ,greedy_cross_acc_until_stab_0_9950_top_9_no_filter          ,greedy_cross_acc_until_stab_0_9975_top_9_no_filter          ,greedy_rmse_until_stab_0_9800_top_27_with_filter            ,greedy_rmse_until_stab_0_9825_top_27_with_filter            ,greedy_rmse_until_stab_0_9850_top_27_with_filter            ,greedy_rmse_until_stab_0_9875_top_27_with_filter            ,greedy_rmse_until_stab_0_9900_top_27_with_filter            ,greedy_rmse_until_stab_0_9925_top_27_with_filter            ,greedy_rmse_until_stab_0_9950_top_27_with_filter            ,greedy_rmse_until_stab_0_9975_top_27_with_filter            ,greedy_rmse_until_stab_0_9800_top_27_no_filter              ,greedy_rmse_until_stab_0_9825_top_27_no_filter              ,greedy_rmse_until_stab_0_9850_top_27_no_filter              ,greedy_rmse_until_stab_0_9875_top_27_no_filter              ,greedy_rmse_until_stab_0_9900_top_27_no_filter              ,greedy_rmse_until_stab_0_9925_top_27_no_filter              ,greedy_rmse_until_stab_0_9950_top_27_no_filter              ,greedy_rmse_until_stab_0_9975_top_27_no_filter              ,greedy_cross_acc_until_stab_0_9800_top_27_with_filter       ,greedy_cross_acc_until_stab_0_9825_top_27_with_filter       ,greedy_cross_acc_until_stab_0_9850_top_27_with_filter       ,greedy_cross_acc_until_stab_0_9875_top_27_with_filter       ,greedy_cross_acc_until_stab_0_9900_top_27_with_filter       ,greedy_cross_acc_until_stab_0_9925_top_27_with_filter       ,greedy_cross_acc_until_stab_0_9950_top_27_with_filter       ,greedy_cross_acc_until_stab_0_9975_top_27_with_filter       ,greedy_cross_acc_until_stab_0_9800_top_27_no_filter         ,greedy_cross_acc_until_stab_0_9825_top_27_no_filter         ,greedy_cross_acc_until_stab_0_9850_top_27_no_filter         ,greedy_cross_acc_until_stab_0_9875_top_27_no_filter         ,greedy_cross_acc_until_stab_0_9900_top_27_no_filter         ,greedy_cross_acc_until_stab_0_9925_top_27_no_filter         ,greedy_cross_acc_until_stab_0_9950_top_27_no_filter         ,greedy_cross_acc_until_stab_0_9975_top_27_no_filter         ,knapsack_rmse_until_cross_acc_0_960_top_3_with_filter       ,knapsack_rmse_until_cross_acc_0_970_top_3_with_filter       ,knapsack_rmse_until_cross_acc_0_980_top_3_with_filter       ,knapsack_rmse_until_cross_acc_0_990_top_3_with_filter       ,knapsack_rmse_until_cross_acc_0_965_top_3_with_filter       ,knapsack_rmse_until_cross_acc_0_975_top_3_with_filter       ,knapsack_rmse_until_cross_acc_0_985_top_3_with_filter       ,knapsack_rmse_until_cross_acc_0_995_top_3_with_filter       ,knapsack_rmse_until_cross_acc_1_000_top_3_with_filter       ,knapsack_rmse_until_cross_acc_0_960_top_3_no_filter         ,knapsack_rmse_until_cross_acc_0_970_top_3_no_filter         ,knapsack_rmse_until_cross_acc_0_980_top_3_no_filter         ,knapsack_rmse_until_cross_acc_0_990_top_3_no_filter         ,knapsack_rmse_until_cross_acc_0_965_top_3_no_filter         ,knapsack_rmse_until_cross_acc_0_975_top_3_no_filter         ,knapsack_rmse_until_cross_acc_0_985_top_3_no_filter         ,knapsack_rmse_until_cross_acc_0_995_top_3_no_filter         ,knapsack_rmse_until_cross_acc_1_000_top_3_no_filter         ,knapsack_cross_acc_until_cross_acc_0_960_top_3_with_filter  ,knapsack_cross_acc_until_cross_acc_0_970_top_3_with_filter  ,knapsack_cross_acc_until_cross_acc_0_980_top_3_with_filter  ,knapsack_cross_acc_until_cross_acc_0_990_top_3_with_filter  ,knapsack_cross_acc_until_cross_acc_0_965_top_3_with_filter  ,knapsack_cross_acc_until_cross_acc_0_975_top_3_with_filter  ,knapsack_cross_acc_until_cross_acc_0_985_top_3_with_filter  ,knapsack_cross_acc_until_cross_acc_0_995_top_3_with_filter  ,knapsack_cross_acc_until_cross_acc_1_000_top_3_with_filter  ,knapsack_cross_acc_until_cross_acc_0_960_top_3_no_filter    ,knapsack_cross_acc_until_cross_acc_0_970_top_3_no_filter    ,knapsack_cross_acc_until_cross_acc_0_980_top_3_no_filter    ,knapsack_cross_acc_until_cross_acc_0_990_top_3_no_filter    ,knapsack_cross_acc_until_cross_acc_0_965_top_3_no_filter    ,knapsack_cross_acc_until_cross_acc_0_975_top_3_no_filter    ,knapsack_cross_acc_until_cross_acc_0_985_top_3_no_filter    ,knapsack_cross_acc_until_cross_acc_0_995_top_3_no_filter    ,knapsack_cross_acc_until_cross_acc_1_000_top_3_no_filter    ,knapsack_rmse_until_cross_acc_0_960_top_9_with_filter       ,knapsack_rmse_until_cross_acc_0_970_top_9_with_filter       ,knapsack_rmse_until_cross_acc_0_980_top_9_with_filter       ,knapsack_rmse_until_cross_acc_0_990_top_9_with_filter       ,knapsack_rmse_until_cross_acc_0_965_top_9_with_filter       ,knapsack_rmse_until_cross_acc_0_975_top_9_with_filter       ,knapsack_rmse_until_cross_acc_0_985_top_9_with_filter       ,knapsack_rmse_until_cross_acc_0_995_top_9_with_filter       ,knapsack_rmse_until_cross_acc_1_000_top_9_with_filter       ,knapsack_rmse_until_cross_acc_0_960_top_9_no_filter         ,knapsack_rmse_until_cross_acc_0_970_top_9_no_filter         ,knapsack_rmse_until_cross_acc_0_980_top_9_no_filter         ,knapsack_rmse_until_cross_acc_0_990_top_9_no_filter         ,knapsack_rmse_until_cross_acc_0_965_top_9_no_filter         ,knapsack_rmse_until_cross_acc_0_975_top_9_no_filter         ,knapsack_rmse_until_cross_acc_0_985_top_9_no_filter         ,knapsack_rmse_until_cross_acc_0_995_top_9_no_filter         ,knapsack_rmse_until_cross_acc_1_000_top_9_no_filter         ,knapsack_cross_acc_until_cross_acc_0_960_top_9_with_filter  ,knapsack_cross_acc_until_cross_acc_0_970_top_9_with_filter  ,knapsack_cross_acc_until_cross_acc_0_980_top_9_with_filter  ,knapsack_cross_acc_until_cross_acc_0_990_top_9_with_filter  ,knapsack_cross_acc_until_cross_acc_0_965_top_9_with_filter  ,knapsack_cross_acc_until_cross_acc_0_975_top_9_with_filter  ,knapsack_cross_acc_until_cross_acc_0_985_top_9_with_filter  ,knapsack_cross_acc_until_cross_acc_0_995_top_9_with_filter  ,knapsack_cross_acc_until_cross_acc_1_000_top_9_with_filter  ,knapsack_cross_acc_until_cross_acc_0_960_top_9_no_filter    ,knapsack_cross_acc_until_cross_acc_0_970_top_9_no_filter    ,knapsack_cross_acc_until_cross_acc_0_980_top_9_no_filter    ,knapsack_cross_acc_until_cross_acc_0_990_top_9_no_filter    ,knapsack_cross_acc_until_cross_acc_0_965_top_9_no_filter    ,knapsack_cross_acc_until_cross_acc_0_975_top_9_no_filter    ,knapsack_cross_acc_until_cross_acc_0_985_top_9_no_filter    ,knapsack_cross_acc_until_cross_acc_0_995_top_9_no_filter    ,knapsack_cross_acc_until_cross_acc_1_000_top_9_no_filter    ,knapsack_rmse_until_cross_acc_0_960_top_27_with_filter      ,knapsack_rmse_until_cross_acc_0_970_top_27_with_filter      ,knapsack_rmse_until_cross_acc_0_980_top_27_with_filter      ,knapsack_rmse_until_cross_acc_0_990_top_27_with_filter      ,knapsack_rmse_until_cross_acc_0_965_top_27_with_filter      ,knapsack_rmse_until_cross_acc_0_975_top_27_with_filter      ,knapsack_rmse_until_cross_acc_0_985_top_27_with_filter      ,knapsack_rmse_until_cross_acc_0_995_top_27_with_filter      ,knapsack_rmse_until_cross_acc_1_000_top_27_with_filter      ,knapsack_rmse_until_cross_acc_0_960_top_27_no_filter        ,knapsack_rmse_until_cross_acc_0_970_top_27_no_filter        ,knapsack_rmse_until_cross_acc_0_980_top_27_no_filter        ,knapsack_rmse_until_cross_acc_0_990_top_27_no_filter        ,knapsack_rmse_until_cross_acc_0_965_top_27_no_filter        ,knapsack_rmse_until_cross_acc_0_975_top_27_no_filter        ,knapsack_rmse_until_cross_acc_0_985_top_27_no_filter        ,knapsack_rmse_until_cross_acc_0_995_top_27_no_filter        ,knapsack_rmse_until_cross_acc_1_000_top_27_no_filter        ,knapsack_cross_acc_until_cross_acc_0_960_top_27_with_filter ,knapsack_cross_acc_until_cross_acc_0_970_top_27_with_filter ,knapsack_cross_acc_until_cross_acc_0_980_top_27_with_filter ,knapsack_cross_acc_until_cross_acc_0_990_top_27_with_filter ,knapsack_cross_acc_until_cross_acc_0_965_top_27_with_filter ,knapsack_cross_acc_until_cross_acc_0_975_top_27_with_filter ,knapsack_cross_acc_until_cross_acc_0_985_top_27_with_filter ,knapsack_cross_acc_until_cross_acc_0_995_top_27_with_filter ,knapsack_cross_acc_until_cross_acc_1_000_top_27_with_filter ,knapsack_cross_acc_until_cross_acc_0_960_top_27_no_filter   ,knapsack_cross_acc_until_cross_acc_0_970_top_27_no_filter   ,knapsack_cross_acc_until_cross_acc_0_980_top_27_no_filter   ,knapsack_cross_acc_until_cross_acc_0_990_top_27_no_filter   ,knapsack_cross_acc_until_cross_acc_0_965_top_27_no_filter   ,knapsack_cross_acc_until_cross_acc_0_975_top_27_no_filter   ,knapsack_cross_acc_until_cross_acc_0_985_top_27_no_filter   ,knapsack_cross_acc_until_cross_acc_0_995_top_27_no_filter   ,knapsack_cross_acc_until_cross_acc_1_000_top_27_no_filter   ], "compare", "True", "False")
 
