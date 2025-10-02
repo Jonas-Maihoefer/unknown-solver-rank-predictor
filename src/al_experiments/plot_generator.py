@@ -239,6 +239,65 @@ class PlotGenerator:
             legend=True
         )
 
+    def get_all_measurements_2023(self, paths, plot_type):
+        """ result_string = ""
+
+        timeout_breaking_methods = ['until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00', 'until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00']#['until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975'] #['until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_stab_0_9800','until_stab_0_9825','until_stab_0_9850','until_stab_0_9875','until_stab_0_9900','until_stab_0_9925','until_stab_0_9950','until_stab_0_9975','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00','until_cross_acc_0_96','until_cross_acc_0_97','until_cross_acc_0_98','until_cross_acc_0_99','until_cross_acc_0_965','until_cross_acc_0_975','until_cross_acc_0_985','until_cross_acc_0_995','until_cross_acc_1_00']
+        timeout_breaking_names = ['$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$', '$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$'] #['$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$'] #['$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{stab}_{geq 0.98}$','$mathrm{stab}_{geq 0.9825}$','$mathrm{stab}_{geq 0.985}$','$mathrm{stab}_{geq 0.9875}$','$mathrm{stab}_{geq 0.99}$','$mathrm{stab}_{geq 0.9925}$','$mathrm{stab}_{geq 0.995}$','$mathrm{stab}_{geq 0.9975}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$','$mathrm{fcp}_{geq 0.96}$','$mathrm{fcp}_{geq 0.97}$','$mathrm{fcp}_{geq 0.98}$','$mathrm{fcp}_{geq 0.99}$','$mathrm{fcp}_{geq 0.965}$','$mathrm{fcp}_{geq 0.975}$','$mathrm{fcp}_{geq 0.985}$','$mathrm{fcp}_{geq 0.995}$','$mathrm{fcp}_{geq 1.0}$']
+        selection_methods = ['choose_instances_random'] #, 'variance_based_selection_1', 'highest_rt_selection', 'lowest_variance', 'highest_variance', 'lowest_variances_per_rt', 'lowest_rt_selection']
+        selection_names = ['$\mathrm{rand}$'] # , '$\mathrm{max}_{V/R}$', '$\mathrm{max}_{R}$', '$\mathrm{min}_{V}$', '$\mathrm{max}_{V}$', '$\mathrm{min}_{V/R}$', '$\mathrm{min}_{R}$']
+        #filterings = [True, True, True, True, True, True, True, True] #[False               ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,True             ,True             ,True             ,True             ,True             ,True             ,True             ,True             ,True             ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,True              ,True              ,True              ,True              ,True              ,True              ,True              ,True              ,False                ,False                ,False                ,False                ,False                ,False                ,False                ,False                ,True                   ,True                   ,True                   ,True                   ,True                   ,True                   ,True                   ,True                   ,False                     ,False                     ,False                     ,False                     ,False                     ,False                     ,False                     ,False                     ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,True             ,True             ,True             ,True             ,True             ,True             ,True             ,True             ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,False               ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,True        ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,False          ,True            ,True            ,True            ,True            ,True            ,True            ,True            ,True            ,False              ,False              ,False              ,False              ,False              ,False              ,False              ,False              ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,True       ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,False         ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,True  ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,False    ,True      ,True      ,True      ,True      ,True      ,True      ,True      ,True      ,True      ,False        ,False        ,False        ,False        ,False        ,False        ,False        ,False        ,False        ,True ,True ,True ,True ,True ,True ,True ,True ,True ,False   ,False   ,False   ,False   ,False   ,False   ,False   ,False   ,False] 
+        t_instance_selections = ['$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$', '$\mathrm{best}$' ] # ['$\mathrm{top}_3$', '$\mathrm{top}_3$', '$\mathrm{top}_3$', '$\mathrm{top}_3$', '$\mathrm{top}_3$', '$\mathrm{top}_3$', '$\mathrm{top}_3$', '$\mathrm{top}_3$']  #['$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{best}$'  ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_3$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_9$' ,'$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$','$\mathrm{top}_27$']
+        optimizations = ['$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$'] #['$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$'] #['$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^2$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^1$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^4$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$', '$u_i^3$']
+        timeout_breaking_methods.reverse()
+        timeout_breaking_names.reverse()
+        selection_names.reverse()
+        #filterings.reverse()
+        t_instance_selections.reverse()
+        optimizations.reverse()
+
+        for path in paths:
+            timeout_breaking = timeout_breaking_names.pop()
+            timeout_breaking_method = timeout_breaking_methods.pop()
+            #filtering = filterings.pop()
+            t_instance_selection = t_instance_selections.pop()
+            optimization = optimizations.pop()
+            selection_names_copy = selection_names.copy()
+            print(path + ": " + timeout_breaking_method)
+            df = pd.read_pickle(path, compression='gzip')
+            for selection_method in selection_methods:
+                selection_name = selection_names_copy.pop()
+                print(f"sel_method={selection_method}; sel_name={selection_name}")
+                instance_breaking = '$\mathrm{fcp}_{\geq 0.9}$'
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, timeout_breaking_method, selection_method, 0.9, f'{optimization} & {t_instance_selection} &  {timeout_breaking}  & {selection_name} & {instance_breaking}')
+                instance_breaking = '$\mathrm{fcp}_{\geq 0.925}$'
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, timeout_breaking_method, selection_method, 0.925, f'{optimization} & {t_instance_selection} &  {timeout_breaking}  & {selection_name} & {instance_breaking}')
+                instance_breaking = '$\mathrm{fcp}_{\geq 0.95}$'
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, timeout_breaking_method, selection_method, 0.95, f'{optimization} & {t_instance_selection} &  {timeout_breaking}  & {selection_name} & {instance_breaking}')
+                instance_breaking = '$\mathrm{fcp}_{\geq 0.975}$'
+                result_string += self.print_lowest_rf_cross_acc_greedy(df, timeout_breaking_method, selection_method, 0.975, f'{optimization} & {t_instance_selection} &  {timeout_breaking}  & {selection_name} & {instance_breaking}')
+
+        print()
+        print("combined:")
+        print(result_string)
+
+        results_df = pd.DataFrame(self.results, columns=["x", "y", "std_x", "std_y", "label"])
+        results_df["method"] = "bottom-up" """
+
+        stored_df = pd.read_pickle("./pickle/2023-runs.pkl.gz", compression='gzip')
+        bottom_up = stored_df[stored_df["method"] == "bottom-up"]
+        baseline = stored_df[stored_df["method"] == "baseline"]
+
+        if plot_type == 'pareto':
+            pareto = self.pareto_front(bottom_up)
+            self.plot_pareto_df(pareto, "Results for the Main2023 Baseline") 
+        if plot_type == 'baseline':
+            self.compare_methods(stored_df, "bottom-up", "baseline") 
+        if plot_type == 'utility':
+            self.compare_utility(bottom_up)
+        if plot_type == 'true baseline':
+            self.compare_true_baseline(stored_df)
+
     def get_all_measurements_bottom_up(self, paths, plot_type, attribute_1=None, attribute_2=None):
         """ result_string = ""
 
@@ -310,6 +369,13 @@ class PlotGenerator:
             self.compare_utility(no_filter_df)
         if plot_type == 'timeout instance chooser':
             self.compare_timeout_instance_chooser(no_filter_df)
+        if plot_type == 'break cond':
+            self.compare_break_cond(no_filter_df, 0.9)
+            self.compare_break_cond(no_filter_df, 0.925)
+            self.compare_break_cond(no_filter_df, 0.95)
+            self.compare_break_cond(no_filter_df, 0.975)
+        if plot_type == 'compare_timeout_breaking':
+            self.compare_timeout_breaking(no_filter_df)
 
         self.results = []
 
@@ -499,6 +565,12 @@ class PlotGenerator:
         combined = pd.concat([stored_df, append_df], ignore_index=True)
         combined.to_pickle(path, compression="gzip")
 
+    def update_2023_runs(self, append_df):
+        path = "./pickle/2023-runs.pkl.gz"
+        stored_df = pd.read_pickle(path, compression="gzip")
+        combined = pd.concat([stored_df, append_df], ignore_index=True)
+        combined.to_pickle(path, compression="gzip")
+
     def compare_against_baseline(self, df, method, title="Compare Instance-Wise Timeout Distribution to Baseline"):
         met = df[df["method"] == method]
         met = met[met["label"].str.contains("False", regex=False, na=False)]
@@ -611,7 +683,7 @@ class PlotGenerator:
             x="x", y="y",
             drawstyle="steps-post",  # ensures horizontal, then vertical
             marker="o",
-            label=method1
+            label="bottom up"
         )
 
         # Plot df_2
@@ -627,7 +699,7 @@ class PlotGenerator:
         #plt.xlim(right=1)
         #plt.ylim(0, 1.05)
         plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
-        plt.title("Compare Static to Instance-Wise Timeout Distribution")
+        plt.title("Compare Bottom Up Timeout Distribution to Baseline")
         plt.grid(True, linestyle="--", alpha=0.5)
         plt.tight_layout()
 
@@ -793,20 +865,140 @@ class PlotGenerator:
         plt.legend()
         plt.show()
 
+    def compare_break_cond(self, df, break_i):
+        bottom_up = df 
+        bottom_up = bottom_up[bottom_up["label"].str.contains("best", regex=False, na=False)]
+        bottom_up = bottom_up[bottom_up["label"].str.contains("rand", regex=False, na=False)]
+        bottom_up = bottom_up[bottom_up["label"].str.contains("s_\mathrm{fitted}", regex=False, na=False)]
+        bottom_up = bottom_up[bottom_up["label"].str.contains("u_i^3", regex=False, na=False)]
+        
+        if break_i == 0.9:
+            instance_break = bottom_up["label"].str.contains("& $\mathrm{fcp}_{\geq 0.9}$ &", regex=False, na=False)
+        if break_i == 0.925:
+            instance_break = bottom_up["label"].str.contains("& $\mathrm{fcp}_{\geq 0.925}$ &", regex=False, na=False)
+        if break_i == 0.95:
+            instance_break = bottom_up["label"].str.contains("& $\mathrm{fcp}_{\geq 0.95}$ &", regex=False, na=False)
+        if break_i == 0.975:
+            instance_break = bottom_up["label"].str.contains("& $\mathrm{fcp}_{\geq 0.975}$ &", regex=False, na=False)
+
+        timeout_break_0_96 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.96}$  &", regex=False, na=False)
+        timeout_break_0_965 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.965}$  &", regex=False, na=False)
+        timeout_break_0_97 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.97}$  &", regex=False, na=False)
+        timeout_break_0_975 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.975}$  &", regex=False, na=False)
+        timeout_break_0_98 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.98}$  &", regex=False, na=False)
+        timeout_break_0_985 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.985}$  &", regex=False, na=False)
+        timeout_break_0_99 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.99}$  &", regex=False, na=False)
+        timeout_break_0_995 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.995}$  &", regex=False, na=False)
+        timeout_break_1_00 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 1.0}$  &", regex=False, na=False)
+
+        bottom_up_0_96  = bottom_up[instance_break & timeout_break_0_96]
+        bottom_up_0_965 = bottom_up[instance_break & timeout_break_0_965]
+        bottom_up_0_97  = bottom_up[instance_break & timeout_break_0_97]
+        bottom_up_0_975 = bottom_up[instance_break & timeout_break_0_975]
+        bottom_up_0_98  = bottom_up[instance_break & timeout_break_0_98]
+        bottom_up_0_985 = bottom_up[instance_break & timeout_break_0_985]
+        bottom_up_0_99  = bottom_up[instance_break & timeout_break_0_99]
+        bottom_up_0_995 = bottom_up[instance_break & timeout_break_0_995]
+        bottom_up_1_00  = bottom_up[instance_break & timeout_break_1_00]
+
+        #bottom_up = pd.concat([bottom_up_small, bottom_up_medium, bottom_up_high, bottom_up_highest], ignore_index=True)
+
+        plt.figure(figsize=(8, 5))
+
+        sns.scatterplot(data=bottom_up_0_96,x="x", y="y",marker="o",label=r'\mathrm{fcp}_{\geq 0.96}')
+        sns.scatterplot(data=bottom_up_0_965,x="x", y="y",marker="o",label=r'\mathrm{fcp}_{\geq 0.965}')
+        sns.scatterplot(data=bottom_up_0_97,x="x", y="y",marker="o",label=r'\mathrm{fcp}_{\geq 0.97}')
+        sns.scatterplot(data=bottom_up_0_975,x="x", y="y",marker="o",label=r'\mathrm{fcp}_{\geq 0.975}')
+        sns.scatterplot(data=bottom_up_0_98,x="x", y="y",marker="o",label=r'\mathrm{fcp}_{\geq 0.98}')
+        sns.scatterplot(data=bottom_up_0_985,x="x", y="y",marker="o",label=r'\mathrm{fcp}_{\geq 0.985}')
+        sns.scatterplot(data=bottom_up_0_99,x="x", y="y",marker="o",label=r'\mathrm{fcp}_{\geq 0.99}')
+        sns.scatterplot(data=bottom_up_0_995,x="x", y="y",marker="o",label=r'\mathrm{fcp}_{\geq 0.995}')
+        sns.scatterplot(data=bottom_up_1_00,x="x", y="y",marker="o",label=r'\mathrm{fcp}_{\geq 1.0}')
+
+        plt.xlabel("$\overline{O}_{\mathrm{rt}}$")
+        #plt.xlim(right=1)
+        #plt.ylim(0, 1.05)
+        plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
+        plt.title("Comparing Bottom Up Timeout Distribution to Baseline")
+        plt.grid(True, linestyle="--", alpha=0.5)
+        plt.tight_layout()
+
+        plt.legend()
+        plt.show()    
+
+    def compare_true_baseline(self, df):        
+        bottom_up = df[df["method"] == "bottom-up"]
+        bottom_up = bottom_up[bottom_up["label"].str.contains("rand", regex=False, na=False)]
+        bottom_up = bottom_up[bottom_up["label"].str.contains("s_\mathrm{fitted}", regex=False, na=False)]
+        bottom_up = bottom_up[bottom_up["label"].str.contains("u_i^3", regex=False, na=False)]
+        
+        instance_break_0_9 = bottom_up["label"].str.contains("& $\mathrm{fcp}_{\geq 0.9}$ &", regex=False, na=False)
+        instance_break_0_925 = bottom_up["label"].str.contains("& $\mathrm{fcp}_{\geq 0.925}$ &", regex=False, na=False)
+        instance_break_0_95 = bottom_up["label"].str.contains("& $\mathrm{fcp}_{\geq 0.95}$ &", regex=False, na=False)
+        instance_break_0_975 = bottom_up["label"].str.contains("& $\mathrm{fcp}_{\geq 0.975}$ &", regex=False, na=False)
+
+        timeout_break_0_96 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.96}$  &", regex=False, na=False)
+        timeout_break_0_965 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.965}$  &", regex=False, na=False)
+        timeout_break_0_97 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.97}$  &", regex=False, na=False)
+        timeout_break_0_975 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.975}$  &", regex=False, na=False)
+        timeout_break_0_98 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.98}$  &", regex=False, na=False)
+        timeout_break_0_985 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.985}$  &", regex=False, na=False)
+        timeout_break_0_99 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.99}$  &", regex=False, na=False)
+        timeout_break_0_995 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 0.995}$  &", regex=False, na=False)
+        timeout_break_1_00 = bottom_up["label"].str.contains("&  $mathrm{fcp}_{geq 1.0}$  &", regex=False, na=False)
+        
+        bottom_up_small = bottom_up[instance_break_0_9 & timeout_break_1_00]
+        bottom_up_medium = bottom_up[instance_break_0_925 & timeout_break_1_00]
+        bottom_up_high = bottom_up[instance_break_0_95 & timeout_break_1_00]
+        bottom_up_highest = bottom_up[instance_break_0_975 & timeout_break_1_00]
+
+        bottom_up = pd.concat([bottom_up_small, bottom_up_medium, bottom_up_high, bottom_up_highest], ignore_index=True)
+
+        baseline = df[df["method"] == "baseline"]
+        baseline = baseline[baseline["label"].str.contains("rand", regex=False, na=False)]
+        baseline = baseline[baseline["label"].str.contains("s_\mathcal{B}", regex=False, na=False)]
+
+        plt.figure(figsize=(8, 5))
+
+        sns.scatterplot(
+            data=bottom_up,
+            x="x", y="y",
+            marker="o",
+            label=r'bottom up'
+        )
+
+        sns.scatterplot(
+            data=baseline,
+            x="x", y="y",
+            marker="o",
+            label=r'baseline'
+        )
+
+        plt.xlabel("$\overline{O}_{\mathrm{rt}}$")
+        #plt.xlim(right=1)
+        #plt.ylim(0, 1.05)
+        plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
+        plt.title("Comparing Bottom Up Timeout Distribution to Baseline")
+        plt.grid(True, linestyle="--", alpha=0.5)
+        plt.tight_layout()
+
+        plt.legend()
+        plt.show()
+
     def compare_utility(self, df):
-        ui1 = df[df["label"].str.contains("u_i^1", regex=False, na=False)]
-        ui2 = df[df["label"].str.contains("u_i^2", regex=False, na=False)]
+        #ui1 = df[df["label"].str.contains("u_i^1", regex=False, na=False)]
+        #ui2 = df[df["label"].str.contains("u_i^2", regex=False, na=False)]
         ui3 = df[df["label"].str.contains("u_i^3", regex=False, na=False)]
         ui4 = df[df["label"].str.contains("u_i^4", regex=False, na=False)]
 
-        ui1_pareto = self.pareto_front(ui1)
-        ui2_pareto = self.pareto_front(ui2)
+        #ui1_pareto = self.pareto_front(ui1)
+        #ui2_pareto = self.pareto_front(ui2)
         ui3_pareto = self.pareto_front(ui3)
         ui4_pareto = self.pareto_front(ui4)
 
         plt.figure(figsize=(8, 5))
 
-        # Plot df_1
+        """         # Plot df_1
         sns.lineplot(
             data=ui1_pareto,
             x="x", y="y",
@@ -821,7 +1013,7 @@ class PlotGenerator:
             drawstyle="steps-post",  # ensures horizontal, then vertical
             marker="o",
             label=r'$u_i^2$'
-        )
+        ) """
 
         sns.lineplot(
             data=ui3_pareto,
@@ -844,6 +1036,50 @@ class PlotGenerator:
         #plt.ylim(0, 1.05)
         plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
         plt.title("Comparing Different Utility Functions $u_i$")
+        plt.grid(True, linestyle="--", alpha=0.5)
+        plt.tight_layout()
+
+        plt.legend()
+        plt.show()
+
+    def compare_timeout_breaking(self, df):
+        timeout_break_0_960 = df["label"].str.contains("&  $mathrm{fcp}_{geq 0.96}$  &", regex=False, na=False)
+        timeout_break_0_965 = df["label"].str.contains("&  $mathrm{fcp}_{geq 0.965}$  &", regex=False, na=False)
+        timeout_break_0_970 = df["label"].str.contains("&  $mathrm{fcp}_{geq 0.97}$  &", regex=False, na=False)
+        timeout_break_0_975 = df["label"].str.contains("&  $mathrm{fcp}_{geq 0.975}$  &", regex=False, na=False)
+        timeout_break_0_980 = df["label"].str.contains("&  $mathrm{fcp}_{geq 0.98}$  &", regex=False, na=False)
+        timeout_break_0_985 = df["label"].str.contains("&  $mathrm{fcp}_{geq 0.985}$  &", regex=False, na=False)
+        timeout_break_0_990 = df["label"].str.contains("&  $mathrm{fcp}_{geq 0.99}$  &", regex=False, na=False)
+        timeout_break_0_995 = df["label"].str.contains("&  $mathrm{fcp}_{geq 0.995}$  &", regex=False, na=False)
+        timeout_break_1_000 = df["label"].str.contains("&  $mathrm{fcp}_{geq 1.0}$  &", regex=False, na=False)
+
+        timeout_break_0_960_pareto = self.pareto_front(df[timeout_break_0_960])
+        timeout_break_0_965_pareto = self.pareto_front(df[timeout_break_0_965])
+        timeout_break_0_970_pareto = self.pareto_front(df[timeout_break_0_970])
+        timeout_break_0_975_pareto = self.pareto_front(df[timeout_break_0_975])
+        timeout_break_0_980_pareto = self.pareto_front(df[timeout_break_0_980])
+        timeout_break_0_985_pareto = self.pareto_front(df[timeout_break_0_985])
+        timeout_break_0_990_pareto = self.pareto_front(df[timeout_break_0_990])
+        timeout_break_0_995_pareto = self.pareto_front(df[timeout_break_0_995])
+        timeout_break_1_000_pareto = self.pareto_front(df[timeout_break_1_000])
+
+        plt.figure(figsize=(8, 5))
+
+        sns.lineplot(data=timeout_break_0_960_pareto,x="x", y="y",drawstyle="steps-post",marker="o",label=r'$\mathrm{fcp}_{\geq 0.96 }$')
+        sns.lineplot(data=timeout_break_0_965_pareto,x="x", y="y",drawstyle="steps-post",marker="o",label=r'$\mathrm{fcp}_{\geq 0.965}$')
+        sns.lineplot(data=timeout_break_0_970_pareto,x="x", y="y",drawstyle="steps-post",marker="o",label=r'$\mathrm{fcp}_{\geq 0.97 }$')
+        sns.lineplot(data=timeout_break_0_975_pareto,x="x", y="y",drawstyle="steps-post",marker="o",label=r'$\mathrm{fcp}_{\geq 0.975}$')
+        sns.lineplot(data=timeout_break_0_980_pareto,x="x", y="y",drawstyle="steps-post",marker="o",label=r'$\mathrm{fcp}_{\geq 0.98 }$')
+        sns.lineplot(data=timeout_break_0_985_pareto,x="x", y="y",drawstyle="steps-post",marker="o",label=r'$\mathrm{fcp}_{\geq 0.985}$')
+        sns.lineplot(data=timeout_break_0_990_pareto,x="x", y="y",drawstyle="steps-post",marker="o",label=r'$\mathrm{fcp}_{\geq 0.99 }$')
+        sns.lineplot(data=timeout_break_0_995_pareto,x="x", y="y",drawstyle="steps-post",marker="o",label=r'$\mathrm{fcp}_{\geq 0.995}$')
+        sns.lineplot(data=timeout_break_1_000_pareto,x="x", y="y",drawstyle="steps-post",marker="o",label=r'$\mathrm{fcp}_{\geq 1.0  }$')
+
+        plt.xlabel("$\overline{O}_{\mathrm{rt}}$")
+        #plt.xlim(right=1)
+        #plt.ylim(0, 1.05)
+        plt.ylabel("$\overline{O}_{\mathrm{acc}}$")
+        plt.title("Comparing the Different Timeout Distribution Breaking Conditions")
         plt.grid(True, linestyle="--", alpha=0.5)
         plt.tight_layout()
 
@@ -1620,6 +1856,30 @@ class PlotGenerator:
         static_2000_no_filter = "./pickle/93e13f5_8__rt_weigth_1_temp_None.pkl.gz"
         static_1000_no_filter = "./pickle/93e13f5_9__rt_weigth_1_temp_None.pkl.gz"
 
+        ########### Main2023 ##########################
+
+        static_5000_no_filter_2023 = "./pickle/47335bc_0__rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_rmse_until_cross_acc_0_960_no_filter_2023 = "./pickle/5180070_0_until_cross_acc_0_96_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_rmse_until_cross_acc_0_970_no_filter_2023 = "./pickle/5180070_0_until_cross_acc_0_97_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_rmse_until_cross_acc_0_980_no_filter_2023 = "./pickle/5180070_0_until_cross_acc_0_98_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_rmse_until_cross_acc_0_990_no_filter_2023 = "./pickle/5180070_0_until_cross_acc_0_99_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_rmse_until_cross_acc_0_965_no_filter_2023 = "./pickle/5180070_0_until_cross_acc_0_965_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_rmse_until_cross_acc_0_975_no_filter_2023 = "./pickle/5180070_0_until_cross_acc_0_975_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_rmse_until_cross_acc_0_985_no_filter_2023 = "./pickle/5180070_0_until_cross_acc_0_985_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_rmse_until_cross_acc_0_995_no_filter_2023 = "./pickle/5180070_0_until_cross_acc_0_995_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_rmse_until_cross_acc_1_000_no_filter_2023 = "./pickle/5180070_0_until_cross_acc_1_00_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_cross_acc_until_cross_acc_0_960_no_filter_2023 = "./pickle/fef70fc_0_until_cross_acc_0_96_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_cross_acc_until_cross_acc_0_970_no_filter_2023 = "./pickle/fef70fc_0_until_cross_acc_0_97_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_cross_acc_until_cross_acc_0_980_no_filter_2023 = "./pickle/fef70fc_0_until_cross_acc_0_98_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_cross_acc_until_cross_acc_0_990_no_filter_2023 = "./pickle/fef70fc_0_until_cross_acc_0_99_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_cross_acc_until_cross_acc_0_965_no_filter_2023 = "./pickle/fef70fc_0_until_cross_acc_0_965_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_cross_acc_until_cross_acc_0_975_no_filter_2023 = "./pickle/fef70fc_0_until_cross_acc_0_975_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_cross_acc_until_cross_acc_0_985_no_filter_2023 = "./pickle/fef70fc_0_until_cross_acc_0_985_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_cross_acc_until_cross_acc_0_995_no_filter_2023 = "./pickle/fef70fc_0_until_cross_acc_0_995_rt_weigth_1_temp_None.pkl.gz"
+        bottom_up_knapsack_cross_acc_until_cross_acc_1_000_no_filter_2023 = "./pickle/fef70fc_0_until_cross_acc_1_00_rt_weigth_1_temp_None.pkl.gz"
+
+        #####################################
+
         al_low_delta_rt = [0.0541, 0.1035]
         al_high_delta_acc = [0.9048, 0.9233]
 
@@ -1630,10 +1890,12 @@ class PlotGenerator:
         #self.get_all_measurements_static([], 'compare', "True & 5000", "False & 5000")
 
         #self.plot_all_results("test")
+        #self.get_all_measurements_2023([], "true baseline")
         #self.get_all_measurements_static([], 'compare estimator')
         #self.get_all_measurements_instance_wise([], 'compare estimator')
         #self.get_all_measurements_instance_wise([], 'variance')
-        self.get_all_measurements_bottom_up([], 'timeout instance chooser')
+        
+        self.get_all_measurements_bottom_up([], 'compare_timeout_breaking')
 
         # "pareto", "compare estimator"
         #self.get_all_measurements_static([static_5000_with_filter, static_4000_with_filter, static_3000_with_filter, static_2000_with_filter, static_1000_with_filter, static_5000_no_filter, static_4000_no_filter, static_3000_no_filter, static_2000_no_filter, static_1000_no_filter], "pareto")
